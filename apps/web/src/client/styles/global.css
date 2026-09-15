@@ -1,97 +1,98 @@
 @import "tailwindcss";
-
-/* Self-hosted Noto Sans Thai (OFL) — docs/technology-stack.md §6 forbids a runtime CDN call. */
-@font-face {
-  font-family: "Noto Sans Thai";
-  font-style: normal;
-  font-weight: 400 700;
-  font-display: swap;
-  src: url("/fonts/noto-sans-thai-thai.woff2") format("woff2");
-  unicode-range: U+02D7, U+0303, U+0331, U+0E01-0E5B, U+200C-200D, U+25CC;
-}
-@font-face {
-  font-family: "Noto Sans Thai";
-  font-style: normal;
-  font-weight: 400 700;
-  font-display: swap;
-  src: url("/fonts/noto-sans-thai-latin-ext.woff2") format("woff2");
-  unicode-range:
-    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308,
-    U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113,
-    U+2C60-2C7F, U+A720-A7FF;
-}
-@font-face {
-  font-family: "Noto Sans Thai";
-  font-style: normal;
-  font-weight: 400 700;
-  font-display: swap;
-  src: url("/fonts/noto-sans-thai-latin.woff2") format("woff2");
-  unicode-range:
-    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
-    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
+/* Self-hosted Thai faces (OFL) — docs/technology-stack.md §6 forbids a runtime CDN call. */
+@import "./fonts.css";
 
 /**
- * Design tokens. Every colour pair below was measured against WCAG AA before being written here
- * (see docs/adr/0003 for the ratios and the reasoning). Status colours are deliberately separate
- * from brand colours so a badge can never be mistaken for decoration, and UNKNOWN is intentionally
- * grey — "we don't know" must look like absence, not like a warning.
+ * Design tokens.
+ *
+ * Two axes are switchable while the authors choose a direction: `data-font` picks the Thai face and
+ * `data-palette` picks the signature colour. Both collapse to a single committed choice once
+ * agreed — see docs/adr/0003.
+ *
+ * Status colours (PASS/FAIL/PARTIAL/UNKNOWN) deliberately do NOT change with the palette. They
+ * carry analytical meaning, so they must stay stable and never read as brand decoration. Every
+ * foreground/background pair below was measured for WCAG AA before being written here.
  */
 :root {
-  --font-thai: "Noto Sans Thai", system-ui, sans-serif;
+  --font-thai: "Anuphan", system-ui, sans-serif;
+
+  --radius-card: 1rem;
+  --radius-pill: 999px;
 
   /* Surfaces */
-  --color-canvas: #fdfbf7;
+  --color-canvas: #fbfaf7;
   --color-surface: #ffffff;
-  --color-surface-sunken: #f5f1e8;
-  --color-border: #e6e1d8;
-  --color-border-strong: #cfc7b8;
+  --color-surface-sunken: #f3f1ec;
+  --color-border: #e5e1d9;
+  --color-border-strong: #cbc5b9;
 
   /* Text */
-  --color-ink: #1a2332;
-  --color-ink-muted: #5a6472;
+  --color-ink: #10151c;
+  --color-ink-muted: #5c6470;
 
-  /* Brand */
-  --color-primary: #1e3a5f;
-  --color-primary-hover: #2c4e7a;
-  --color-primary-on: #ffffff;
-  --color-accent: #8cb9bd;
-  --color-accent-soft: #e4eff0;
+  /* Signature — overridden per [data-palette] below. */
+  --color-signature: #00b8a0;
+  --color-signature-on: #0b0f14;
+  --color-signature-text: #008271;
+  --color-signature-wash: #e0f7f3;
 
-  /* App bar. Kept separate from --color-primary: inverting primary for dark mode would turn the
-     header into a glaring light bar, so dark mode uses a raised surface instead. */
-  --color-header: #1e3a5f;
+  --color-header: #10151c;
   --color-header-on: #ffffff;
 
-  /* Analytical status. Text-weight values; *-soft are background fills. */
+  /* Analytical status. *-soft are fills, plain values are text weight. */
   --color-pass: #1b6b45;
   --color-pass-soft: #e3f2ea;
   --color-fail: #a32e24;
   --color-fail-soft: #fbe7e5;
   --color-partial: #a16812;
   --color-partial-soft: #fdf1dc;
-  --color-unknown: #5a6472;
+  --color-unknown: #5c6470;
   --color-unknown-soft: #eef0f3;
 }
 
+:root[data-font="anuphan"] {
+  --font-thai: "Anuphan", system-ui, sans-serif;
+}
+:root[data-font="plex"] {
+  --font-thai: "IBM Plex Sans Thai", system-ui, sans-serif;
+}
+:root[data-font="looped"] {
+  --font-thai: "Noto Sans Thai Looped", system-ui, sans-serif;
+}
+:root[data-font="noto"] {
+  --font-thai: "Noto Sans Thai", system-ui, sans-serif;
+}
+
+:root[data-palette="violet"] {
+  --color-signature: #6c5ce7;
+  --color-signature-on: #ffffff;
+  --color-signature-text: #6c5ce7;
+  --color-signature-wash: #eeebfd;
+}
+:root[data-palette="cobalt"] {
+  --color-signature: #1d4ed8;
+  --color-signature-on: #ffffff;
+  --color-signature-text: #1d4ed8;
+  --color-signature-wash: #e6ecfc;
+}
+
 :root[data-theme="dark"] {
-  --color-canvas: #0f1720;
-  --color-surface: #18222e;
-  --color-surface-sunken: #131c26;
-  --color-border: #2a3644;
-  --color-border-strong: #3d4c5e;
+  --color-canvas: #0e1116;
+  --color-surface: #171b22;
+  --color-surface-sunken: #12161c;
+  --color-border: #272d37;
+  --color-border-strong: #3a424f;
 
-  --color-ink: #e8edf2;
-  --color-ink-muted: #9aa7b5;
+  --color-ink: #eef1f5;
+  --color-ink-muted: #9aa3b0;
 
-  --color-primary: #7fa8d4;
-  --color-primary-hover: #9cbde2;
-  --color-primary-on: #0f1720;
-  --color-accent: #8cb9bd;
-  --color-accent-soft: #1b2f33;
+  --color-signature: #00b8a0;
+  --color-signature-on: #0b0f14;
+  --color-signature-text: #00b8a0;
+  --color-signature-wash: #06312b;
 
-  --color-header: #18222e;
-  --color-header-on: #e8edf2;
+  --color-header: #171b22;
+  --color-header-on: #eef1f5;
 
   --color-pass: #5fcf9b;
   --color-pass-soft: #14301f;
@@ -99,12 +100,27 @@
   --color-fail-soft: #331715;
   --color-partial: #ecb159;
   --color-partial-soft: #332611;
-  --color-unknown: #9aa7b5;
+  --color-unknown: #9aa3b0;
   --color-unknown-soft: #1e2833;
+}
+
+:root[data-theme="dark"][data-palette="violet"] {
+  --color-signature: #7a6ce9;
+  --color-signature-on: #ffffff;
+  --color-signature-text: #7a6ce9;
+  --color-signature-wash: #1e1a3a;
+}
+:root[data-theme="dark"][data-palette="cobalt"] {
+  --color-signature: #4e76e7;
+  --color-signature-on: #ffffff;
+  --color-signature-text: #4e76e7;
+  --color-signature-wash: #141f3d;
 }
 
 @theme inline {
   --font-sans: var(--font-thai);
+  --radius-card: var(--radius-card);
+  --radius-pill: var(--radius-pill);
 
   --color-canvas: var(--color-canvas);
   --color-surface: var(--color-surface);
@@ -113,11 +129,10 @@
   --color-border-strong: var(--color-border-strong);
   --color-ink: var(--color-ink);
   --color-ink-muted: var(--color-ink-muted);
-  --color-primary: var(--color-primary);
-  --color-primary-hover: var(--color-primary-hover);
-  --color-primary-on: var(--color-primary-on);
-  --color-accent: var(--color-accent);
-  --color-accent-soft: var(--color-accent-soft);
+  --color-signature: var(--color-signature);
+  --color-signature-on: var(--color-signature-on);
+  --color-signature-text: var(--color-signature-text);
+  --color-signature-wash: var(--color-signature-wash);
   --color-header: var(--color-header);
   --color-header-on: var(--color-header-on);
   --color-pass: var(--color-pass);
@@ -136,8 +151,13 @@ html {
   font-family: var(--font-thai);
 }
 
+/* Thai text needs more line height than Latin to stay comfortable to read. */
+body {
+  line-height: 1.65;
+}
+
 /* Keyboard operation is a release requirement (docs/technology-stack.md §5). */
 :focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--color-signature);
   outline-offset: 2px;
 }
