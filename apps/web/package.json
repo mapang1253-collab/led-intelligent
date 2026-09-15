@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
+    "dev": "dotenv -e .dev.vars -- vite dev",
     "build": "vite build",
     "typecheck": "tsc -p tsconfig.client.json && tsc -p tsconfig.worker.json && tsc -p tsconfig.json",
     "test": "vitest run",
@@ -36,6 +36,7 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "^0.1.11",
     "@cloudflare/workers-types": "^4.20241224.0",
+    "dotenv-cli": "^7.4.4",
     "@playwright/test": "^1.49.1",
     "@tailwindcss/vite": "^4.0.0",
     "@testing-library/jest-dom": "^6.6.3",

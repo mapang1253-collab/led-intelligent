@@ -19,6 +19,7 @@
     "benchmark": "pnpm --filter @reis/web benchmark",
     "deploy": "pnpm --filter @reis/web deploy",
     "db:migrate": "pnpm --filter @reis/data-access run db:migrate",
+    "db:seed:reference": "pnpm --filter @reis/data-access run db:seed:reference",
     "db:seed:academic": "pnpm --filter @reis/data-access run db:seed:academic"
   },
   "devDependencies": {

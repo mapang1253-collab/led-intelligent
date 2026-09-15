@@ -7,12 +7,14 @@
   "types": "./src/index.ts",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "db:migrate": "node ./src/migrate.mjs",
-    "db:seed:academic": "node ./src/seed-academic.mjs"
+    "db:migrate": "node --env-file=../../apps/web/.env.migration ./src/migrate.mjs",
+    "db:seed:reference": "node --env-file=../../apps/web/.env.migration ./src/seed-admin-areas.mjs",
+    "db:seed:academic": "node --env-file=../../apps/web/.env.migration ./src/seed-academic.mjs"
   },
   "dependencies": {
     "@reis/contracts": "workspace:*",
     "@reis/domain": "workspace:*",
+    "geothai": "^3.0.1",
     "kysely": "^0.27.4",
     "pg": "^8.13.1"
   },

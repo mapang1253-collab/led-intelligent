@@ -10,9 +10,11 @@ GEMINI_TPM_LIMIT=
 GEMINI_RPD_LIMIT=
 AI_DAILY_RESERVE_PERCENT=20
 
-# Supabase Postgres connection string used by Hyperdrive in local dev
-# (Supabase dashboard → Project Settings → Database → Connection string → "URI", direct connection).
-DATABASE_URL=postgresql://
+# Supabase Postgres connection string (Supabase dashboard → Connect → Direct connection → URI).
+# Wrangler's Hyperdrive local-dev emulation reads this exact variable name: it must be
+# WRANGLER_HYPERDRIVE_LOCAL_CONNECTION_STRING_<binding name> — our binding is "HYPERDRIVE"
+# (apps/web/wrangler.jsonc), so the variable is:
+WRANGLER_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE=postgresql://
 
 # Random 32+ byte value used to sign/digest the anonymous run capability (docs/security-privacy-compliance.md §3).
 # Generate one with: node -e "console.log(crypto.randomBytes(32).toString('hex'))"

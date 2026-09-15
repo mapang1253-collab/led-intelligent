@@ -11,14 +11,11 @@
     "directory": "./dist/client",
     "not_found_handling": "single-page-application"
   },
-  // --- Bindings below are commented out until Day 2-3 (database schema work) creates the matching
-  // Cloudflare/Supabase resources. An invalid placeholder ID/name here fails config validation, so
-  // they stay disabled rather than fake. Never commit a real connection string in this file — the
-  // Hyperdrive/R2 IDs below are not secrets, but the underlying DB password is (that lives in
-  // `wrangler secret put` / .dev.vars, never here).
-  // "hyperdrive": [
-  //   { "binding": "HYPERDRIVE", "id": "<hyperdrive-config-id>" }
-  // ],
+  // Hyperdrive config "reis-db", created 2026-09-15 (Cloudflare account
+  // knsurattanaporn@gmail.com), pointing at the Supabase direct-connection Postgres. The ID is not a
+  // secret; the underlying DB password is (lives only in apps/web/.dev.vars, never here).
+  "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "469d366a5414404c896ddbe752b18f02" }]
+  // --- R2 stays disabled until a source needs raw-object storage rights (docs/data-architecture.md §8).
   // "r2_buckets": [
   //   { "binding": "RAW_OBJECTS", "bucket_name": "<r2-bucket-name>" }
   // ]
