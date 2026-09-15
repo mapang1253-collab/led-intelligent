@@ -58,7 +58,7 @@ function StatusPill({ status }: { status: Status }) {
 
 function Card({ children }: { children: ReactNode }) {
   return (
-    <section className="rounded-card border border-border bg-surface p-6 shadow-[0_1px_2px_rgba(16,21,28,0.04),0_8px_24px_-12px_rgba(16,21,28,0.12)]">
+    <section className="glass rounded-card p-6 shadow-[0_8px_32px_-16px_rgba(0,0,0,0.5)]">
       {children}
     </section>
   );
@@ -108,7 +108,7 @@ const EVIDENCE_FIELDS: ReadonlyArray<readonly [string, string]> = [
 ];
 
 export function DesignSystemPreview() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [font, setFont] = useState<string>("prompt");
   const [palette, setPalette] = useState<string>("aurora");
   const [section, setSection] = useState<string>(SECTIONS[0] ?? "");
@@ -131,8 +131,19 @@ export function DesignSystemPreview() {
   }
 
   return (
-    <div className="min-h-screen bg-canvas text-ink">
-      <div className="border-border border-b bg-surface">
+    <div className={`min-h-screen text-ink ${theme === "dark" ? "galaxy-root" : "bg-canvas"}`}>
+      {theme === "dark" && (
+        <>
+          <div className="galaxy-nebula" aria-hidden="true" />
+          <div className="galaxy-stars" aria-hidden="true">
+            <div className="star-layer star-small" />
+            <div className="star-layer star-medium" />
+            <div className="star-layer star-large" />
+          </div>
+        </>
+      )}
+
+      <div className={theme === "dark" ? "glass border-b" : "border-border border-b bg-surface"}>
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-3 px-6 py-3 text-sm">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-ink-muted">ฟอนต์</span>
@@ -184,14 +195,7 @@ export function DesignSystemPreview() {
         </div>
       </div>
 
-      <header
-        className="relative overflow-hidden px-6 py-16"
-        style={{
-          background:
-            "linear-gradient(135deg, var(--grad-deep-from) 0%, var(--grad-deep-via) 52%, var(--grad-deep-to) 100%)",
-          color: "#ffffff",
-        }}
-      >
+      <header className="relative overflow-hidden px-6 py-20 text-white">
         {/* Decorative glow uses the vivid tier — no text sits on it. */}
         <div
           aria-hidden="true"
@@ -205,18 +209,31 @@ export function DesignSystemPreview() {
           <span className="inline-flex items-center gap-1.5 rounded-pill bg-black/15 px-3 py-1 font-semibold text-xs">
             <Building2 size={14} /> ต้นแบบเชิงวิชาการ
           </span>
-          <h1 className="mt-4 font-extrabold text-4xl leading-tight tracking-tight md:text-5xl">
+          <h1 className="mt-5 font-extrabold text-4xl leading-tight tracking-tight md:text-6xl">
             ที่ดินแปลงนี้
             <br />
-            ใช้ทำอะไรได้คุ้มที่สุด
+            <span
+              style={{
+                background:
+                  "linear-gradient(100deg, var(--grad-vivid-from), var(--grad-vivid-via), var(--grad-vivid-to))",
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                color: "transparent",
+              }}
+            >
+              ใช้ทำอะไรได้คุ้มที่สุด
+            </span>
           </h1>
           <p className="mt-3 max-w-xl text-base opacity-80">
             วิเคราะห์จากหลักฐานจริง ครบทุกจังหวัดทั่วประเทศ พร้อมบอกตรง ๆ ว่าอะไรที่ยังไม่รู้
           </p>
           <button
             type="button"
-            className="mt-7 inline-flex items-center gap-2 rounded-pill bg-white px-6 py-3 font-bold text-base"
-            style={{ color: "var(--color-signature-text)" }}
+            className="mt-7 inline-flex items-center gap-2 rounded-pill px-7 py-3.5 font-bold text-base text-white shadow-[0_8px_28px_-8px_rgba(0,0,0,0.6)]"
+            style={{
+              background:
+                "linear-gradient(120deg, var(--grad-deep-from), var(--grad-deep-via), var(--grad-deep-to))",
+            }}
           >
             เริ่มวิเคราะห์
             <ArrowUpRight size={18} strokeWidth={2.5} />
@@ -245,14 +262,7 @@ export function DesignSystemPreview() {
 
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             {METRICS.map((m) => (
-              <div
-                key={m.label}
-                className="rounded-card p-4"
-                style={{
-                  background:
-                    "linear-gradient(140deg, var(--color-signature-wash) 0%, var(--color-surface-sunken) 100%)",
-                }}
-              >
+              <div key={m.label} className="glass rounded-card p-4">
                 <p className="flex items-center gap-1.5 text-ink-muted text-sm">
                   <m.Icon size={15} /> {m.label}
                 </p>
@@ -326,7 +336,7 @@ export function DesignSystemPreview() {
 
         <Card>
           <CardTitle>การ์ดหลักฐาน</CardTitle>
-          <article className="rounded-card border border-border p-5">
+          <article className="glass rounded-card p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <h3 className="font-bold text-base">รายได้ครัวเรือนเฉลี่ยต่อเดือน</h3>
               <span className="rounded-pill border border-border-strong px-3 py-1 font-semibold text-ink-muted text-xs">
@@ -337,7 +347,7 @@ export function DesignSystemPreview() {
               <span
                 style={{
                   background:
-                    "linear-gradient(100deg, var(--grad-deep-from), var(--grad-deep-via), var(--grad-deep-to))",
+                    "linear-gradient(100deg, var(--grad-vivid-from), var(--grad-vivid-via), var(--grad-vivid-to))",
                   WebkitBackgroundClip: "text",
                   backgroundClip: "text",
                   color: "transparent",
