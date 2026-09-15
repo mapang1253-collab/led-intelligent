@@ -69,16 +69,19 @@ function CardTitle({ children }: { children: ReactNode }) {
 }
 
 const FONTS = [
+  { id: "prompt", name: "Prompt" },
   { id: "anuphan", name: "Anuphan" },
+  { id: "kanit", name: "Kanit" },
+  { id: "sarabun", name: "Sarabun" },
   { id: "plex", name: "IBM Plex Sans Thai" },
-  { id: "looped", name: "Noto Sans Thai Looped" },
-  { id: "noto", name: "Noto Sans Thai" },
+  { id: "looped", name: "Noto Looped" },
 ] as const;
 
 const PALETTES = [
-  { id: "turquoise", name: "เทอร์คอยซ์", swatch: "#00B8A0" },
-  { id: "violet", name: "ม่วง", swatch: "#6C5CE7" },
-  { id: "cobalt", name: "น้ำเงินโคบอลต์", swatch: "#1D4ED8" },
+  { id: "aurora", name: "Aurora", swatch: "linear-gradient(135deg,#00C2A8,#3B82F6,#7C3AED)" },
+  { id: "sunset", name: "Sunset", swatch: "linear-gradient(135deg,#FF7A45,#F43F8E,#8B5CF6)" },
+  { id: "ocean", name: "Ocean", swatch: "linear-gradient(135deg,#06B6D4,#2563EB,#1E3A8A)" },
+  { id: "berry", name: "Berry", swatch: "linear-gradient(135deg,#EC4899,#A855F7,#6366F1)" },
 ] as const;
 
 const SECTIONS = [
@@ -106,8 +109,8 @@ const EVIDENCE_FIELDS: ReadonlyArray<readonly [string, string]> = [
 
 export function DesignSystemPreview() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [font, setFont] = useState<string>("anuphan");
-  const [palette, setPalette] = useState<string>("turquoise");
+  const [font, setFont] = useState<string>("prompt");
+  const [palette, setPalette] = useState<string>("aurora");
   const [section, setSection] = useState<string>(SECTIONS[0] ?? "");
 
   function selectedStyle(isActive: boolean) {
@@ -162,8 +165,8 @@ export function DesignSystemPreview() {
                 style={selectedStyle(palette === p.id)}
               >
                 <span
-                  className="size-3 rounded-full"
-                  style={{ backgroundColor: p.swatch }}
+                  className="size-3.5 rounded-full"
+                  style={{ background: p.swatch }}
                   aria-hidden="true"
                 />
                 {p.name}
@@ -182,14 +185,23 @@ export function DesignSystemPreview() {
       </div>
 
       <header
-        className="px-6 py-14"
+        className="relative overflow-hidden px-6 py-16"
         style={{
           background:
-            "linear-gradient(135deg, var(--color-signature) 0%, color-mix(in srgb, var(--color-signature) 68%, #000) 100%)",
-          color: "var(--color-signature-on)",
+            "linear-gradient(135deg, var(--grad-deep-from) 0%, var(--grad-deep-via) 52%, var(--grad-deep-to) 100%)",
+          color: "#ffffff",
         }}
       >
-        <div className="mx-auto max-w-6xl">
+        {/* Decorative glow uses the vivid tier — no text sits on it. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-28 -right-24 size-80 rounded-full opacity-40 blur-3xl"
+          style={{
+            background:
+              "radial-gradient(circle, var(--grad-vivid-from) 0%, var(--grad-vivid-via) 60%, transparent 70%)",
+          }}
+        />
+        <div className="relative mx-auto max-w-6xl">
           <span className="inline-flex items-center gap-1.5 rounded-pill bg-black/15 px-3 py-1 font-semibold text-xs">
             <Building2 size={14} /> ต้นแบบเชิงวิชาการ
           </span>
@@ -203,11 +215,8 @@ export function DesignSystemPreview() {
           </p>
           <button
             type="button"
-            className="mt-7 inline-flex items-center gap-2 rounded-pill px-6 py-3 font-bold text-base"
-            style={{
-              backgroundColor: "var(--color-signature-on)",
-              color: "var(--color-signature)",
-            }}
+            className="mt-7 inline-flex items-center gap-2 rounded-pill bg-white px-6 py-3 font-bold text-base"
+            style={{ color: "var(--color-signature-text)" }}
           >
             เริ่มวิเคราะห์
             <ArrowUpRight size={18} strokeWidth={2.5} />
@@ -225,10 +234,9 @@ export function DesignSystemPreview() {
               <p className="mt-1 font-extrabold text-3xl tracking-tight">ที่พักอาศัยให้เช่า</p>
             </div>
             <span
-              className="rounded-pill px-4 py-2 font-bold text-sm"
+              className="rounded-pill px-4 py-2 font-bold text-sm text-white"
               style={{
-                backgroundColor: "var(--color-signature-wash)",
-                color: "var(--color-signature-text)",
+                background: "linear-gradient(120deg, var(--grad-deep-via), var(--grad-deep-to))",
               }}
             >
               ระดับพื้นที่ (AREA)
@@ -237,7 +245,14 @@ export function DesignSystemPreview() {
 
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             {METRICS.map((m) => (
-              <div key={m.label} className="rounded-card bg-surface-sunken p-4">
+              <div
+                key={m.label}
+                className="rounded-card p-4"
+                style={{
+                  background:
+                    "linear-gradient(140deg, var(--color-signature-wash) 0%, var(--color-surface-sunken) 100%)",
+                }}
+              >
                 <p className="flex items-center gap-1.5 text-ink-muted text-sm">
                   <m.Icon size={15} /> {m.label}
                 </p>
@@ -319,7 +334,17 @@ export function DesignSystemPreview() {
               </span>
             </div>
             <p className="mt-3 font-extrabold text-4xl tracking-tight">
-              17,019
+              <span
+                style={{
+                  background:
+                    "linear-gradient(100deg, var(--grad-deep-from), var(--grad-deep-via), var(--grad-deep-to))",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  color: "transparent",
+                }}
+              >
+                17,019
+              </span>
               <span className="ml-2 font-medium text-ink-muted text-base">บาท/เดือน</span>
             </p>
             <dl className="mt-4 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">

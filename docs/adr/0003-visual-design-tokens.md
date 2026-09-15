@@ -42,3 +42,32 @@ The authors' palette survives as the app's character (warm cream, teal accents, 
 parts that carry meaning are legible and unambiguous. Adding a colour later means adding it to one
 of the two sets deliberately and measuring it — there is no "just pick something that looks nice"
 path, which is the intended friction.
+
+---
+
+## Update, 2026-09-16 — the restrained direction was rejected
+
+The authors reviewed the implementation of the decision above and rejected its *aesthetic* while
+keeping its *discipline*. Their words: the colours were washed out, the cream canvas bland, the
+layout stiff, and the whole thing read as AI-generated. They asked for a bold multi-colour gradient
+look referencing the Thai app DIME!, and for no emoji anywhere.
+
+What changed:
+
+- **The cream canvas is gone.** Light mode is a cool near-white (`#F7F8FC`), dark mode near-black
+  (`#0B0D13`).
+- **The signature is now a three-stop gradient, not a flat colour**, selectable from four palettes
+  (Aurora, Sunset, Ocean, Berry).
+- **Gradients come in two tiers, and this is a hard constraint rather than a style choice.** Bright
+  gradients cannot carry white text — measured, every bright palette fell between 2.26:1 and 3.53:1.
+  So `--grad-deep-*` is a contrast-verified deepened version used behind text (≥4.6:1 at every
+  stop), and `--grad-vivid-*` is the bright version used only for decoration where no text sits.
+- **Google Sans was requested and cannot be used**: it is proprietary to Google and may not be
+  self-hosted, which `docs/technology-stack.md` §6 requires. Prompt is the closest open geometric
+  Thai face and is now the default, with Anuphan, Kanit, Sarabun, IBM Plex Sans Thai and Noto Sans
+  Thai Looped also bundled for comparison.
+- **Symbol glyphs became Lucide icon components**, per the no-emoji instruction.
+
+What deliberately did **not** change: status colours stay independent of the palette, UNKNOWN stays
+grey, colour is never the only signal, and the disclaimer stays visually prominent. Bold styling and
+epistemic honesty are not in conflict — conflating them was the error in the original decision.
