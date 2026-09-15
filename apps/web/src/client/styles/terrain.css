@@ -31,30 +31,52 @@
   height: 100%;
 }
 
-/* Cadastral plots: each boundary traces itself, like a plan being plotted, while the whole sheet
-   pans. Dash length is generous so the trace reads clearly at any plot size. */
+/**
+ * The pattern lives strongest at the edges and fades toward the middle, where the content column
+ * sits. This is what keeps the sheet from competing with the text: density is spent where nothing
+ * is being read.
+ */
+.terrain-pattern {
+  position: absolute;
+  inset: 0;
+  mask-image: radial-gradient(
+    ellipse 62% 58% at 50% 45%,
+    transparent 0%,
+    rgba(0, 0, 0, 0.35) 45%,
+    rgba(0, 0, 0, 0.85) 72%,
+    #000 100%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 62% 58% at 50% 45%,
+    transparent 0%,
+    rgba(0, 0, 0, 0.35) 45%,
+    rgba(0, 0, 0, 0.85) 72%,
+    #000 100%
+  );
+}
+
+/* Cadastral plots: plain boundaries that drift. The self-tracing dash was removed — ten shapes all
+   redrawing at once was the main source of visual noise. */
 .terrain-plots rect {
   fill: none;
   stroke: var(--terrain-line);
-  stroke-width: 1.2;
-  stroke-dasharray: 260 900;
-  animation: terrain-trace 9s linear infinite;
+  stroke-width: 1.1;
 }
 .terrain-plots {
-  opacity: 0.75;
-  animation: terrain-pan 26s ease-in-out infinite alternate;
+  opacity: 0.6;
+  animation: terrain-pan 34s ease-in-out infinite alternate;
 }
 
 /* Elevation contours: a travelling dash runs along each ring, and the group drifts and breathes. */
 .terrain-contours path {
   fill: none;
   stroke: var(--terrain-contour);
-  stroke-width: 1.4;
-  stroke-dasharray: 120 60;
-  animation: terrain-flow 7s linear infinite, terrain-breathe 6s ease-in-out infinite alternate;
+  stroke-width: 1.2;
+  stroke-dasharray: 200 110;
+  animation: terrain-flow 11s linear infinite, terrain-breathe 9s ease-in-out infinite alternate;
 }
 .terrain-contours {
-  animation: terrain-drift 30s ease-in-out infinite alternate;
+  animation: terrain-drift 40s ease-in-out infinite alternate;
 }
 
 /* Survey points: a dot plus an expanding halo, like a measurement being taken. */
@@ -62,7 +84,7 @@
   fill: var(--terrain-pin);
 }
 .terrain-pins g {
-  animation: terrain-pin-pulse 3.4s ease-in-out infinite;
+  animation: terrain-pin-pulse 4.2s ease-in-out infinite;
 }
 .terrain-pins .terrain-pin-halo {
   fill: none;
@@ -70,7 +92,7 @@
   stroke-width: 1.5;
   transform-box: fill-box;
   transform-origin: center;
-  animation: terrain-halo 3.4s ease-out infinite;
+  animation: terrain-halo 4.2s ease-out infinite;
 }
 
 /* Scan sweep: a soft diagonal band crossing the sheet, suggesting analysis in progress. */
@@ -82,7 +104,7 @@
   height: 180%;
   transform: rotate(18deg);
   background: linear-gradient(90deg, transparent 0%, var(--terrain-sweep) 50%, transparent 100%);
-  animation: terrain-scan 8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: terrain-scan 14s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @keyframes terrain-pan {
@@ -91,16 +113,6 @@
   }
   to {
     transform: translate3d(5%, -1.5%, 0);
-  }
-}
-
-/* Boundary trace: the dash pattern travels around each parcel outline. */
-@keyframes terrain-trace {
-  from {
-    stroke-dashoffset: 1160;
-  }
-  to {
-    stroke-dashoffset: 0;
   }
 }
 
@@ -128,7 +140,7 @@
     opacity: 0.3;
   }
   to {
-    opacity: 0.85;
+    opacity: 0.7;
   }
 }
 
@@ -166,7 +178,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .terrain-plots,
-  .terrain-plots rect,
   .terrain-contours,
   .terrain-contours path,
   .terrain-pins g,
@@ -174,7 +185,6 @@
   .terrain-sweep {
     animation: none;
   }
-  .terrain-plots rect,
   .terrain-contours path {
     stroke-dasharray: none;
   }
