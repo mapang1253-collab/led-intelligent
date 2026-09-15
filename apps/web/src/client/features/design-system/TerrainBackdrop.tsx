@@ -1,12 +1,11 @@
 /**
- * Backdrop motif: a land-survey sheet — elevation contours over an irregular cadastral parcel
- * grid, with a slow scan sweep and pulsing survey points. Chosen over a generic starfield because
- * this product is literally about reading land parcels and terrain, and a star background says
- * nothing about that.
+ * Backdrop motif: a land-survey sheet — elevation contours over an irregular cadastral parcel grid,
+ * with a scan sweep and pulsing survey points. Chosen over a generic starfield because this product
+ * is about reading land parcels and terrain, and a star background says nothing about that.
  *
- * Everything is static SVG plus CSS keyframes: no requestAnimationFrame loop, so the interactive
- * latency gates in docs/performance-and-reliability.md §7 stay intact. All motion stops under
- * prefers-reduced-motion (see terrain.css).
+ * Static SVG plus CSS keyframes: no requestAnimationFrame loop, so the interactive latency gates in
+ * docs/performance-and-reliability.md §7 stay intact. All motion stops under prefers-reduced-motion
+ * (see terrain.css).
  */
 
 const CONTOURS = [
@@ -71,9 +70,22 @@ const PLOTS = [
 ];
 
 const PINS = [
-  { x: 122, y: 310 },
-  { x: 704, y: 431 },
-  { x: 1149, y: 721 },
+  { x: 506, y: 164 },
+  { x: 963, y: 164 },
+  { x: 1357, y: 164 },
+  { x: 164, y: 304 },
+  { x: 1057, y: 304 },
+  { x: 1524, y: 304 },
+  { x: 256, y: 425 },
+  { x: 839, y: 425 },
+  { x: 1214, y: 425 },
+  { x: 1524, y: 425 },
+  { x: 365, y: 589 },
+  { x: 698, y: 589 },
+  { x: 952, y: 589 },
+  { x: 197, y: 715 },
+  { x: 633, y: 715 },
+  { x: 950, y: 715 },
 ];
 
 export function TerrainBackdrop() {
@@ -87,8 +99,16 @@ export function TerrainBackdrop() {
         preserveAspectRatio="xMidYMid slice"
       >
         <title>ผังแปลงที่ดินประกอบการตกแต่ง</title>
-        {PLOTS.map((p) => (
-          <rect key={`${p.x}-${p.y}-${p.w}`} x={p.x} y={p.y} width={p.w} height={p.h} rx="3" />
+        {PLOTS.map((p, i) => (
+          <rect
+            key={`${p.x}-${p.y}-${p.w}`}
+            x={p.x}
+            y={p.y}
+            width={p.w}
+            height={p.h}
+            rx="3"
+            style={{ animationDelay: `${(i % 9) * 0.55}s` }}
+          />
         ))}
       </svg>
 
@@ -100,7 +120,7 @@ export function TerrainBackdrop() {
         <title>เส้นชั้นความสูงประกอบการตกแต่ง</title>
         {CONTOURS.map((d, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: decorative paths have no identity
-          <path key={i} d={d} style={{ animationDelay: `${i * 0.35}s` }} />
+          <path key={i} d={d} style={{ animationDelay: `${i * -0.9}s` }} />
         ))}
       </svg>
 
@@ -112,9 +132,9 @@ export function TerrainBackdrop() {
         <title>จุดสำรวจประกอบการตกแต่ง</title>
         {PINS.map((p, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: decorative points have no identity
-          <g key={i} style={{ animationDelay: `${i * 0.9}s` }}>
-            <circle cx={p.x} cy={p.y} r="3.5" />
-            <circle className="terrain-pin-halo" cx={p.x} cy={p.y} r="3.5" />
+          <g key={i} style={{ animationDelay: `${i * 0.42}s` }}>
+            <circle cx={p.x} cy={p.y} r="3" />
+            <circle className="terrain-pin-halo" cx={p.x} cy={p.y} r="3" />
           </g>
         ))}
       </svg>

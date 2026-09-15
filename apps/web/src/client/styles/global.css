@@ -37,10 +37,10 @@
   --terrain-glow-1: color-mix(in srgb, var(--grad-vivid-from) 30%, transparent);
   --terrain-glow-2: color-mix(in srgb, var(--grad-vivid-via) 22%, transparent);
   --terrain-glow-3: color-mix(in srgb, var(--grad-vivid-to) 20%, transparent);
-  --terrain-line: rgba(30, 70, 120, 0.16);
-  --terrain-contour: rgba(20, 60, 110, 0.24);
+  --terrain-line: rgba(30, 70, 120, 0.3);
+  --terrain-contour: rgba(20, 60, 110, 0.4);
   --terrain-pin: color-mix(in srgb, var(--grad-deep-via) 85%, transparent);
-  --terrain-sweep: rgba(255, 255, 255, 0.55);
+  --terrain-sweep: rgba(255, 255, 255, 0.75);
   --glass-bg: rgba(255, 255, 255, 0.74);
   --glass-border: rgba(30, 70, 120, 0.1);
 
@@ -163,10 +163,10 @@
   --terrain-glow-1: color-mix(in srgb, var(--grad-vivid-from) 32%, transparent);
   --terrain-glow-2: color-mix(in srgb, var(--grad-vivid-via) 28%, transparent);
   --terrain-glow-3: color-mix(in srgb, var(--grad-vivid-to) 26%, transparent);
-  --terrain-line: rgba(150, 195, 240, 0.1);
-  --terrain-contour: rgba(130, 205, 240, 0.24);
+  --terrain-line: rgba(150, 195, 240, 0.2);
+  --terrain-contour: rgba(130, 205, 240, 0.42);
   --terrain-pin: color-mix(in srgb, var(--grad-vivid-from) 90%, transparent);
-  --terrain-sweep: rgba(130, 195, 255, 0.07);
+  --terrain-sweep: rgba(130, 195, 255, 0.14);
   --glass-bg: rgba(255, 255, 255, 0.06);
   --glass-border: rgba(255, 255, 255, 0.1);
 
