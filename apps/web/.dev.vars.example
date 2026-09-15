@@ -1,0 +1,19 @@
+# Copy to .dev.vars (same directory) and fill in real values. .dev.vars is git-ignored — never commit it.
+# No secret may use the public VITE_ prefix (docs/technology-stack.md §13).
+
+# Google AI Studio → https://aistudio.google.com/apikey
+GEMINI_API_KEY=
+
+# Gemini quota facts recorded from your Google AI Studio project (docs/technology-stack.md §10).
+GEMINI_RPM_LIMIT=
+GEMINI_TPM_LIMIT=
+GEMINI_RPD_LIMIT=
+AI_DAILY_RESERVE_PERCENT=20
+
+# Supabase Postgres connection string used by Hyperdrive in local dev
+# (Supabase dashboard → Project Settings → Database → Connection string → "URI", direct connection).
+DATABASE_URL=postgresql://
+
+# Random 32+ byte value used to sign/digest the anonymous run capability (docs/security-privacy-compliance.md §3).
+# Generate one with: node -e "console.log(crypto.randomBytes(32).toString('hex'))"
+RUN_CAPABILITY_SECRET=

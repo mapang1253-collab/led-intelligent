@@ -1,0 +1,20 @@
+{
+  "name": "@reis/ai-gateway",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@google/genai": "^2.22.0",
+    "@reis/contracts": "workspace:*",
+    "@reis/domain": "workspace:*",
+    "@reis/i18n": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

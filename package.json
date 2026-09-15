@@ -1,0 +1,38 @@
+{
+  "name": "real-estate-investment-system",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Thailand-wide, property-centred Highest-and-Best-Use analysis web application (university project).",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "pnpm@10.0.0",
+  "scripts": {
+    "setup:check": "node ./tools/setup-check.mjs",
+    "dev": "pnpm --filter @reis/web dev",
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "test": "pnpm -r --if-present run test",
+    "test:e2e": "pnpm --filter @reis/web test:e2e",
+    "benchmark": "pnpm --filter @reis/web benchmark",
+    "deploy": "pnpm --filter @reis/web deploy",
+    "db:migrate": "pnpm --filter @reis/data-access run db:migrate",
+    "db:seed:academic": "pnpm --filter @reis/data-access run db:seed:academic"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "typescript": "^5.7.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@biomejs/biome",
+      "@google/genai",
+      "esbuild",
+      "protobufjs",
+      "sharp",
+      "workerd"
+    ]
+  }
+}

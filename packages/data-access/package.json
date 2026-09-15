@@ -1,0 +1,23 @@
+{
+  "name": "@reis/data-access",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "db:migrate": "node ./src/migrate.mjs",
+    "db:seed:academic": "node ./src/seed-academic.mjs"
+  },
+  "dependencies": {
+    "@reis/contracts": "workspace:*",
+    "@reis/domain": "workspace:*",
+    "kysely": "^0.27.4",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.10",
+    "typescript": "^5.7.2"
+  }
+}

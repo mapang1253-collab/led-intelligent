@@ -1,0 +1,23 @@
+node_modules/
+dist/
+build/
+.wrangler/
+.turbo/
+
+# secrets — never commit
+.dev.vars
+.env
+.env.*
+!.env.migration.example
+!.dev.vars.example
+
+# editor/OS
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+*.log
+
+# test output
+coverage/
+playwright-report/
+test-results/

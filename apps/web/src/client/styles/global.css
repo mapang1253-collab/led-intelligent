@@ -1,0 +1,4 @@
+@import "tailwindcss";
+
+/* Noto Sans Thai is bundled/self-hosted per docs/technology-stack.md §6 — add the font files under
+   public/fonts/ and an @font-face block here before the first real UI screen ships (Day 7-8). */

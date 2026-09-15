@@ -1,0 +1,25 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // TODO(day 1): rename to your actual Cloudflare Workers project name.
+  "name": "reis-web",
+  "main": "./src/worker/index.ts",
+  // TODO(day 1): set to today's date once `wrangler` is installed (`npx wrangler --version` prints
+  // the latest supported value). Pin it; do not "always use latest".
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./dist/client",
+    "not_found_handling": "single-page-application"
+  },
+  // --- Bindings below are commented out until Day 2-3 (database schema work) creates the matching
+  // Cloudflare/Supabase resources. An invalid placeholder ID/name here fails config validation, so
+  // they stay disabled rather than fake. Never commit a real connection string in this file — the
+  // Hyperdrive/R2 IDs below are not secrets, but the underlying DB password is (that lives in
+  // `wrangler secret put` / .dev.vars, never here).
+  // "hyperdrive": [
+  //   { "binding": "HYPERDRIVE", "id": "<hyperdrive-config-id>" }
+  // ],
+  // "r2_buckets": [
+  //   { "binding": "RAW_OBJECTS", "bucket_name": "<r2-bucket-name>" }
+  // ]
+}
