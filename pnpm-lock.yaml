@@ -242,9 +242,15 @@ importers:
         specifier: workspace:*
         version: link:../domain
     devDependencies:
+      '@reis/test-fixtures':
+        specifier: workspace:*
+        version: link:../test-fixtures
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@26.5.1)(lightningcss@1.32.0)
 
   packages/test-fixtures:
     dependencies:

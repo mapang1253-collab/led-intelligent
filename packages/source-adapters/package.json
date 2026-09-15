@@ -6,13 +6,16 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@reis/contracts": "workspace:*",
     "@reis/domain": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5.7.2"
+    "@reis/test-fixtures": "workspace:*",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
   }
 }

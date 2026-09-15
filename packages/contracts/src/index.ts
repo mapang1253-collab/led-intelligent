@@ -23,3 +23,11 @@ export interface Versioned {
 
 /** Decimal-precision values cross contracts as strings (see docs/technology-stack.md §9). */
 export type DecimalString = Brand<string, "DecimalString">;
+
+export type {
+  AcquisitionOutcome,
+  AcquisitionResult,
+  EpistemicStatus,
+  GeographyLevel,
+  Observation,
+} from "./evidence.js";
