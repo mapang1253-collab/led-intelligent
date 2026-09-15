@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
+import { TerrainBackdrop } from "./TerrainBackdrop.js";
 
 /**
  * Living preview of the design tokens. Font and signature colour are switchable here so the
@@ -109,8 +110,8 @@ const EVIDENCE_FIELDS: ReadonlyArray<readonly [string, string]> = [
 
 export function DesignSystemPreview() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
-  const [font, setFont] = useState<string>("prompt");
-  const [palette, setPalette] = useState<string>("aurora");
+  const [font, setFont] = useState<string>("sarabun");
+  const [palette, setPalette] = useState<string>("ocean");
   const [section, setSection] = useState<string>(SECTIONS[0] ?? "");
 
   function selectedStyle(isActive: boolean) {
@@ -131,19 +132,10 @@ export function DesignSystemPreview() {
   }
 
   return (
-    <div className={`min-h-screen text-ink ${theme === "dark" ? "galaxy-root" : "bg-canvas"}`}>
-      {theme === "dark" && (
-        <>
-          <div className="galaxy-nebula" aria-hidden="true" />
-          <div className="galaxy-stars" aria-hidden="true">
-            <div className="star-layer star-small" />
-            <div className="star-layer star-medium" />
-            <div className="star-layer star-large" />
-          </div>
-        </>
-      )}
+    <div className="relative min-h-screen text-ink">
+      <TerrainBackdrop />
 
-      <div className={theme === "dark" ? "glass border-b" : "border-border border-b bg-surface"}>
+      <div className="glass border-b">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-3 px-6 py-3 text-sm">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-ink-muted">ฟอนต์</span>
@@ -195,7 +187,7 @@ export function DesignSystemPreview() {
         </div>
       </div>
 
-      <header className="relative overflow-hidden px-6 py-20 text-white">
+      <header className="relative overflow-hidden px-6 py-20 text-ink">
         {/* Decorative glow uses the vivid tier — no text sits on it. */}
         <div
           aria-hidden="true"
@@ -206,25 +198,15 @@ export function DesignSystemPreview() {
           }}
         />
         <div className="relative mx-auto max-w-6xl">
-          <span className="inline-flex items-center gap-1.5 rounded-pill bg-black/15 px-3 py-1 font-semibold text-xs">
+          <span className="glass inline-flex items-center gap-1.5 rounded-pill px-3 py-1 font-semibold text-xs">
             <Building2 size={14} /> ต้นแบบเชิงวิชาการ
           </span>
           <h1 className="mt-5 font-extrabold text-4xl leading-tight tracking-tight md:text-6xl">
             ที่ดินแปลงนี้
             <br />
-            <span
-              style={{
-                background:
-                  "linear-gradient(100deg, var(--grad-vivid-from), var(--grad-vivid-via), var(--grad-vivid-to))",
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                color: "transparent",
-              }}
-            >
-              ใช้ทำอะไรได้คุ้มที่สุด
-            </span>
+            <span className="headline-gradient">ใช้ทำอะไรได้คุ้มที่สุด</span>
           </h1>
-          <p className="mt-3 max-w-xl text-base opacity-80">
+          <p className="mt-3 max-w-xl text-base text-ink-muted">
             วิเคราะห์จากหลักฐานจริง ครบทุกจังหวัดทั่วประเทศ พร้อมบอกตรง ๆ ว่าอะไรที่ยังไม่รู้
           </p>
           <button
@@ -344,17 +326,7 @@ export function DesignSystemPreview() {
               </span>
             </div>
             <p className="mt-3 font-extrabold text-4xl tracking-tight">
-              <span
-                style={{
-                  background:
-                    "linear-gradient(100deg, var(--grad-vivid-from), var(--grad-vivid-via), var(--grad-vivid-to))",
-                  WebkitBackgroundClip: "text",
-                  backgroundClip: "text",
-                  color: "transparent",
-                }}
-              >
-                17,019
-              </span>
+              <span className="headline-gradient">17,019</span>
               <span className="ml-2 font-medium text-ink-muted text-base">บาท/เดือน</span>
             </p>
             <dl className="mt-4 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">

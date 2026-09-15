@@ -1,0 +1,189 @@
+/**
+ * Land-survey backdrop. Replaces the earlier starfield, which was visually generic and said nothing
+ * about the product: this one reads as a survey sheet — elevation contours over an irregular
+ * cadastral parcel grid, scanned by a slow sweep, with a few pulsing survey points.
+ *
+ * Static SVG + CSS keyframes only (no rAF loop), and every animation stops under
+ * prefers-reduced-motion.
+ */
+
+.terrain {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.terrain-wash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(70% 55% at 8% 0%, var(--terrain-glow-1) 0%, transparent 62%),
+    radial-gradient(60% 50% at 96% 30%, var(--terrain-glow-2) 0%, transparent 60%),
+    radial-gradient(80% 60% at 50% 104%, var(--terrain-glow-3) 0%, transparent 66%),
+    var(--terrain-base);
+}
+
+.terrain-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Cadastral plots: thin boundary lines, drifting slowly sideways like a map being panned. */
+.terrain-plots rect {
+  fill: none;
+  stroke: var(--terrain-line);
+  stroke-width: 1;
+}
+.terrain-plots {
+  opacity: 0.55;
+  animation: terrain-pan 90s linear infinite alternate;
+}
+
+/* Elevation contours: breathe in and out so the sheet feels alive without moving position. */
+.terrain-contours path {
+  fill: none;
+  stroke: var(--terrain-contour);
+  stroke-width: 1.25;
+  opacity: 0.5;
+  animation: terrain-breathe 14s ease-in-out infinite alternate;
+}
+.terrain-contours {
+  animation: terrain-drift 120s ease-in-out infinite alternate;
+}
+
+/* Survey points: a dot plus an expanding halo, like a measurement being taken. */
+.terrain-pins circle {
+  fill: var(--terrain-pin);
+}
+.terrain-pins g {
+  animation: terrain-pin-pulse 6s ease-in-out infinite;
+}
+.terrain-pins .terrain-pin-halo {
+  fill: none;
+  stroke: var(--terrain-pin);
+  stroke-width: 1.5;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: terrain-halo 6s ease-out infinite;
+}
+
+/* Scan sweep: a soft diagonal band crossing the sheet, suggesting analysis in progress. */
+.terrain-sweep {
+  position: absolute;
+  top: -40%;
+  left: -60%;
+  width: 45%;
+  height: 180%;
+  transform: rotate(18deg);
+  background: linear-gradient(90deg, transparent 0%, var(--terrain-sweep) 45%, transparent 100%);
+  animation: terrain-scan 18s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@keyframes terrain-pan {
+  from {
+    transform: translateX(-2%);
+  }
+  to {
+    transform: translateX(2%);
+  }
+}
+
+@keyframes terrain-drift {
+  from {
+    transform: translate3d(-1.5%, 1%, 0) scale(1.02);
+  }
+  to {
+    transform: translate3d(1.5%, -1%, 0) scale(1.06);
+  }
+}
+
+@keyframes terrain-breathe {
+  from {
+    opacity: 0.28;
+  }
+  to {
+    opacity: 0.62;
+  }
+}
+
+@keyframes terrain-pin-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes terrain-halo {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  70%,
+  100% {
+    transform: scale(5);
+    opacity: 0;
+  }
+}
+
+@keyframes terrain-scan {
+  0% {
+    transform: translateX(0) rotate(18deg);
+  }
+  55%,
+  100% {
+    transform: translateX(340%) rotate(18deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .terrain-plots,
+  .terrain-contours,
+  .terrain-contours path,
+  .terrain-pins g,
+  .terrain-pins .terrain-pin-halo,
+  .terrain-sweep {
+    animation: none;
+  }
+  .terrain-sweep {
+    opacity: 0;
+  }
+}
+
+/**
+ * Gradient headline. The tier has to swap by theme: the vivid gradient is unreadable on a light
+ * canvas (measured 2.4–3.5:1), so light mode uses the deepened, contrast-verified stops.
+ */
+.headline-gradient {
+  background-image: linear-gradient(
+    100deg,
+    var(--grad-deep-from),
+    var(--grad-deep-via),
+    var(--grad-deep-to)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+:root[data-theme="dark"] .headline-gradient {
+  background-image: linear-gradient(
+    100deg,
+    var(--grad-vivid-from),
+    var(--grad-vivid-via),
+    var(--grad-vivid-to)
+  );
+}
+
+/* Translucent panel. Contrast of body, muted and status text was measured against this surface
+   composited over the brightest part of the wash, not just over the base. */
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(12px);
+}

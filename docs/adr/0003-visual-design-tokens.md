@@ -71,3 +71,31 @@ What changed:
 What deliberately did **not** change: status colours stay independent of the palette, UNKNOWN stays
 grey, colour is never the only signal, and the disclaimer stays visually prominent. Bold styling and
 epistemic honesty are not in conflict — conflating them was the error in the original decision.
+
+---
+
+## Update, 2026-09-16 (later) — chosen direction, and why the starfield went
+
+The authors reviewed the gradient/starfield pass and made their picks: **Sarabun** for type and
+**Ocean** for the palette. Both are now the defaults in `index.html` and `global.css`.
+
+Two things had to change:
+
+**The light theme was broken.** The hero carried a hardcoded `text-white`, a leftover from when it
+sat on a solid gradient slab. Once the slab became a page-wide backdrop, white-on-near-white made
+the headline invisible in light mode. Fixed by driving hero text from `--color-ink` and by moving
+the headline gradient into a `.headline-gradient` class that swaps to the deepened stops in light
+mode — the vivid stops measure 2.4–3.5:1 on a light canvas and cannot carry text. Light-mode status
+and body colours were re-derived against the light wash (measured 4.60:1 to 15.22:1).
+
+**The starfield was replaced by a land-survey motif.** The authors pointed out that a starry
+background is what every other project group uses and says nothing about this one. The backdrop is
+now elevation contours over an irregular cadastral parcel grid, with a slow scan sweep and a few
+pulsing survey points — which is what this product actually does: read terrain and parcels. It
+keeps the movement they liked.
+
+Implementation constraint unchanged: static SVG plus CSS keyframes, no `requestAnimationFrame`
+loop, so the latency gates in `docs/performance-and-reliability.md` §7 are unaffected; all 27
+animations stop under `prefers-reduced-motion`. Backdrop glow colours derive from the active
+palette's vivid stops via `color-mix`, so switching palette repaints the sheet without duplicating
+tokens per palette.

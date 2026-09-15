@@ -1,7 +1,7 @@
 @import "tailwindcss";
 /* Self-hosted Thai faces (OFL) — docs/technology-stack.md §6 forbids a runtime CDN call. */
 @import "./fonts.css";
-@import "./galaxy.css";
+@import "./terrain.css";
 
 /**
  * Design tokens.
@@ -15,49 +15,62 @@
  * foreground/background pair below was measured for WCAG AA before being written here.
  */
 :root {
-  --font-thai: "Prompt", system-ui, sans-serif;
+  --font-thai: "Sarabun", system-ui, sans-serif;
 
   --radius-card: 1rem;
   --radius-pill: 999px;
 
   /* Surfaces */
-  --color-canvas: #f7f8fc;
+  --color-canvas: #f4f8fd;
   --color-surface: #ffffff;
-  --color-surface-sunken: #eff1f8;
-  --color-border: #e2e5ef;
-  --color-border-strong: #c6cbdb;
+  --color-surface-sunken: #eaf1f9;
+  --color-border: #d9e4f0;
+  --color-border-strong: #b9c9dc;
 
   /* Text */
-  --color-ink: #10151c;
-  --color-ink-muted: #5c6470;
+  --color-ink: #14202e;
+  --color-ink-muted: #48566b;
+
+  /* Survey backdrop. Glow colours derive from the active palette's vivid stops via color-mix, so
+     switching palette repaints the sheet without duplicating these per palette. */
+  --terrain-base: #f4f8fd;
+  --terrain-glow-1: color-mix(in srgb, var(--grad-vivid-from) 30%, transparent);
+  --terrain-glow-2: color-mix(in srgb, var(--grad-vivid-via) 22%, transparent);
+  --terrain-glow-3: color-mix(in srgb, var(--grad-vivid-to) 20%, transparent);
+  --terrain-line: rgba(30, 70, 120, 0.16);
+  --terrain-contour: rgba(20, 60, 110, 0.24);
+  --terrain-pin: color-mix(in srgb, var(--grad-deep-via) 85%, transparent);
+  --terrain-sweep: rgba(255, 255, 255, 0.55);
+  --glass-bg: rgba(255, 255, 255, 0.74);
+  --glass-border: rgba(30, 70, 120, 0.1);
 
   /* Signature + gradients — overridden per [data-palette] below.
      Two tiers by necessity: `grad-deep-*` sits behind white text and is contrast-verified, while
      `grad-vivid-*` is the bright version used only for decoration (bars, glows, chart fills) where
      no text sits on it. Bright gradients cannot carry white text — measured, not assumed. */
-  --color-signature: #1469f4;
+  --color-signature: #2563eb;
   --color-signature-on: #ffffff;
-  --color-signature-text: #1469f4;
-  --color-signature-wash: #e8effe;
-  --grad-deep-from: #008371;
-  --grad-deep-via: #186cf7;
-  --grad-deep-to: #7c38ef;
-  --grad-vivid-from: #00c2a8;
-  --grad-vivid-via: #3b82f6;
-  --grad-vivid-to: #7c3aed;
+  --color-signature-text: #2563eb;
+  --color-signature-wash: #e6ecfd;
+  --grad-deep-from: #026170;
+  --grad-deep-via: #2362ed;
+  --grad-deep-to: #1d398b;
+  --grad-vivid-from: #06b6d4;
+  --grad-vivid-via: #2563eb;
+  --grad-vivid-to: #1e3a8a;
 
   --color-header: #10151c;
   --color-header-on: #ffffff;
 
   /* Analytical status. *-soft are fills, plain values are text weight. */
-  --color-pass: #1b6b45;
-  --color-pass-soft: #e3f2ea;
-  --color-fail: #a32e24;
-  --color-fail-soft: #fbe7e5;
-  --color-partial: #a16812;
-  --color-partial-soft: #fdf1dc;
-  --color-unknown: #5c6470;
-  --color-unknown-soft: #eef0f3;
+  --color-pass: #15603d;
+  --color-pass-soft: rgba(21, 96, 61, 0.12);
+  --color-fail: #97271e;
+  --color-fail-soft: rgba(151, 39, 30, 0.12);
+  --color-partial: #8a560e;
+  --color-partial-soft: rgba(138, 86, 14, 0.14);
+  --color-unknown: #48566b;
+  --color-unknown-soft: rgba(72, 86, 107, 0.12);
 }
 
 :root[data-font="prompt"] {
@@ -82,6 +95,18 @@
   --font-thai: "Noto Sans Thai", system-ui, sans-serif;
 }
 
+:root[data-palette="aurora"] {
+  --color-signature: #1469f4;
+  --color-signature-on: #ffffff;
+  --color-signature-text: #1469f4;
+  --color-signature-wash: #e8effe;
+  --grad-deep-from: #008371;
+  --grad-deep-via: #186cf7;
+  --grad-deep-to: #7c38ef;
+  --grad-vivid-from: #00c2a8;
+  --grad-vivid-via: #3b82f6;
+  --grad-vivid-to: #7c3aed;
+}
 :root[data-palette="sunset"] {
   --color-signature: #df0d68;
   --color-signature-on: #ffffff;
@@ -134,13 +159,14 @@
   --color-signature-text: #3b82f6;
   --color-signature-wash: #10203c;
 
-  /* Galaxy backdrop. Cloud colours are per-palette below; the base stays near-black so the
-     starfield reads. */
-  --galaxy-base: #05060f;
-  --galaxy-cloud-1: rgba(59, 42, 122, 0.55);
-  --galaxy-cloud-2: rgba(16, 39, 94, 0.5);
-  --galaxy-cloud-3: rgba(11, 59, 70, 0.45);
-  --galaxy-cloud-4: rgba(88, 28, 104, 0.35);
+  --terrain-base: #05080f;
+  --terrain-glow-1: color-mix(in srgb, var(--grad-vivid-from) 32%, transparent);
+  --terrain-glow-2: color-mix(in srgb, var(--grad-vivid-via) 28%, transparent);
+  --terrain-glow-3: color-mix(in srgb, var(--grad-vivid-to) 26%, transparent);
+  --terrain-line: rgba(150, 195, 240, 0.1);
+  --terrain-contour: rgba(130, 205, 240, 0.24);
+  --terrain-pin: color-mix(in srgb, var(--grad-vivid-from) 90%, transparent);
+  --terrain-sweep: rgba(130, 195, 255, 0.07);
   --glass-bg: rgba(255, 255, 255, 0.06);
   --glass-border: rgba(255, 255, 255, 0.1);
 
@@ -161,28 +187,16 @@
   --color-signature: #f43f8e;
   --color-signature-text: #f43f8e;
   --color-signature-wash: #3a0f24;
-  --galaxy-cloud-1: rgba(122, 32, 60, 0.55);
-  --galaxy-cloud-2: rgba(150, 45, 20, 0.42);
-  --galaxy-cloud-3: rgba(88, 28, 104, 0.45);
-  --galaxy-cloud-4: rgba(190, 60, 120, 0.3);
 }
 :root[data-theme="dark"][data-palette="ocean"] {
   --color-signature: #3d74ed;
   --color-signature-text: #3d74ed;
   --color-signature-wash: #101c3a;
-  --galaxy-cloud-1: rgba(6, 78, 110, 0.55);
-  --galaxy-cloud-2: rgba(16, 45, 110, 0.5);
-  --galaxy-cloud-3: rgba(8, 60, 72, 0.5);
-  --galaxy-cloud-4: rgba(30, 58, 138, 0.35);
 }
 :root[data-theme="dark"][data-palette="berry"] {
   --color-signature: #a855f7;
   --color-signature-text: #a855f7;
   --color-signature-wash: #25133c;
-  --galaxy-cloud-1: rgba(130, 25, 100, 0.55);
-  --galaxy-cloud-2: rgba(84, 32, 160, 0.5);
-  --galaxy-cloud-3: rgba(50, 30, 130, 0.45);
-  --galaxy-cloud-4: rgba(190, 50, 140, 0.3);
 }
 
 @theme inline {
