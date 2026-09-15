@@ -9,7 +9,9 @@
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": "./dist/client",
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "single-page-application",
+    // Lets the Worker hand client-side routes back to the SPA instead of 404-ing them.
+    "binding": "ASSETS"
   },
   // Hyperdrive config "reis-db", created 2026-09-15 (Cloudflare account
   // knsurattanaporn@gmail.com), pointing at the Supabase direct-connection Postgres. The ID is not a

@@ -1,17 +1,26 @@
 import { th } from "@reis/i18n";
+import { Route, Routes } from "react-router";
+import { DesignSystemPreview } from "../features/design-system/DesignSystemPreview.js";
 
-/**
- * Day 1 placeholder shell. Real screens (PropertyIntakeForm, AnalysisProgress, ResultHeader, ...
- * per docs/technology-stack.md §5) land starting Day 7-8 of the current increment, once the
- * intake → evidence → AI-concept pipeline has something real to submit to.
- */
-export function App() {
+function IntakePlaceholder() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-neutral-50 p-6 text-neutral-900">
+    <main className="flex min-h-screen items-center justify-center bg-canvas p-6 text-ink">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold">{th.app.title}</h1>
-        <p className="mt-2 text-sm text-neutral-500">กำลังพัฒนา — โครงสร้างเริ่มต้นของระบบ</p>
+        <h1 className="font-semibold text-xl">{th.app.title}</h1>
+        <p className="mt-2 text-ink-muted text-sm">กำลังพัฒนา — หน้ากรอกข้อมูลทรัพย์สิน</p>
+        <a className="mt-4 inline-block text-primary underline" href="/design">
+          ดูระบบออกแบบ (design system)
+        </a>
       </div>
     </main>
+  );
+}
+
+export function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<IntakePlaceholder />} />
+      <Route path="/design" element={<DesignSystemPreview />} />
+    </Routes>
   );
 }

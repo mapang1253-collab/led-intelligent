@@ -9,6 +9,7 @@ import { Hono } from "hono";
 export type Env = {
   HYPERDRIVE: Hyperdrive;
   GEMINI_API_KEY: string;
+  ASSETS: Fetcher;
 };
 
 const app = new Hono<{ Bindings: Env }>();
@@ -58,5 +59,17 @@ app.get("/api/v1/administrative-areas/subdistricts", async (c) => {
 
 // TODO(Day 7-8): POST /api/v1/analysis-runs, GET /api/v1/analysis-runs/:run_id,
 //                POST /api/v1/analysis-runs/:run_id/cancel — see docs/api-contracts.md §3.
+
+/**
+ * Anything that is not an API route belongs to the SPA: hand it back to the assets layer so
+ * client-side routes resolve to index.html instead of a Worker 404. API routes that genuinely do
+ * not exist still need to fail as API calls, not as HTML.
+ */
+app.notFound((c) => {
+  if (c.req.path.startsWith("/api/")) {
+    return c.json({ error: "NOT_FOUND" }, 404);
+  }
+  return c.env.ASSETS.fetch(c.req.raw);
+});
 
 export default app;
