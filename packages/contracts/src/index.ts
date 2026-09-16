@@ -51,3 +51,24 @@ export type {
   SubjectMatch,
   TemporalMatch,
 } from "./evidence-link.js";
+
+export type {
+  Applicability,
+  ConceptUnderTest,
+  FamilyCoverage,
+  LegalRule,
+  LegalRulePack,
+  LegalValidationResult,
+  LifecycleState,
+  PackReviewRecord,
+  RuleApplicability,
+  RuleCriticality,
+  RuleEffect,
+  RuleFamily,
+  RuleInput,
+  RuleJurisdiction,
+  RuleOutcome,
+  RulePredicate,
+  RuleSource,
+  ValidationStatus,
+} from "./legal.js";

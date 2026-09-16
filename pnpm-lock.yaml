@@ -310,10 +310,16 @@ importers:
       '@reis/domain':
         specifier: workspace:*
         version: link:../domain
+      decimal.js:
+        specifier: ^10.4.3
+        version: 10.6.0
     devDependencies:
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@26.5.1)(lightningcss@1.32.0)
 
 packages:
 
