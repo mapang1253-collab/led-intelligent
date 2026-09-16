@@ -216,38 +216,34 @@
 }
 
 /**
- * The moon: a soft disc with a thin ring, in the same colours as everything else on the sheet.
+ * The moon: a crescent of light in the same colours as everything else on the sheet.
  *
- * It sits in the upper right, which is the one quarter no screen here puts a heading or a column
- * in. The halo breathes over a minute and a half — slow enough that it is never caught moving,
- * which is the point of the one still thing in the scene.
+ * Smaller than the disc it replaces, and with no outline at all — a hairline ring around a perfect
+ * circle was the stiffest mark in the scene. It sits in the upper right, the one quarter no screen
+ * here puts a heading or a column into. The halo breathes over a minute and a half, slow enough
+ * that it is never caught moving, which is the point of the one still thing in the scene.
  */
 .terrain-moon {
   position: absolute;
-  top: 9%;
-  right: 12%;
-  width: 132px;
-  height: 132px;
+  top: 8%;
+  right: 13%;
+  width: 84px;
+  height: 84px;
 }
-.terrain-moon-disc {
+.terrain-moon-svg {
   position: absolute;
   inset: 0;
-  border-radius: 50%;
-  border: 1px solid var(--map-stroke);
-  background: radial-gradient(
-    circle at 38% 34%,
-    color-mix(in srgb, var(--map-marker) 34%, transparent) 0%,
-    color-mix(in srgb, var(--map-marker) 14%, transparent) 52%,
-    transparent 72%
-  );
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--map-marker) 30%, transparent));
 }
 .terrain-moon-halo {
   position: absolute;
-  inset: -62%;
+  inset: -80%;
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    color-mix(in srgb, var(--map-marker) 16%, transparent) 0%,
+    color-mix(in srgb, var(--map-marker) 13%, transparent) 0%,
     transparent 62%
   );
   animation: terrain-moon-breathe 92s ease-in-out infinite alternate;

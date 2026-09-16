@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 /**
  * Backdrop motif: the map this product actually works on. All 77 province outlines of Thailand,
  * drawn from public-domain boundary data, with coordinate markers pulsing on a spread of provinces
@@ -359,6 +361,41 @@ const DRIZZLE = Array.from({ length: 26 }, (_, i) => ({
   opacity: 0.45 + noise(i, 139) * 0.5,
 }));
 
+/**
+ * A crescent, cut by masking one disc out of another.
+ *
+ * A full circle with a hairline ring was the stiffest thing on the sheet: a perfect outline reads
+ * as geometry, and the moon is the one element here that is light rather than structure. So there
+ * is no stroke at all — the shape is carried by a gradient that brightens toward the lit rim, and
+ * the softness is the point rather than a compromise.
+ */
+function Moon() {
+  const id = useId();
+  const maskId = `${id}-crescent`;
+  const fillId = `${id}-glow`;
+  return (
+    <div className="terrain-moon" aria-hidden="true">
+      <span className="terrain-moon-halo" />
+      <svg className="terrain-moon-svg" viewBox="0 0 100 100">
+        <title>พระจันทร์เสี้ยวประกอบการตกแต่ง</title>
+        <defs>
+          <mask id={maskId}>
+            <circle cx="50" cy="50" r="42" fill="#fff" />
+            {/* Offset up and right, so the crescent thins toward its horns as a real one does. */}
+            <circle cx="70" cy="38" r="40" fill="#000" />
+          </mask>
+          <radialGradient id={fillId} cx="28%" cy="62%" r="78%">
+            <stop offset="0%" stopColor="var(--map-marker)" stopOpacity="0.62" />
+            <stop offset="58%" stopColor="var(--map-marker)" stopOpacity="0.34" />
+            <stop offset="100%" stopColor="var(--map-marker)" stopOpacity="0.1" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="42" fill={`url(#${fillId})`} mask={`url(#${maskId})`} />
+      </svg>
+    </div>
+  );
+}
+
 export function TerrainBackdrop() {
   return (
     <div className="terrain" aria-hidden="true">
@@ -409,10 +446,7 @@ export function TerrainBackdrop() {
       </div>
 
       {/* Above the city, in the empty quarter of the sky, and never behind the headline. */}
-      <div className="terrain-moon" aria-hidden="true">
-        <span className="terrain-moon-halo" />
-        <span className="terrain-moon-disc" />
-      </div>
+      <Moon />
 
       <div className="terrain-drizzle">
         {DRIZZLE.map((drop) => (
