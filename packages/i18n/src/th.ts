@@ -132,6 +132,9 @@ export const th = {
     sourceLabel: "แหล่งข้อมูล",
     limitLabel: "ข้อจำกัด",
     showDetail: "ดูรายละเอียดและข้อจำกัด",
+    showAllItems: "ดูทั้งหมด",
+    showFewerItems: "ย่อรายการ",
+    moreItems: "รายการ",
     hideDetail: "ซ่อนรายละเอียด",
     temporal: {
       CURRENT: "เป็นข้อมูลรอบล่าสุด",

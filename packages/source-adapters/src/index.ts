@@ -6,6 +6,7 @@
  * Implemented so far (each activated independently, or not at all):
  * - NSO Socio-Economic Survey household income, by province.
  * - DOPA registered population, by province and subdistrict.
+ * - Treasury assessed construction values, by province and building type.
  *
  * Planned next, in the free/nationwide set from docs/adr/0001-first-increment-scope.md:
  * Treasury assessed land value (CKAN), DOPA population, MOTS tourism, GISTDA historical flood,
@@ -14,6 +15,15 @@
  */
 export { USER_AGENT, fetchJson, fetchText } from "./http.js";
 export type { FetchJsonOptions, FetchJsonResult, FetchTextResult } from "./http.js";
+export {
+  BUILDING_VALUATION_MEASURE_ID,
+  BUILDING_VALUATION_SOURCE_PRODUCT_ID,
+  BUILDING_VALUATION_URL,
+  type BuildingValuationResult,
+  fetchBuildingValuation,
+  parseBuildingValuationCsv,
+  splitCsvLine,
+} from "./treasury/building-valuation.js";
 export {
   DOPA_POPULATION_MEASURE_ID,
   DOPA_POPULATION_SOURCE_PRODUCT_ID,

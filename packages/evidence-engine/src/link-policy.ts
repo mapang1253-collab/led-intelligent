@@ -43,6 +43,17 @@ export const HOUSEHOLD_INCOME_REQUIREMENT: EvidenceRequirement = {
   subject_kind: "COHORT_WITHIN_AREA",
 };
 
+/**
+ * Treasury assessed construction values. The subject is a building type, not the area — the same
+ * shape as a household cohort, so an exact geographic match still leaves the subject only partially
+ * identified.
+ */
+export const CONSTRUCTION_COST_REQUIREMENT: EvidenceRequirement = {
+  requirement_id: "economic.construction_cost_reference",
+  purpose_th: "ราคาประเมินสิ่งปลูกสร้างของราชการ สำหรับใช้เป็นจุดอ้างอิงเชิงเปรียบเทียบ",
+  subject_kind: "COHORT_WITHIN_AREA",
+};
+
 export const POPULATION_REQUIREMENT: EvidenceRequirement = {
   requirement_id: "demand.resident_population",
   purpose_th: "ขนาดประชากรในพื้นที่ สำหรับประกอบการพิจารณาด้านดีมานด์",

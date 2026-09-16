@@ -9,6 +9,7 @@ import {
 } from "@reis/data-access";
 import { areaLabelTh, areaLevelNounTh } from "@reis/domain";
 import {
+  CONSTRUCTION_COST_REQUIREMENT,
   type EvidenceRequirement,
   HOUSEHOLD_INCOME_REQUIREMENT,
   POPULATION_REQUIREMENT,
@@ -37,6 +38,10 @@ import {
 const REQUIREMENTS: readonly { measureId: string; requirement: EvidenceRequirement }[] = [
   { measureId: "registered_population", requirement: POPULATION_REQUIREMENT },
   { measureId: "household_income_monthly_mean", requirement: HOUSEHOLD_INCOME_REQUIREMENT },
+  {
+    measureId: "assessed_construction_value_per_sqm",
+    requirement: CONSTRUCTION_COST_REQUIREMENT,
+  },
 ];
 
 export type EvidenceStageState = "SUCCEEDED" | "DEGRADED" | "SKIPPED";

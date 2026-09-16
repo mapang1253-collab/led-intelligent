@@ -28,6 +28,13 @@ function formatValue(value: string): string {
   });
 }
 
+/**
+ * A published reference table can be long — the Treasury lists 69 building types per province.
+ * Showing the first few keeps the rest of the page reachable, while the whole table stays one click
+ * away: the figures are the source's, and trimming them permanently would be editing the evidence.
+ */
+const ITEMS_BEFORE_COLLAPSE = 8;
+
 function EvidenceRow({ item }: { item: EvidenceGroup["items"][number] }) {
   const [open, setOpen] = useState(false);
   return (
@@ -61,6 +68,34 @@ function EvidenceRow({ item }: { item: EvidenceGroup["items"][number] }) {
         </p>
       )}
     </li>
+  );
+}
+
+function EvidenceItems({ items }: { items: EvidenceGroup["items"] }) {
+  const [expanded, setExpanded] = useState(false);
+  const collapsible = items.length > ITEMS_BEFORE_COLLAPSE;
+  const shown = collapsible && !expanded ? items.slice(0, ITEMS_BEFORE_COLLAPSE) : items;
+
+  return (
+    <>
+      <ul className="mt-2">
+        {shown.map((item) => (
+          <EvidenceRow key={item.observation_id} item={item} />
+        ))}
+      </ul>
+      {collapsible && (
+        <button
+          type="button"
+          onClick={() => setExpanded((value) => !value)}
+          aria-expanded={expanded}
+          className="mt-2 font-medium text-signature-text text-sm"
+        >
+          {expanded
+            ? th.evidence.showFewerItems
+            : `${th.evidence.showAllItems} (${items.length} ${th.evidence.moreItems})`}
+        </button>
+      )}
+    </>
   );
 }
 
