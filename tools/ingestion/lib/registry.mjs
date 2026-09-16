@@ -100,7 +100,8 @@ export async function registerVersion(client, sourceProductId, version) {
  * a new version row and the old one stops being current, so history stays readable.
  */
 export async function upsertObservations(client, options) {
-  const { measureId, unitCode, currency, statistic, versionId, retrievedAt, rows } = options;
+  const { measureId, unitCode, currency, statistic, versionId, retrievedAt, rows, retireMissing } =
+    options;
 
   const standing = new Map(
     (
@@ -120,6 +121,7 @@ export async function upsertObservations(client, options) {
   const unchangedIds = [];
   const supersededIds = [];
   const fresh = [];
+  let idByKey = new Map();
 
   for (const row of rows) {
     const current = standing.get(row.key);
@@ -215,7 +217,7 @@ export async function upsertObservations(client, options) {
       ],
     );
 
-    const idByKey = new Map(inserted.rows.map((row) => [row.observation_key, row.id]));
+    idByKey = new Map(inserted.rows.map((row) => [row.observation_key, row.id]));
     // Exactly one representation per figure, enforced by observation_value's own CHECK: a row
     // carries either a scalar or a pair of bounds, never both and never neither.
     await client.query(
@@ -240,9 +242,30 @@ export async function upsertObservations(client, options) {
     );
   }
 
+  /**
+   * For a source ingested as one whole corpus, a figure that this run did not write is a figure the
+   * publisher no longer lists — or, more often, one whose natural key changed shape because the
+   * parser changed. Either way it must stop being current: leaving it standing is how one file
+   * quietly becomes two copies of itself under two different cohort names.
+   *
+   * Opt-in, because it is only true of full-corpus ingests. A source fetched per province would
+   * retire the other seventy-six every time.
+   */
+  let retired = 0;
+  if (retireMissing) {
+    const written = [...unchangedIds, ...fresh.map((r) => idByKey.get(r.key))].filter(Boolean);
+    const result = await client.query(
+      `UPDATE evidence.observation SET is_current = false
+        WHERE measure_id = $1 AND is_current AND NOT (id = ANY($2::bigint[]))`,
+      [measureId, written],
+    );
+    retired = result.rowCount ?? 0;
+  }
+
   return {
     inserted: fresh.length,
     superseded: supersededIds.length,
     unchanged: unchangedIds.length,
+    retired,
   };
 }

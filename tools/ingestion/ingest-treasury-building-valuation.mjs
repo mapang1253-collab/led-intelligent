@@ -146,12 +146,14 @@ async function main() {
       statistic: "SINGLE",
       versionId: version.id,
       retrievedAt: version.retrieved_at,
+      // One file, the whole country: anything this run did not write is no longer standing.
+      retireMissing: true,
       rows,
     });
     await client.query("COMMIT");
 
     console.log(
-      `ingest done — ${counts.inserted} new observation version(s), ${counts.superseded} superseded, ${counts.unchanged} unchanged`,
+      `ingest done — ${counts.inserted} new observation version(s), ${counts.superseded} superseded, ${counts.unchanged} unchanged, ${counts.retired} retired`,
     );
     const state = product.activation_state;
     const stateNote =

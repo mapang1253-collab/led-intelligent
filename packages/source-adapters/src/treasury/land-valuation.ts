@@ -55,12 +55,15 @@ const REQUIRED_COLUMNS = [
   "CHANGWAT_CODE",
   "AMPHUR_CODE",
   "TUMBON_CODE",
+  "TUMBON_NAME",
   "STREET_NAME",
   "EVAPRICE",
 ] as const;
 
 interface Bucket {
   readonly landUnit: string;
+  /** The area the source itself named — a tambon, or a municipality inside one. */
+  readonly sourceAreaTh: string;
   readonly level: "SUBDISTRICT" | "DISTRICT";
   readonly code: number;
   low: number;
@@ -122,8 +125,13 @@ export function parseLandValuationCsv(csv: string): LandValuationResult {
       continue;
     }
 
+    const sourceAreaTh = at(fields, "TUMBON_NAME").trim();
     const value = Number(price);
-    const key = `${area.level}|${area.code}|${landUnit}`;
+    // The source's own area name is part of the identity, not decoration. A third of this file is
+    // municipalities whose code does not resolve to a subdistrict; those rows are later placed in
+    // their district, where four municipalities' "ที่ดินติดทะเล" would otherwise arrive as four
+    // identical-looking rows at four different prices. The name is what tells them apart.
+    const key = `${area.level}|${area.code}|${sourceAreaTh}|${landUnit}`;
     const existing = buckets.get(key);
     if (existing) {
       existing.low = Math.min(existing.low, value);
@@ -133,6 +141,7 @@ export function parseLandValuationCsv(csv: string): LandValuationResult {
     }
     buckets.set(key, {
       landUnit,
+      sourceAreaTh,
       level: area.level,
       code: area.code,
       low: value,
@@ -146,9 +155,12 @@ export function parseLandValuationCsv(csv: string): LandValuationResult {
     // Only a genuine spread is announced as one. Two blocks that happen to carry the same price are
     // one figure, and saying "2 บล็อก" over a single number would invent a disagreement.
     const spread = bucket.low !== bucket.high;
+    const where = bucket.sourceAreaTh === "" ? "" : ` · ${bucket.sourceAreaTh}`;
     observations.push({
       measure_id: LAND_VALUATION_MEASURE_ID,
-      population: spread ? `${bucket.landUnit} (${bucket.blocks} บล็อก)` : bucket.landUnit,
+      population: spread
+        ? `${bucket.landUnit}${where} (${bucket.blocks} บล็อก)`
+        : `${bucket.landUnit}${where}`,
       ...(spread
         ? { value_low: String(bucket.low), value_high: String(bucket.high) }
         : { value: String(bucket.low) }),

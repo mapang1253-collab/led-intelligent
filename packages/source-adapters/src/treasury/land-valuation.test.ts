@@ -65,6 +65,29 @@ describe("parseLandValuationCsv", () => {
     expect(o?.population).not.toContain("บล็อก");
   });
 
+  it("names the area the source named, so two municipalities never look like one row", () => {
+    // Both of these land in อ.ศรีราชา once their municipality codes fail to resolve. Without the
+    // name they arrive as two identical "ที่ดินติดทะเล" rows at two prices.
+    const result = parse(
+      row({
+        TUMBON_CODE: "96",
+        TUMBON_NAME: "เทศบาลเมืองศรีราชา",
+        STREET_NAME: "ที่ดินติดทะเล",
+        EVAPRICE: "20000",
+      }),
+      row({
+        TUMBON_CODE: "97",
+        TUMBON_NAME: "เทศบาลตำบลบางพระ",
+        STREET_NAME: "ที่ดินติดทะเล",
+        EVAPRICE: "12000",
+      }),
+    );
+    expect(result.observations).toHaveLength(2);
+    const cohorts = result.observations?.map((o) => o.population) ?? [];
+    expect(new Set(cohorts).size).toBe(2);
+    expect(cohorts[0]).toContain("เทศบาลเมืองศรีราชา");
+  });
+
   it("keeps different land units apart", () => {
     const result = parse(
       row({ STREET_NAME: "ที่ดินติดทางหลวงแผ่นดิน", EVAPRICE: "80000" }),
