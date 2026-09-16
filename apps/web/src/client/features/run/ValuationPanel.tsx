@@ -109,14 +109,17 @@ function ValuationResultView({
 function LandValuation({
   groups,
   enabled,
+  intakeArea,
 }: {
   groups: readonly EvidenceGroup[] | undefined;
   enabled: boolean;
+  /** The area the reader already typed on the intake form; asking for it twice is rude. */
+  intakeArea: { rai?: string | undefined; ngan?: string | undefined; wa?: string | undefined };
 }) {
   const [unitId, setUnitId] = useState("");
-  const [rai, setRai] = useState("");
-  const [ngan, setNgan] = useState("");
-  const [wa, setWa] = useState("");
+  const [rai, setRai] = useState(intakeArea.rai ?? "");
+  const [ngan, setNgan] = useState(intakeArea.ngan ?? "");
+  const [wa, setWa] = useState(intakeArea.wa ?? "");
 
   const rates = useMemo(
     () =>
@@ -228,7 +231,13 @@ function LandValuation({
   );
 }
 
-export function ValuationPanel({ groups }: { groups: readonly EvidenceGroup[] | undefined }) {
+export function ValuationPanel({
+  groups,
+  intakeArea = {},
+}: {
+  groups: readonly EvidenceGroup[] | undefined;
+  intakeArea?: { rai?: string | undefined; ngan?: string | undefined; wa?: string | undefined };
+}) {
   const [methodOk, setMethodOk] = useState<{ ok: boolean; reason?: string } | null>(null);
   const [typeId, setTypeId] = useState("");
   const [floorArea, setFloorArea] = useState("");
@@ -334,7 +343,7 @@ export function ValuationPanel({ groups }: { groups: readonly EvidenceGroup[] | 
         </>
       )}
 
-      <LandValuation groups={groups} enabled={methodOk?.ok === true} />
+      <LandValuation groups={groups} enabled={methodOk?.ok === true} intakeArea={intakeArea} />
     </section>
   );
 }

@@ -47,11 +47,14 @@ function OptionalTextField({
   label,
   value,
   placeholder,
+  help,
   onChange,
 }: {
   label: string;
   value: string;
   placeholder?: string;
+  /** What this thing is, in words someone who has never opened a title deed can follow. */
+  help?: string;
   onChange: (v: string) => void;
 }) {
   return (
@@ -64,8 +67,19 @@ function OptionalTextField({
         onChange={(e) => onChange(e.target.value)}
         className="rounded-card border border-border-strong bg-surface px-4 py-3 text-base text-ink placeholder:text-ink-muted"
       />
+      {help && <span className="text-ink-muted text-xs leading-relaxed">{help}</span>}
     </label>
   );
+}
+
+/** 1 ไร่ = 4 งาน = 400 ตารางวา, 1 ตารางวา = 4 ตารางเมตร (ประมวลกฎหมายที่ดิน). */
+function areaSummaryTh(rai: string, ngan: string, wa: string): string | null {
+  const squareWa = (Number(rai) || 0) * 400 + (Number(ngan) || 0) * 100 + (Number(wa) || 0);
+  if (!Number.isFinite(squareWa) || squareWa <= 0) {
+    return null;
+  }
+  const format = (value: number) => value.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+  return `${th.intake.areaConversion} ${format(squareWa)} ${th.valuation.wa} (${format(squareWa * 4)} ตร.ม.)`;
 }
 
 export function PropertyIntakeForm() {
@@ -79,6 +93,7 @@ export function PropertyIntakeForm() {
   const [picked, setPicked] = useState<AreaChoice | null>(null);
   const [optional, setOptional] = useState<OptionalFields>(EMPTY_OPTIONAL);
   const [showOptional, setShowOptional] = useState(false);
+  const [showArea, setShowArea] = useState(false);
   const [site, setSite] = useState<SiteFields>(EMPTY_SITE);
   const [nearLargeWater, setNearLargeWater] = useState(false);
   const [showSite, setShowSite] = useState(false);
@@ -100,6 +115,12 @@ export function PropertyIntakeForm() {
     setDistrictId(id);
     setSubdistrictId("");
   }
+
+  const areaSummary = areaSummaryTh(
+    optional.land_area_rai,
+    optional.land_area_ngan,
+    optional.land_area_wa,
+  );
 
   const hasPropertyDetail =
     optional.title_deed_number.trim() !== "" ||
@@ -272,46 +293,21 @@ export function PropertyIntakeForm() {
       <div className="mt-6">
         <button
           type="button"
-          onClick={() => setShowOptional((open) => !open)}
-          aria-expanded={showOptional}
+          onClick={() => setShowArea((open) => !open)}
+          aria-expanded={showArea}
           className="flex items-center gap-2 font-medium text-signature-text text-sm"
         >
-          {showOptional ? <ChevronDown size={16} /> : <Plus size={16} />}
-          {th.intake.optionalToggle}
+          {showArea ? <ChevronDown size={16} /> : <Plus size={16} />}
+          {th.intake.areaToggle}
         </button>
 
-        {showOptional && (
+        {showArea && (
           <div className="mt-4 rounded-card bg-surface-sunken p-5">
             <p className="mb-4 flex items-start gap-2 text-ink-muted text-sm">
               <Info size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
-              {th.intake.optionalHelp}
+              {th.intake.areaHelp}
             </p>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <OptionalTextField
-                label={th.intake.addressLabel}
-                placeholder={th.intake.addressPlaceholder}
-                value={optional.address_line}
-                onChange={(v) => setOptional((o) => ({ ...o, address_line: v }))}
-              />
-              <OptionalTextField
-                label={th.intake.titleDeedLabel}
-                value={optional.title_deed_number}
-                onChange={(v) => setOptional((o) => ({ ...o, title_deed_number: v }))}
-              />
-              <OptionalTextField
-                label={th.intake.mapSheetLabel}
-                value={optional.map_sheet}
-                onChange={(v) => setOptional((o) => ({ ...o, map_sheet: v }))}
-              />
-              <OptionalTextField
-                label={th.intake.landNumberLabel}
-                value={optional.land_number}
-                onChange={(v) => setOptional((o) => ({ ...o, land_number: v }))}
-              />
-            </div>
-
-            <fieldset className="mt-4">
+            <fieldset>
               <legend className="mb-1.5 font-medium text-sm">{th.intake.landAreaLabel}</legend>
               <div className="grid grid-cols-3 gap-3">
                 {(
@@ -336,6 +332,62 @@ export function PropertyIntakeForm() {
                 ))}
               </div>
             </fieldset>
+            {/* The statutory conversion, shown as it is typed, so the number is checkable. */}
+            {areaSummary && <p className="mt-2 text-ink-muted text-sm">{areaSummary}</p>}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6">
+        <button
+          type="button"
+          onClick={() => setShowOptional((open) => !open)}
+          aria-expanded={showOptional}
+          className="flex items-center gap-2 font-medium text-signature-text text-sm"
+        >
+          {showOptional ? <ChevronDown size={16} /> : <Plus size={16} />}
+          {th.intake.optionalToggle}
+        </button>
+
+        {showOptional && (
+          <div className="mt-4 rounded-card bg-surface-sunken p-5">
+            <p className="mb-4 flex items-start gap-2 text-ink-muted text-sm">
+              <Info size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+              {th.intake.optionalHelp}
+            </p>
+            {/* Said plainly: this asks for a document nobody carries, and today it buys little. */}
+            <p className="-mt-2 mb-4 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
+              <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
+              {th.intake.optionalHonesty}
+            </p>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <OptionalTextField
+                label={th.intake.addressLabel}
+                placeholder={th.intake.addressPlaceholder}
+                value={optional.address_line}
+                onChange={(v) => setOptional((o) => ({ ...o, address_line: v }))}
+              />
+              <OptionalTextField
+                label={th.intake.titleDeedLabel}
+                value={optional.title_deed_number}
+                help={th.intake.titleDeedHelp}
+                onChange={(v) => setOptional((o) => ({ ...o, title_deed_number: v }))}
+              />
+              <OptionalTextField
+                label={th.intake.mapSheetLabel}
+                placeholder={th.intake.mapSheetPlaceholder}
+                help={th.intake.mapSheetHelp}
+                value={optional.map_sheet}
+                onChange={(v) => setOptional((o) => ({ ...o, map_sheet: v }))}
+              />
+              <OptionalTextField
+                label={th.intake.landNumberLabel}
+                help={th.intake.landNumberHelp}
+                value={optional.land_number}
+                onChange={(v) => setOptional((o) => ({ ...o, land_number: v }))}
+              />
+            </div>
           </div>
         )}
       </div>

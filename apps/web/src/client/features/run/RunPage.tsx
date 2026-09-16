@@ -205,7 +205,15 @@ export function RunPage() {
               stageState={evidenceStage?.state}
             />
 
-            <ValuationPanel groups={envelope?.partial_artifacts?.evidence} />
+            <ValuationPanel
+              groups={envelope?.partial_artifacts?.evidence}
+              // Carried from the intake so the land calculator starts with what was already typed.
+              intakeArea={{
+                rai: intake?.land_area_rai as string | undefined,
+                ngan: intake?.land_area_ngan as string | undefined,
+                wa: intake?.land_area_wa as string | undefined,
+              }}
+            />
 
             <ConceptPanel
               concepts={envelope?.partial_artifacts?.concepts}
