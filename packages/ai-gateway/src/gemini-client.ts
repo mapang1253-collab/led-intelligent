@@ -138,7 +138,15 @@ export function createGeminiClient(options: GeminiClientOptions): ModelClient {
       }
       return { outcome: "SUCCESS", text };
     } catch (error) {
-      return classify(error);
+      const classified = classify(error);
+      // Operator-facing only: a provider failure that reaches no log is undiagnosable in a
+      // deployment. This never reaches a user and is never persisted (docs/ai-architecture.md §5
+      // forbids storing provider content, not surfacing it to whoever runs the service).
+      console.warn(
+        `[ai-gateway] ${model} failed: ${classified.outcome === "FAILED" ? classified.code : "?"} — ` +
+          `${error instanceof Error ? error.message : String(error)}`,
+      );
+      return classified;
     } finally {
       clearTimeout(timer);
     }
