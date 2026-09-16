@@ -35,3 +35,13 @@ export {
   loadConceptSet,
   saveConceptSet,
 } from "./repositories/concepts.js";
+export {
+  type BudgetDecision,
+  type BudgetLimits,
+  type BudgetStatus,
+  type CallRecord,
+  budgetStatus,
+  effectiveDailyLimit,
+  recordCall,
+  reserveCall,
+} from "./repositories/ai-budget.js";

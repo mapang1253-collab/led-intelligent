@@ -1,6 +1,7 @@
 import {
   type AiMode,
   type BriefEvidenceInput,
+  PRIMARY_MODEL,
   buildOpportunityBrief,
   createGeminiClient,
   proposeConcepts,
@@ -14,8 +15,9 @@ import type {
   LegalValidationResult,
   PotentialUseConcept,
 } from "@reis/contracts";
-import type { StoredEvidenceLink } from "@reis/data-access";
+import type { Db, StoredEvidenceLink } from "@reis/data-access";
 import { validateLegal, verifyPackIntegrity } from "@reis/validation-engine";
+import { budgetedClient, readBudgetLimits } from "./budgeted-client.js";
 
 /**
  * Concept proposal and legal screening for one run
@@ -98,6 +100,14 @@ export function conceptUnderTest(
 export interface ConceptStageInput {
   readonly mode: AiMode;
   readonly apiKey?: string;
+  /** Required for LIVE_AI: the budget is reserved in the database before any request is sent. */
+  readonly db?: Db;
+  readonly budgetEnv?: {
+    GEMINI_RPM_LIMIT?: string;
+    GEMINI_TPM_LIMIT?: string;
+    GEMINI_RPD_LIMIT?: string;
+    AI_DAILY_RESERVE_PERCENT?: string;
+  };
   readonly targetTh: string;
   readonly effectiveOn: string;
   readonly outputScope: "AREA" | "PRELIMINARY_PROPERTY" | "PROPERTY";
@@ -130,12 +140,33 @@ export async function runConceptGeneration(input: ConceptStageInput): Promise<Co
     critical_gaps_th: CRITICAL_GAPS_TH,
   });
 
+  let client: ReturnType<typeof createGeminiClient> | undefined;
+  if (input.mode === "LIVE_AI") {
+    const limits = input.budgetEnv ? readBudgetLimits(input.budgetEnv) : null;
+    if (!input.apiKey || !input.db || !limits) {
+      // Refused rather than attempted: calling without a recorded, enforceable budget would spend
+      // an allowance nobody is measuring (docs/ai-architecture.md §5).
+      return {
+        state: "FAILED",
+        reason: !input.apiKey ? "AI_UNAVAILABLE" : "AI_BUDGET_NOT_CONFIGURED",
+        concepts: [],
+        record: null,
+        validations: [],
+        final: null,
+      };
+    }
+    client = budgetedClient(
+      input.db,
+      PRIMARY_MODEL,
+      limits,
+      createGeminiClient({ apiKey: input.apiKey }),
+    );
+  }
+
   const proposal = await proposeConcepts({
     mode: input.mode,
     brief,
-    ...(input.mode === "LIVE_AI" && input.apiKey
-      ? { client: createGeminiClient({ apiKey: input.apiKey }) }
-      : {}),
+    ...(client ? { client } : {}),
     ...(input.recorded ? { recorded: input.recorded } : {}),
   });
 

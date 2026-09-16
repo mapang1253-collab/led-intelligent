@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "db:migrate": "node --env-file=../../apps/web/.env.migration ./src/migrate.mjs",
     "db:seed:reference": "node --env-file=../../apps/web/.env.migration ./src/seed-admin-areas.mjs",
-    "db:seed:academic": "node --env-file=../../apps/web/.env.migration ./src/seed-academic.mjs"
+    "db:seed:academic": "node --env-file=../../apps/web/.env.migration ./src/seed-academic.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "@reis/contracts": "workspace:*",
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "@types/pg": "^8.11.10",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
   }
 }

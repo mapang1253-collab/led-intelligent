@@ -15,6 +15,11 @@ export type Env = {
    * calling a provider is something a deployment opts into, never a default.
    */
   AI_MODE?: string;
+  /** Recorded from the project's Google AI Studio rate-limit page (docs/ai-architecture.md §5). */
+  GEMINI_RPM_LIMIT?: string;
+  GEMINI_TPM_LIMIT?: string;
+  GEMINI_RPD_LIMIT?: string;
+  AI_DAILY_RESERVE_PERCENT?: string;
   ASSETS: Fetcher;
 };
 

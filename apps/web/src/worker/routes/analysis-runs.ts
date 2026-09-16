@@ -133,6 +133,8 @@ analysisRuns.post("/", async (c) => {
     const concepts = await runConceptGeneration({
       mode: aiMode(c.env),
       apiKey: c.env.GEMINI_API_KEY,
+      db,
+      budgetEnv: c.env,
       targetTh: `ต.${areas.subdistrict} อ.${areas.district} จ.${areas.province}`,
       effectiveOn: new Date().toISOString().slice(0, 10),
       outputScope: run.permitted_scope,

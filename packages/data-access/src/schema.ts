@@ -214,6 +214,32 @@ export interface FinalResultTable {
   created_at: ColumnType<string, string | undefined, never>;
 }
 
+/** Matches database/migrations/0007_ai_budget.sql exactly. */
+export interface AiBudgetWindowTable {
+  id: Generated<string>;
+  provider: string;
+  model: string;
+  window_kind: "MINUTE" | "DAY";
+  window_start: ColumnType<string, string, string>;
+  requests_reserved: number;
+  tokens_used: ColumnType<string, string | number | undefined, string | number>;
+  blocked_until: string | null;
+  created_at: ColumnType<string, string | undefined, never>;
+  updated_at: ColumnType<string, string | undefined, string>;
+}
+
+export interface AiCallLogTable {
+  id: Generated<string>;
+  provider: string;
+  model: string;
+  outcome: string;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  latency_ms: number | null;
+  retry_after_at: string | null;
+  created_at: ColumnType<string, string | undefined, never>;
+}
+
 export interface Database {
   "reference.administrative_area": AdministrativeAreaTable;
   "analysis.analysis_run": AnalysisRunTable;
@@ -228,4 +254,6 @@ export interface Database {
   "analysis.potential_use_concept": PotentialUseConceptTable;
   "analysis.validation_result": ValidationResultTable;
   "analysis.final_result": FinalResultTable;
+  "operations.ai_budget_window": AiBudgetWindowTable;
+  "operations.ai_call_log": AiCallLogTable;
 }
