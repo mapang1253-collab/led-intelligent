@@ -148,59 +148,74 @@
 }
 
 /**
- * Parcels use the map's own values, not values of their own: same faint fill, same hairline stroke,
+ * Towers use the map's own values, not values of their own: same faint fill, same hairline stroke,
  * same colour. That is what keeps one sheet reading as one drawing. The stroke is non-scaling, so
- * the field keeps the map's line weight however the band is stretched.
+ * the skyline keeps the map's line weight however the band is stretched.
  */
-.terrain-parcel {
+.terrain-tower {
   fill: var(--map-fill);
   stroke: var(--map-stroke);
   stroke-width: 1;
   stroke-linejoin: round;
-  opacity: 0.55;
-  animation: terrain-parcel-breathe 13s ease-in-out infinite alternate;
 }
 
-/* Survey corners, fixed one after another rather than all at once. */
-.terrain-corner {
+.terrain-mast {
+  fill: none;
+  stroke: var(--map-stroke);
+  stroke-width: 1;
+}
+
+/* A window coming on: dark for most of its cycle, lit briefly, each on its own delay. */
+.terrain-window {
   fill: var(--map-marker);
-  animation: terrain-corner-glint 6s ease-in-out infinite;
+  animation: terrain-window-light 11s ease-in-out infinite;
 }
 
-.terrain-parcels {
-  animation: terrain-parcel-drift 52s ease-in-out infinite alternate;
+/**
+ * Parallax. The far row is fainter and drifts slowly; the near row is more present and drifts
+ * further. Enough depth to read as a city, slow enough that nothing catches the eye mid-sentence.
+ */
+.terrain-skyline-far {
+  opacity: 0.45;
+  animation: terrain-skyline-drift-far 78s ease-in-out infinite alternate;
 }
 
-@keyframes terrain-parcel-breathe {
-  from {
-    opacity: 0.32;
-  }
-  to {
-    opacity: 0.8;
-  }
+.terrain-skyline-near {
+  opacity: 0.8;
+  animation: terrain-skyline-drift-near 54s ease-in-out infinite alternate;
 }
 
-@keyframes terrain-corner-glint {
+@keyframes terrain-window-light {
   0%,
-  72%,
+  46%,
   100% {
-    opacity: 0.12;
+    opacity: 0.08;
   }
-  84% {
-    opacity: 1;
+  55%,
+  86% {
+    opacity: 0.95;
   }
 }
 
-@keyframes terrain-parcel-drift {
+@keyframes terrain-skyline-drift-far {
   from {
-    transform: translate3d(-0.8%, 0, 0);
+    transform: translate3d(-0.6%, 0, 0);
   }
   to {
-    transform: translate3d(0.8%, 0, 0);
+    transform: translate3d(0.6%, 0, 0);
   }
 }
 
-/* Motes rising over the field, in the marker colour so they belong to the same drawing. */
+@keyframes terrain-skyline-drift-near {
+  from {
+    transform: translate3d(1.4%, 0, 0);
+  }
+  to {
+    transform: translate3d(-1.4%, 0, 0);
+  }
+}
+
+/* Lights drifting above the city, in the marker colour so they belong to the same drawing. */
 .terrain-spores {
   position: absolute;
   inset: 0;
@@ -302,19 +317,20 @@
   .terrain-markers g,
   .terrain-marker-halo,
   .terrain-sweep,
-  .terrain-parcels,
-  .terrain-parcel,
-  .terrain-corner,
+  .terrain-skyline-far,
+  .terrain-skyline-near,
+  .terrain-window,
   .terrain-spore {
     animation: none;
   }
-  .terrain-corner {
-    opacity: 0.5;
+  /* Stilled, the windows would all read as off; half-lit is the honest resting state. */
+  .terrain-window {
+    opacity: 0.45;
   }
   .terrain-sweep {
     opacity: 0;
   }
-  /* The field stays; the motes are motion and nothing else, so they go. */
+  /* The skyline stays; the drifting lights are motion and nothing else, so they go. */
   .terrain-spores {
     display: none;
   }

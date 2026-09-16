@@ -1,4 +1,3 @@
-<ParcelField />;
 /**
  * Backdrop motif: the map this product actually works on. All 77 province outlines of Thailand,
  * drawn from public-domain boundary data, with coordinate markers pulsing on a spread of provinces
@@ -13,10 +12,10 @@
  * docs/performance-and-reliability.md §7 are unaffected. All motion stops under
  * prefers-reduced-motion.
  *
- * Under the map lies a surveyed field of parcels in the same line, with motes drifting up through
- * it. It is kept to the lower half and dimmed through the middle, because the top of every screen
- * carries a heading and the centre is where the reading happens. Every shape here is decorative:
- * the layer is aria-hidden and carries no meaning the screen relies on.
+ * Under the map stands a city skyline in the same line, its windows lighting one at a time. It is
+ * kept to the lower half and dimmed through the middle, because the top of every screen carries a
+ * heading and the centre is where the reading happens. Every shape here is decorative: the layer is
+ * aria-hidden and carries no meaning the screen relies on.
  */
 
 const PROVINCES = [
@@ -116,110 +115,160 @@ const MARKERS = [
 ];
 
 /**
- * A surveyed field of land parcels, lying under the map.
+ * A city skyline under the map: towers in the same hairline as the province outlines, with lit
+ * windows coming on one at a time.
  *
- * Trees were the wrong motif twice over: they crowded the sheet, and they were about nothing this
- * product does. Parcel boundaries are its actual subject — the thing a title deed draws and the
- * thing every figure here is attached to — so the backdrop now says what the app is rather than
- * decorating around it.
+ * This is the subject the app is actually about — the condominium buildings it prices are these —
+ * and a night skyline gives the sparkle somewhere honest to live: a window lighting up is a thing
+ * cities do, so the shimmer is the motif rather than an effect laid over one.
  *
- * The rows are spaced so they grow taller toward the bottom, which reads as ground receding, and
- * the corners glint one after another the way survey points are fixed one at a time.
+ * Two depths. The far row is shorter and fainter and drifts slowly; the near row is taller and
+ * drifts a little faster, which is enough parallax to give the band depth without any of it moving
+ * fast enough to catch the eye while someone is reading.
  */
-const PARCEL_COLUMNS = 9;
-
-/** Row positions as fractions of the band: close together at the top, apart at the bottom. */
-const PARCEL_ROWS = [0, 0.16, 0.38, 0.66, 1] as const;
+const BAND_W = 1000;
+const GROUND_Y = 600;
 
 /**
- * Deterministic jitter. A grid drawn straight is graph paper; the same grid pulled about by a few
- * per cent is a cadastre. Hash noise rather than Math.random, so every render draws one field
- * rather than a new one each mount.
+ * Deterministic noise. Hash rather than Math.random, so every render draws one city rather than a
+ * new one on each mount.
  */
-function jitter(column: number, row: number, salt: number): number {
-  const n = Math.sin(column * 127.1 + row * 311.7 + salt * 74.7) * 43758.5453;
+function noise(a: number, b: number): number {
+  const n = Math.sin(a * 127.1 + b * 311.7) * 43758.5453;
   return n - Math.floor(n);
 }
 
-const BAND_W = 1000;
-const BAND_H = 600;
-
-/** Grid vertices, jittered. Edge columns stay put so the field runs off the sides cleanly. */
-function vertex(column: number, row: number): { x: number; y: number } {
-  const baseX = (column / PARCEL_COLUMNS) * BAND_W;
-  const baseY = (PARCEL_ROWS[row] ?? 1) * BAND_H;
-  const held = column === 0 || column === PARCEL_COLUMNS || row === 0;
-  const spread = 1 - (PARCEL_ROWS[row] ?? 1) * 0.4;
-  return {
-    x: held ? baseX : baseX + (jitter(column, row, 1) - 0.5) * 78 * spread,
-    y: row === 0 ? baseY : baseY + (jitter(column, row, 2) - 0.5) * 46,
-  };
+interface Tower {
+  readonly x: number;
+  readonly w: number;
+  readonly h: number;
+  /** A mast on the taller towers, the way the ones on Sathon and Rama III carry them. */
+  readonly mast: boolean;
+  /** A setback near the top, which is what makes a tower read as a tower and not a bar. */
+  readonly setback: boolean;
 }
 
-const PARCELS = PARCEL_ROWS.slice(0, -1).flatMap((_, row) =>
-  Array.from({ length: PARCEL_COLUMNS }, (_, column) => {
-    const a = vertex(column, row);
-    const b = vertex(column + 1, row);
-    const c = vertex(column + 1, row + 1);
-    const d = vertex(column, row + 1);
-    return {
-      id: `${row}-${column}`,
-      d: `M ${a.x} ${a.y} L ${b.x} ${b.y} L ${c.x} ${c.y} L ${d.x} ${d.y} Z`,
-      // Later rows are nearer, so they carry a little more presence.
-      delay: (row * PARCEL_COLUMNS + column) * 0.28,
-    };
-  }),
-);
+/** Far row: a low, dense backdrop of blocks. Near row: fewer, taller, further apart. */
+function row(count: number, seed: number, minH: number, maxH: number): Tower[] {
+  const towers: Tower[] = [];
+  let x = -30;
+  for (let i = 0; i < count; i += 1) {
+    const w = 30 + noise(i, seed) * 52;
+    const h = minH + noise(i, seed + 7) * (maxH - minH);
+    towers.push({
+      x,
+      w,
+      h,
+      mast: h > maxH * 0.8,
+      setback: noise(i, seed + 13) > 0.55,
+    });
+    x += w + 6 + noise(i, seed + 21) * 26;
+    if (x > BAND_W + 40) {
+      break;
+    }
+  }
+  return towers;
+}
 
-/** Corner marks that glint. Only the inner vertices of the nearer rows, so the field stays quiet. */
-const CORNERS = PARCEL_ROWS.slice(2)
-  .flatMap((_, index) =>
-    Array.from({ length: PARCEL_COLUMNS - 1 }, (_, column) => {
-      const point = vertex(column + 1, index + 2);
-      return { id: `${index}-${column}`, ...point, delay: (index * 4 + column) * 0.7 };
-    }),
-  )
-  .filter((_, index) => index % 2 === 0);
+const FAR_TOWERS = row(22, 3, 90, 230);
+const NEAR_TOWERS = row(14, 11, 170, 430);
 
-/** Fireflies: motes that drift up and pulse. */
-const SPORES = [
-  { left: 7, size: 4, delay: 0, duration: 26, drift: 40 },
-  { left: 16, size: 3, delay: 6, duration: 34, drift: -28 },
-  { left: 24, size: 5, delay: 12, duration: 30, drift: 22 },
-  { left: 33, size: 3, delay: 3, duration: 38, drift: -34 },
-  { left: 44, size: 4, delay: 17, duration: 28, drift: 30 },
-  { left: 57, size: 3, delay: 23, duration: 35, drift: 24 },
-  { left: 68, size: 4, delay: 8, duration: 31, drift: -30 },
-  { left: 77, size: 5, delay: 19, duration: 27, drift: 36 },
-  { left: 86, size: 3, delay: 2, duration: 36, drift: -20 },
-  { left: 94, size: 4, delay: 14, duration: 30, drift: 26 },
-] as const;
+/**
+ * Lit windows, scattered rather than gridded. A full grid of unlit panes would be hundreds of
+ * elements for something nobody looks at; only the lights that are on are drawn, which is also
+ * what a city at night actually shows.
+ */
+function windowsFor(towers: readonly Tower[], seed: number, density: number) {
+  const lights: { id: string; x: number; y: number; delay: number }[] = [];
+  towers.forEach((tower, index) => {
+    const columns = Math.max(2, Math.floor(tower.w / 13));
+    const rows = Math.max(3, Math.floor(tower.h / 20));
+    for (let c = 0; c < columns; c += 1) {
+      for (let r = 0; r < rows; r += 1) {
+        if (noise(index * 100 + c * 7 + r, seed) > density) {
+          continue;
+        }
+        lights.push({
+          id: `${seed}-${index}-${c}-${r}`,
+          x: tower.x + 7 + (c * (tower.w - 12)) / Math.max(1, columns - 1 || 1),
+          y: GROUND_Y - tower.h + 16 + r * ((tower.h - 24) / Math.max(1, rows - 1 || 1)),
+          delay: noise(index + c, r + seed) * 9,
+        });
+      }
+    }
+  });
+  return lights;
+}
 
-function ParcelField() {
+const FAR_WINDOWS = windowsFor(FAR_TOWERS, 5, 0.1);
+const NEAR_WINDOWS = windowsFor(NEAR_TOWERS, 9, 0.14);
+
+function towerPath(tower: Tower): string {
+  const top = GROUND_Y - tower.h;
+  if (!tower.setback) {
+    return `M ${tower.x} ${GROUND_Y} L ${tower.x} ${top} L ${tower.x + tower.w} ${top} L ${tower.x + tower.w} ${GROUND_Y} Z`;
+  }
+  const inset = tower.w * 0.16;
+  const shoulder = top + tower.h * 0.16;
   return (
-    <g className="terrain-parcels">
-      {PARCELS.map((parcel) => (
-        <path
-          key={parcel.id}
-          className="terrain-parcel"
-          d={parcel.d}
-          style={{ animationDelay: `${parcel.delay}s` }}
-          vectorEffect="non-scaling-stroke"
-        />
+    `M ${tower.x} ${GROUND_Y} L ${tower.x} ${shoulder} L ${tower.x + inset} ${shoulder} ` +
+    `L ${tower.x + inset} ${top} L ${tower.x + tower.w - inset} ${top} ` +
+    `L ${tower.x + tower.w - inset} ${shoulder} L ${tower.x + tower.w} ${shoulder} ` +
+    `L ${tower.x + tower.w} ${GROUND_Y} Z`
+  );
+}
+
+function SkylineRow({
+  towers,
+  windows,
+  className,
+}: {
+  towers: readonly Tower[];
+  windows: readonly { id: string; x: number; y: number; delay: number }[];
+  className: string;
+}) {
+  return (
+    <g className={className}>
+      {towers.map((tower) => (
+        <g key={tower.x}>
+          <path className="terrain-tower" d={towerPath(tower)} vectorEffect="non-scaling-stroke" />
+          {tower.mast && (
+            <path
+              className="terrain-mast"
+              d={`M ${tower.x + tower.w / 2} ${GROUND_Y - tower.h} L ${tower.x + tower.w / 2} ${GROUND_Y - tower.h - 26}`}
+              vectorEffect="non-scaling-stroke"
+            />
+          )}
+        </g>
       ))}
-      {CORNERS.map((corner) => (
-        <circle
-          key={corner.id}
-          className="terrain-corner"
-          cx={corner.x}
-          cy={corner.y}
-          r="2.6"
-          style={{ animationDelay: `${corner.delay}s` }}
+      {windows.map((light) => (
+        <rect
+          key={light.id}
+          className="terrain-window"
+          x={light.x}
+          y={light.y}
+          width="3"
+          height="4"
+          style={{ animationDelay: `${light.delay}s` }}
         />
       ))}
     </g>
   );
 }
+
+/** Lights drifting above the city: aircraft on approach, and the rest of the shimmer. */
+const SPORES = [
+  { left: 7, size: 4, delay: 0, duration: 26, drift: 40 },
+  { left: 16, size: 3, delay: 6, duration: 34, drift: -28 },
+  { left: 24, size: 4, delay: 12, duration: 30, drift: 22 },
+  { left: 33, size: 3, delay: 3, duration: 38, drift: -34 },
+  { left: 44, size: 4, delay: 17, duration: 28, drift: 30 },
+  { left: 57, size: 3, delay: 23, duration: 35, drift: 24 },
+  { left: 68, size: 4, delay: 8, duration: 31, drift: -30 },
+  { left: 77, size: 4, delay: 19, duration: 27, drift: 36 },
+  { left: 86, size: 3, delay: 2, duration: 36, drift: -20 },
+  { left: 94, size: 4, delay: 14, duration: 30, drift: 26 },
+] as const;
 
 export function TerrainBackdrop() {
   return (
@@ -260,8 +309,13 @@ export function TerrainBackdrop() {
           viewBox="0 0 1000 600"
           preserveAspectRatio="none"
         >
-          <title>ผังแปลงที่ดินประกอบการตกแต่ง</title>
-          <ParcelField />
+          <title>เส้นขอบฟ้าเมืองประกอบการตกแต่ง</title>
+          <SkylineRow towers={FAR_TOWERS} windows={FAR_WINDOWS} className="terrain-skyline-far" />
+          <SkylineRow
+            towers={NEAR_TOWERS}
+            windows={NEAR_WINDOWS}
+            className="terrain-skyline-near"
+          />
         </svg>
       </div>
 
