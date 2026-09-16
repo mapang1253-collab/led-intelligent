@@ -13,8 +13,8 @@
  * prefers-reduced-motion.
  *
  * Under the map stands a city skyline in the same line, its windows lighting one at a time, with a
- * field of stars above it and a few lights wandering over the rooftops. Behind all of it runs a
- * faint street network — the plan the city is laid out on. Everything that shimmers belongs to the
+ * field of stars above it and a few lights wandering over the rooftops. Beneath the city runs a
+ * faint street network — the plan it is laid out on. Everything that shimmers belongs to the
  * scene: stars twinkle where they hang, windows come on where they are, and the drifting lights
  * stay over the city rather than crossing the page.
  *
@@ -344,15 +344,16 @@ function SkylineRow({
 /**
  * A street network under everything: the plan a city is laid out on.
  *
- * Arterials run the full width at slight angles, cross streets connect them, and a junction is
- * marked where two meet. It is drawn at a fraction of the map's opacity and masked away from the
- * middle, because it is the faintest thing on the sheet by design — a plan is the substrate, not a
- * subject.
+ * Three arterials, not seven, and two cross streets between each pair rather than four. The first
+ * version drew a plan across the whole sheet and it read as a net thrown over the page: a substrate
+ * that competes is no longer a substrate. It now sits low, under the city it belongs to, at half
+ * the opacity it had.
  */
-const ARTERIAL_COUNT = 7;
+const ARTERIAL_COUNT = 3;
 
 const ARTERIALS = Array.from({ length: ARTERIAL_COUNT }, (_, i) => {
-  const y = ((i + 0.5) / ARTERIAL_COUNT) * 600;
+  // Pushed into the lower half: the plan belongs under the skyline, not behind the headline.
+  const y = 300 + ((i + 0.5) / ARTERIAL_COUNT) * 300;
   const tilt = (noise(i, 401) - 0.5) * 120;
   const bend = (noise(i, 409) - 0.5) * 70;
   return {
@@ -366,10 +367,10 @@ const ARTERIALS = Array.from({ length: ARTERIAL_COUNT }, (_, i) => {
 
 /** Cross streets, each spanning two neighbouring arterials at a slant. */
 const CROSS_STREETS = ARTERIALS.slice(0, -1).flatMap((arterial, row) =>
-  Array.from({ length: 4 }, (_, k) => {
-    const x = 60 + ((k + noise(row * 4 + k, 419)) / 4) * 900;
+  Array.from({ length: 2 }, (_, k) => {
+    const x = 120 + ((k + noise(row * 2 + k, 419)) / 2) * 760;
     const next = ARTERIALS[row + 1];
-    const skew = (noise(row * 4 + k, 421) - 0.5) * 90;
+    const skew = (noise(row * 2 + k, 421) - 0.5) * 90;
     return {
       id: `${row}-${k}`,
       d: `M ${x} ${arterial.y} L ${x + skew} ${next ? next.y : arterial.y + 90}`,
@@ -478,7 +479,7 @@ export function TerrainBackdrop() {
               vectorEffect="non-scaling-stroke"
             />
           ))}
-          {CROSS_STREETS.filter((_, i) => i % 3 === 0).map((road) => (
+          {CROSS_STREETS.filter((_, i) => i % 2 === 0).map((road) => (
             <circle key={road.id} className="terrain-junction" cx={road.x} cy={road.y} r="2" />
           ))}
         </svg>

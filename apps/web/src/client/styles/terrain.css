@@ -218,24 +218,15 @@
 /**
  * The street network: the faintest thing on the sheet, by design.
  *
- * A plan is what a city is laid out on, not what anyone is looking at, so it runs at a fraction of
- * the map's opacity and is masked away from the middle where the reading happens. Junctions are
- * marked only every third crossing — a dot at every one turns a plan into a circuit board.
+ * A plan is what a city is laid out on, not what anyone is looking at, so it runs at a fifth of the
+ * map's opacity and only in the band beneath the skyline. Junctions are marked at every other
+ * crossing — one at each turns a plan into a circuit board.
  */
 .terrain-streets {
-  opacity: 0.4;
-  mask-image: radial-gradient(
-    ellipse 64% 58% at 50% 46%,
-    transparent 0%,
-    rgba(0, 0, 0, 0.5) 54%,
-    #000 88%
-  );
-  -webkit-mask-image: radial-gradient(
-    ellipse 64% 58% at 50% 46%,
-    transparent 0%,
-    rgba(0, 0, 0, 0.5) 54%,
-    #000 88%
-  );
+  opacity: 0.22;
+  /* Bottom only. A plan drawn over the reading column is a net thrown over the page. */
+  mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.4) 58%, #000 84%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.4) 58%, #000 84%);
 }
 .terrain-arterial {
   fill: none;
