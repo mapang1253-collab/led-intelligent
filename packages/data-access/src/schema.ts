@@ -240,6 +240,16 @@ export interface AiCallLogTable {
   created_at: ColumnType<string, string | undefined, never>;
 }
 
+/** Matches database/migrations/0008_purge_log.sql exactly. */
+export interface PurgeRunTable {
+  id: Generated<string>;
+  started_at: ColumnType<string, string | undefined, never>;
+  finished_at: ColumnType<string | null, string | null | undefined, string | null>;
+  runs_deleted: ColumnType<number, number | undefined, number>;
+  failure_reason: ColumnType<string | null, string | null | undefined, string | null>;
+  trigger_source: "CRON" | "MANUAL";
+}
+
 export interface Database {
   "reference.administrative_area": AdministrativeAreaTable;
   "analysis.analysis_run": AnalysisRunTable;
@@ -256,4 +266,5 @@ export interface Database {
   "analysis.final_result": FinalResultTable;
   "operations.ai_budget_window": AiBudgetWindowTable;
   "operations.ai_call_log": AiCallLogTable;
+  "operations.purge_run": PurgeRunTable;
 }

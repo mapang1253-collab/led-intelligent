@@ -87,13 +87,31 @@ function applicabilityFor(rule: LegalRule, concept: ConceptUnderTest): Applicabi
     }
   }
 
-  const anyOf = rule.applicability.any_characteristics ?? [];
+  const anyOf = rule.applicability.any_of ?? [];
   if (anyOf.length > 0) {
-    const matched = anyOf.some((option) => concept.characteristics[option.key] === option.value);
+    let matched = false;
+    let undetermined = false;
+    for (const option of anyOf) {
+      if (option.kind === "CHARACTERISTIC") {
+        const stated = concept.characteristics[option.key];
+        if (stated === undefined) {
+          undetermined = true;
+        } else if (stated === option.value) {
+          matched = true;
+        }
+        continue;
+      }
+      const evaluation = evaluatePredicate(option.predicate, concept.inputs);
+      if (evaluation.status === "UNKNOWN") {
+        undetermined = true;
+      } else if (evaluation.status === "PASS") {
+        matched = true;
+      }
+    }
     if (!matched) {
-      // Not matching is only decisive once every listed characteristic was actually stated.
-      const allStated = anyOf.every((option) => concept.characteristics[option.key] !== undefined);
-      return allStated ? "NOT_APPLICABLE" : "UNRESOLVED";
+      // One alternative nobody has measured is enough to keep the rule in play: ruling it out
+      // would drop a requirement on the strength of a fact we do not have.
+      return undetermined ? "UNRESOLVED" : "NOT_APPLICABLE";
     }
   }
 

@@ -107,10 +107,11 @@ export interface RuleApplicability {
   /** Characteristics that must hold, e.g. building_type = ตึกแถว. */
   readonly required_characteristics: readonly { readonly key: string; readonly value: string }[];
   /**
-   * Any characteristic in this list satisfies the rule's applicability on its own — the shape
-   * clauses use when they list several building types that the same requirement reaches.
+   * Alternatives, any one of which brings the rule into play. Clauses routinely reach a thing by
+   * *either* what it is *or* how big it is — "a building over two storeys or over 8 metres, a
+   * shophouse, a warehouse…" — so an alternative can be a characteristic or a measurement.
    */
-  readonly any_characteristics?: readonly { readonly key: string; readonly value: string }[];
+  readonly any_of?: readonly ApplicabilityAlternative[];
   /**
    * Numeric conditions on measured inputs, for clauses that band by magnitude — "if the public road
    * is less than six metres wide". An unmeasured input leaves applicability UNRESOLVED rather than
@@ -119,6 +120,11 @@ export interface RuleApplicability {
   readonly conditions?: readonly RulePredicate[];
   readonly note_th: string;
 }
+
+/** One way a rule can become applicable. */
+export type ApplicabilityAlternative =
+  | { readonly kind: "CHARACTERISTIC"; readonly key: string; readonly value: string }
+  | { readonly kind: "MEASUREMENT"; readonly predicate: RulePredicate };
 
 export interface LegalRule {
   readonly rule_id: string;

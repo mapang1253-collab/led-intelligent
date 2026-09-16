@@ -54,6 +54,7 @@ export type {
 
 export type {
   Applicability,
+  ApplicabilityAlternative,
   ConceptUnderTest,
   FamilyCoverage,
   LegalRule,

@@ -1,20 +1,11 @@
 {
   "pack_id": "th.cba.mr55",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "title_th": "ชุดกฎควบคุมอาคาร: กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543) — ที่ว่าง แนวอาคารและระยะร่น",
-  "lifecycle_state": "ACADEMIC_REVIEWED",
+  "lifecycle_state": "DRAFT",
   "jurisdiction_coverage_th": "ใช้บังคับทั่วประเทศในเขตที่มีการประกาศใช้พระราชบัญญัติควบคุมอาคาร พ.ศ. 2522 ชุดกฎนี้ครอบคลุมเฉพาะหมวดที่ว่าง แนวอาคารและระยะร่น ไม่ครอบคลุมผังเมืองรวม การใช้ประโยชน์ที่ดิน หรือข้อบัญญัติท้องถิ่น",
   "declared_critical_families": ["DEVELOPMENT_INTENSITY", "SETBACK_ACCESS"],
-  "review": {
-    "reviewers": ["อรณภา", "สุรัตนาพร"],
-    "reviewed_on": "2026-09-16",
-    "content_hash": "dda8116d90a2b59073f488f280bf8fcfdd68aad7c3fa0bab31a0c23ec16b26bd",
-    "evidence_basis_th": "ตัวบทจากฉบับรวมของสมาคมสถาปนิกสยาม ตรวจสอบเมื่อ 2026-09-16",
-    "limitations_th": [
-      "ครอบคลุมเฉพาะที่ว่าง แนวอาคารและระยะร่น ไม่ครอบคลุมผังเมืองรวมและข้อบัญญัติท้องถิ่น",
-      "ยังไม่ได้ทานกับราชกิจจานุเบกษาต้นฉบับ"
-    ]
-  },
+  "review": null,
   "rules": [
     {
       "rule_id": "mr55.c33.1",
@@ -47,17 +38,19 @@
       "applicability": {
         "activity_ids": [],
         "required_characteristics": [],
-        "any_characteristics": [
+        "note_th": "ใช้กับอาคารอยู่อาศัยและอาคารอยู่อาศัยรวม",
+        "any_of": [
           {
+            "kind": "CHARACTERISTIC",
             "key": "building_type",
             "value": "อาคารอยู่อาศัย"
           },
           {
+            "kind": "CHARACTERISTIC",
             "key": "building_type",
             "value": "อาคารอยู่อาศัยรวม"
           }
-        ],
-        "note_th": "ใช้กับอาคารอยู่อาศัยและอาคารอยู่อาศัยรวม"
+        ]
       },
       "inputs": [
         {
@@ -113,29 +106,34 @@
       "applicability": {
         "activity_ids": [],
         "required_characteristics": [],
-        "any_characteristics": [
+        "note_th": "ใช้กับอาคารที่ไม่ได้ใช้เป็นที่อยู่อาศัย หากใช้อยู่อาศัยด้วยให้ใช้ข้อ 33 (1)",
+        "any_of": [
           {
+            "kind": "CHARACTERISTIC",
             "key": "building_type",
             "value": "ห้องแถว"
           },
           {
+            "kind": "CHARACTERISTIC",
             "key": "building_type",
             "value": "ตึกแถว"
           },
           {
+            "kind": "CHARACTERISTIC",
             "key": "building_type",
             "value": "อาคารพาณิชย์"
           },
           {
+            "kind": "CHARACTERISTIC",
             "key": "building_type",
             "value": "โรงงาน"
           },
           {
+            "kind": "CHARACTERISTIC",
             "key": "building_type",
             "value": "อาคารสาธารณะ"
           }
-        ],
-        "note_th": "ใช้กับอาคารที่ไม่ได้ใช้เป็นที่อยู่อาศัย หากใช้อยู่อาศัยด้วยให้ใช้ข้อ 33 (1)"
+        ]
       },
       "inputs": [
         {
@@ -191,17 +189,19 @@
       "applicability": {
         "activity_ids": [],
         "required_characteristics": [],
-        "any_characteristics": [
+        "note_th": "ใช้กับห้องแถวและตึกแถว",
+        "any_of": [
           {
+            "kind": "CHARACTERISTIC",
             "key": "building_type",
             "value": "ห้องแถว"
           },
           {
+            "kind": "CHARACTERISTIC",
             "key": "building_type",
             "value": "ตึกแถว"
           }
-        ],
-        "note_th": "ใช้กับห้องแถวและตึกแถว"
+        ]
       },
       "inputs": [
         {
@@ -518,36 +518,6 @@
       "applicability": {
         "activity_ids": [],
         "required_characteristics": [],
-        "any_characteristics": [
-          {
-            "key": "building_type",
-            "value": "ห้องแถว"
-          },
-          {
-            "key": "building_type",
-            "value": "ตึกแถว"
-          },
-          {
-            "key": "building_type",
-            "value": "อาคารพาณิชย์"
-          },
-          {
-            "key": "building_type",
-            "value": "โรงงาน"
-          },
-          {
-            "key": "building_type",
-            "value": "อาคารสาธารณะ"
-          },
-          {
-            "key": "building_type",
-            "value": "บ้านแถว"
-          },
-          {
-            "key": "building_type",
-            "value": "คลังสินค้า"
-          }
-        ],
         "conditions": [
           {
             "kind": "NUMERIC",
@@ -557,7 +527,64 @@
             "unit": "เมตร"
           }
         ],
-        "note_th": "ใช้กับอาคารประเภทที่ข้อ 41 วรรคสองระบุ เมื่อถนนกว้างน้อยกว่า 10 เมตร"
+        "note_th": "ใช้กับอาคารที่สูงเกินสองชั้นหรือเกิน 8 เมตร และกับอาคารประเภทที่ข้อ 41 วรรคสองระบุ เมื่อยังไม่ทราบความสูงหรือจำนวนชั้น จะยังตัดข้อนี้ออกไม่ได้",
+        "any_of": [
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "ห้องแถว"
+          },
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "ตึกแถว"
+          },
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "บ้านแถว"
+          },
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "อาคารพาณิชย์"
+          },
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "โรงงาน"
+          },
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "อาคารสาธารณะ"
+          },
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "คลังสินค้า"
+          },
+          {
+            "kind": "MEASUREMENT",
+            "predicate": {
+              "kind": "NUMERIC",
+              "input_id": "storey_count",
+              "op": "gt",
+              "value": "2",
+              "unit": "ชั้น"
+            }
+          },
+          {
+            "kind": "MEASUREMENT",
+            "predicate": {
+              "kind": "NUMERIC",
+              "input_id": "building_height",
+              "op": "gt",
+              "value": "8",
+              "unit": "เมตร"
+            }
+          }
+        ]
       },
       "inputs": [
         {
@@ -571,6 +598,18 @@
           "label_th": "ระยะร่นแนวอาคารจากกึ่งกลางถนนสาธารณะ",
           "unit": "เมตร",
           "obtained_from_th": "แบบผังบริเวณ"
+        },
+        {
+          "input_id": "storey_count",
+          "label_th": "จำนวนชั้นของอาคาร",
+          "unit": "ชั้น",
+          "obtained_from_th": "แบบสถาปัตยกรรม"
+        },
+        {
+          "input_id": "building_height",
+          "label_th": "ความสูงอาคาร",
+          "unit": "เมตร",
+          "obtained_from_th": "แบบสถาปัตยกรรม"
         }
       ],
       "predicate": {
@@ -613,36 +652,6 @@
       "applicability": {
         "activity_ids": [],
         "required_characteristics": [],
-        "any_characteristics": [
-          {
-            "key": "building_type",
-            "value": "ห้องแถว"
-          },
-          {
-            "key": "building_type",
-            "value": "ตึกแถว"
-          },
-          {
-            "key": "building_type",
-            "value": "อาคารพาณิชย์"
-          },
-          {
-            "key": "building_type",
-            "value": "โรงงาน"
-          },
-          {
-            "key": "building_type",
-            "value": "อาคารสาธารณะ"
-          },
-          {
-            "key": "building_type",
-            "value": "บ้านแถว"
-          },
-          {
-            "key": "building_type",
-            "value": "คลังสินค้า"
-          }
-        ],
         "conditions": [
           {
             "kind": "NUMERIC",
@@ -659,7 +668,64 @@
             "unit": "เมตร"
           }
         ],
-        "note_th": "ใช้เมื่อถนนกว้างตั้งแต่ 10 ถึง 20 เมตร"
+        "note_th": "ใช้กับอาคารที่สูงเกินสองชั้นหรือเกิน 8 เมตร และกับอาคารประเภทที่ข้อ 41 วรรคสองระบุ เมื่อยังไม่ทราบความสูงหรือจำนวนชั้น จะยังตัดข้อนี้ออกไม่ได้",
+        "any_of": [
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "ห้องแถว"
+          },
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "ตึกแถว"
+          },
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "บ้านแถว"
+          },
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "อาคารพาณิชย์"
+          },
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "โรงงาน"
+          },
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "อาคารสาธารณะ"
+          },
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "คลังสินค้า"
+          },
+          {
+            "kind": "MEASUREMENT",
+            "predicate": {
+              "kind": "NUMERIC",
+              "input_id": "storey_count",
+              "op": "gt",
+              "value": "2",
+              "unit": "ชั้น"
+            }
+          },
+          {
+            "kind": "MEASUREMENT",
+            "predicate": {
+              "kind": "NUMERIC",
+              "input_id": "building_height",
+              "op": "gt",
+              "value": "8",
+              "unit": "เมตร"
+            }
+          }
+        ]
       },
       "inputs": [
         {
@@ -673,6 +739,18 @@
           "label_th": "ระยะร่นแนวอาคารจากเขตถนนสาธารณะ",
           "unit": "เมตร",
           "obtained_from_th": "แบบผังบริเวณ"
+        },
+        {
+          "input_id": "storey_count",
+          "label_th": "จำนวนชั้นของอาคาร",
+          "unit": "ชั้น",
+          "obtained_from_th": "แบบสถาปัตยกรรม"
+        },
+        {
+          "input_id": "building_height",
+          "label_th": "ความสูงอาคาร",
+          "unit": "เมตร",
+          "obtained_from_th": "แบบสถาปัตยกรรม"
         }
       ],
       "predicate": {
@@ -715,36 +793,6 @@
       "applicability": {
         "activity_ids": [],
         "required_characteristics": [],
-        "any_characteristics": [
-          {
-            "key": "building_type",
-            "value": "ห้องแถว"
-          },
-          {
-            "key": "building_type",
-            "value": "ตึกแถว"
-          },
-          {
-            "key": "building_type",
-            "value": "อาคารพาณิชย์"
-          },
-          {
-            "key": "building_type",
-            "value": "โรงงาน"
-          },
-          {
-            "key": "building_type",
-            "value": "อาคารสาธารณะ"
-          },
-          {
-            "key": "building_type",
-            "value": "บ้านแถว"
-          },
-          {
-            "key": "building_type",
-            "value": "คลังสินค้า"
-          }
-        ],
         "conditions": [
           {
             "kind": "NUMERIC",
@@ -754,7 +802,64 @@
             "unit": "เมตร"
           }
         ],
-        "note_th": "ใช้เมื่อถนนกว้างเกิน 20 เมตร"
+        "note_th": "ใช้กับอาคารที่สูงเกินสองชั้นหรือเกิน 8 เมตร และกับอาคารประเภทที่ข้อ 41 วรรคสองระบุ เมื่อยังไม่ทราบความสูงหรือจำนวนชั้น จะยังตัดข้อนี้ออกไม่ได้",
+        "any_of": [
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "ห้องแถว"
+          },
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "ตึกแถว"
+          },
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "บ้านแถว"
+          },
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "อาคารพาณิชย์"
+          },
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "โรงงาน"
+          },
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "อาคารสาธารณะ"
+          },
+          {
+            "kind": "CHARACTERISTIC",
+            "key": "building_type",
+            "value": "คลังสินค้า"
+          },
+          {
+            "kind": "MEASUREMENT",
+            "predicate": {
+              "kind": "NUMERIC",
+              "input_id": "storey_count",
+              "op": "gt",
+              "value": "2",
+              "unit": "ชั้น"
+            }
+          },
+          {
+            "kind": "MEASUREMENT",
+            "predicate": {
+              "kind": "NUMERIC",
+              "input_id": "building_height",
+              "op": "gt",
+              "value": "8",
+              "unit": "เมตร"
+            }
+          }
+        ]
       },
       "inputs": [
         {
@@ -768,6 +873,18 @@
           "label_th": "ระยะร่นแนวอาคารจากเขตถนนสาธารณะ",
           "unit": "เมตร",
           "obtained_from_th": "แบบผังบริเวณ"
+        },
+        {
+          "input_id": "storey_count",
+          "label_th": "จำนวนชั้นของอาคาร",
+          "unit": "ชั้น",
+          "obtained_from_th": "แบบสถาปัตยกรรม"
+        },
+        {
+          "input_id": "building_height",
+          "label_th": "ความสูงอาคาร",
+          "unit": "เมตร",
+          "obtained_from_th": "แบบสถาปัตยกรรม"
         }
       ],
       "predicate": {

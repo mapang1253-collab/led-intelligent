@@ -1,6 +1,6 @@
 # Legal pack — กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543): ที่ว่าง แนวอาคารและระยะร่น
 
-Review dossier for pack `th.cba.mr55` v1.0.0
+Review dossier for pack `th.cba.mr55` v1.1.0
 (`database/reviewed-packs/th-cba-mr55-v1.json`), assessed against
 [`docs/validation-architecture.md`](../validation-architecture.md) §4 and §9.
 
@@ -71,13 +71,20 @@ the 10 % non-residential rule never both fire on one building type.
   UNKNOWN, and the engine returns exactly that with the missing facts named.
 - **Road and water-body dimensions are not held by this system.** They must be measured or obtained
   from the local authority; no evidence source currently supplies them.
-- **ข้อ 41 วรรคสอง applicability is encoded by building type only.** The clause also reaches any
-  building over two storeys or over 8 metres regardless of type; that limb is not encoded, because
-  storey count and height are not yet part of a concept's characteristics. A low building of an
-  unlisted type is therefore screened; a tall one of an unlisted type is **not**, and would need this
-  limb added before the pack could be relied on for it.
+- ~~**ข้อ 41 วรรคสอง applicability is encoded by building type only.**~~ **Closed in v1.1.0.** The
+  clause reaches a building either by its type or by its size, and both limbs are now encoded: over
+  two storeys, or over 8 metres, or one of the listed types. Because a concept states no height, the
+  rule now reports UNRESOLVED for an unlisted type rather than dropping out — the requirement stays
+  in play until someone states the height.
 - **Not professional advice.** `ACADEMIC_REVIEWED` is a lifecycle state. Confirmation of any real
   project's compliance rests with the competent local authority and a licensed practitioner.
+
+## Version history
+
+- **1.1.0** (2026-09-16) — encoded the size limb of ข้อ 41 วรรคสอง (over two storeys or over 8 m),
+  which v1.0.0 omitted. Editing the rules invalidated the v1.0.0 signature, as designed; the pack
+  needs signing again before it executes.
+- **1.0.0** (2026-09-16) — first encoding, 15 rules.
 
 ## Review status
 

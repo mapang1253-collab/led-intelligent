@@ -16,6 +16,10 @@
   // knsurattanaporn@gmail.com), pointing at the Supabase direct-connection Postgres. The ID is not a
   // secret; the underlying DB password is (lives only in apps/web/.dev.vars, never here).
   "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "469d366a5414404c896ddbe752b18f02" }],
+  // Hourly expiry sweep. Runs expire exactly 24h after creation; an hourly cadence bounds how long
+  // an expired run's data can linger to well under its own lifetime, without a minute-by-minute job
+  // on a free plan (docs/data-persistence-and-lifecycle.md §3).
+  "triggers": { "crons": ["0 * * * *"] },
   // Not a secret: the mode only selects which concept source runs. LIVE_AI stays off until the
   // provider's data-use terms are reviewed and recorded (docs/ai-architecture.md §6-7); the
   // deployed build serves the recorded fixture, and the screen says so.

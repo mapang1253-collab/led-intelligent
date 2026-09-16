@@ -45,3 +45,9 @@ export {
   recordCall,
   reserveCall,
 } from "./repositories/ai-budget.js";
+export {
+  type ExpiryStatus,
+  type PurgeOutcome,
+  expiryStatus,
+  purgeExpiredRuns,
+} from "./repositories/purge.js";

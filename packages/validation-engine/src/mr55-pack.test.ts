@@ -316,3 +316,70 @@ describe("what the rules require of a particular piece of land", () => {
     expect(height?.requirement_th).toContain("ไม่เกิน");
   });
 });
+
+describe("the tall-building limb of ข้อ 41 วรรคสอง", () => {
+  it("keeps the rule in play for an unlisted type whose height is unknown", () => {
+    // อาคารอยู่อาศัยรวม is not in the clause's list, but the clause also reaches anything over two
+    // storeys or 8 m. With no height stated, ruling it out would drop a requirement on a fact we
+    // do not have.
+    const result = validateLegal(
+      reviewed(),
+      concept({
+        characteristics: { building_type: "อาคารอยู่อาศัยรวม" },
+        inputs: { road_width: "8" },
+      }),
+      TARGET,
+    );
+    const band = result.outcomes.find((outcome) => outcome.rule_id === "mr55.c41.2.1");
+    expect(band?.applicability).toBe("UNRESOLVED");
+  });
+
+  it("applies it once the building is stated to be tall", () => {
+    const result = validateLegal(
+      reviewed(),
+      concept({
+        characteristics: { building_type: "อาคารอยู่อาศัยรวม" },
+        inputs: { road_width: "8", building_height: "12" },
+      }),
+      TARGET,
+    );
+    expect(
+      result.outcomes.find((outcome) => outcome.rule_id === "mr55.c41.2.1")?.applicability,
+    ).toBe("APPLICABLE");
+  });
+
+  it("drops it once the building is stated to be small and of an unlisted type", () => {
+    const result = validateLegal(
+      reviewed(),
+      concept({
+        characteristics: { building_type: "อาคารอยู่อาศัย" },
+        inputs: { road_width: "8", building_height: "6", storey_count: "2" },
+      }),
+      TARGET,
+    );
+    expect(
+      result.outcomes.find((outcome) => outcome.rule_id === "mr55.c41.2.1")?.applicability,
+    ).toBe("NOT_APPLICABLE");
+  });
+
+  it("still applies on type alone, whatever the size", () => {
+    const result = validateLegal(
+      reviewed(),
+      concept({
+        characteristics: { building_type: "ตึกแถว" },
+        inputs: { road_width: "8", building_height: "4", storey_count: "1" },
+      }),
+      TARGET,
+    );
+    expect(
+      result.outcomes.find((outcome) => outcome.rule_id === "mr55.c41.2.1")?.applicability,
+    ).toBe("APPLICABLE");
+  });
+
+  it("no longer carries a signature, because the rules changed", async () => {
+    // Editing a threshold or a clause must invalidate the review rather than inherit it.
+    expect(pack.lifecycle_state).toBe("DRAFT");
+    expect(pack.review).toBeNull();
+    expect(pack.version).toBe("1.1.0");
+  });
+});

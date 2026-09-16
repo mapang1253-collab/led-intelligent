@@ -1,4 +1,10 @@
-import { createDb, listDistricts, listProvinces, listSubdistricts } from "@reis/data-access";
+import {
+  createDb,
+  listDistricts,
+  listProvinces,
+  listSubdistricts,
+  purgeExpiredRuns,
+} from "@reis/data-access";
 import { Hono } from "hono";
 import { analysisRuns } from "./routes/analysis-runs.js";
 
@@ -82,4 +88,33 @@ app.notFound((c) => {
   return c.env.ASSETS.fetch(c.req.raw);
 });
 
-export default app;
+/**
+ * Scheduled expiry purge (docs/data-persistence-and-lifecycle.md §3: "At expiry, revoke access and
+ * automatically purge run-scoped intake, assertions, AI exchanges, analyses, outputs and temporary
+ * objects").
+ *
+ * Access is already revoked the moment a run expires — every read checks `expires_at` — so this
+ * sweep is about the data no longer existing, not about locking it. It is bounded per run and
+ * records what it did, so a failure leaves a trace for the next sweep rather than looking like a
+ * clean slate.
+ */
+async function scheduledPurge(env: Env): Promise<void> {
+  const db = createDb(env.HYPERDRIVE.connectionString);
+  try {
+    const outcome = await purgeExpiredRuns(db, { source: "CRON" });
+    if (outcome.failure_reason) {
+      console.warn(`[purge] failed: ${outcome.failure_reason}`);
+    } else if (outcome.runs_deleted > 0) {
+      console.log(`[purge] deleted ${outcome.runs_deleted} expired run(s)`);
+    }
+  } finally {
+    await db.destroy();
+  }
+}
+
+export default {
+  fetch: app.fetch,
+  scheduled: (_event: ScheduledController, env: Env, ctx: ExecutionContext) => {
+    ctx.waitUntil(scheduledPurge(env));
+  },
+};
