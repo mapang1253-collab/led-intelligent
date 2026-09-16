@@ -72,3 +72,19 @@ export type {
   RuleSource,
   ValidationStatus,
 } from "./legal.js";
+
+export {
+  ACTIVITY_IDS,
+  BUILDING_TYPES_TH,
+  CONCEPT_SCHEMA_VERSION,
+  type ActivityId,
+  type AiFailureCode,
+  type BuildingTypeTh,
+  type CandidateSearchRecord,
+  type ConceptProposalResult,
+  type ConceptSearchStopReason,
+  type DemandHypothesis,
+  type EvidenceCard,
+  type OpportunityBrief,
+  type PotentialUseConcept,
+} from "./concept.js";
