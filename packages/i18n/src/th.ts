@@ -75,6 +75,7 @@ export const th = {
     stageSucceeded: "เสร็จแล้ว",
     stageSkipped: "ยังไม่เปิดใช้งาน",
     stageDegraded: "ได้ข้อมูลไม่ครบ",
+    stageFailed: "ไม่สำเร็จ ลองใหม่ได้",
     stageRunning: "กำลังทำงาน",
     stagePending: "รอดำเนินการ",
     stage: {
@@ -84,6 +85,14 @@ export const th = {
       VALIDATION: "ตรวจสอบกฎหมาย/กายภาพ/ดีมานด์",
       SCENARIO: "คำนวณความเป็นไปได้ทางการเงิน",
       COMPARISON: "เปรียบเทียบและสรุปผล",
+    },
+    stageReason: {
+      NO_CANDIDATES: "ยังไม่มีแนวคิดให้ตรวจ",
+      AI_PROVIDER_BUSY: "บริการ AI หนาแน่นชั่วคราว",
+      AI_QUOTA_EXHAUSTED: "โควตา AI หมดแล้ววันนี้",
+      AI_TIMEOUT: "ใช้เวลานานเกินกำหนด",
+      AI_UNAVAILABLE: "ติดต่อบริการไม่ได้",
+      AI_OUTPUT_INVALID: "คำตอบไม่ผ่านการตรวจสอบ",
     },
   },
 

@@ -53,6 +53,36 @@ const SCHEMA_VERSION = "1.0.0";
 /** The only pack this deployment ships. It executes only if its review record still matches. */
 const LEGAL_PACK = mr55Pack as unknown as LegalRulePack;
 
+/** States that mean the stage ran and did not get there, versus never having been switched on. */
+const NOT_ACTIVATED_REASONS = new Set(["AI_DISABLED", "NO_EVIDENCE"]);
+
+export function conceptStageRecord(set: {
+  concepts: readonly unknown[];
+  failure_code: string | null;
+}): { state: string; reason?: string } {
+  if (set.concepts.length > 0) {
+    return { state: "SUCCEEDED" };
+  }
+  const reason = set.failure_code ?? "AI_DISABLED";
+  return NOT_ACTIVATED_REASONS.has(reason)
+    ? { state: "SKIPPED", reason }
+    : { state: "FAILED", reason };
+}
+
+export function validationStageRecord(set: {
+  concepts: readonly unknown[];
+  validations: readonly unknown[];
+  failure_code: string | null;
+}): { state: string; reason?: string } {
+  if (set.validations.length > 0) {
+    return { state: "SUCCEEDED" };
+  }
+  if (set.concepts.length === 0) {
+    return { state: "SKIPPED", reason: "NO_CANDIDATES" };
+  }
+  return { state: "SKIPPED", reason: set.failure_code ?? "PACK_NOT_ACTIVATED" };
+}
+
 function aiMode(env: Env): AiMode {
   const mode = env.AI_MODE;
   return mode === "LIVE_AI" || mode === "RECORDED_AI" ? mode : "AI_DISABLED";
@@ -255,16 +285,17 @@ analysisRuns.get("/:run_id", async (c) => {
         {
           stage: "CONCEPT_PROPOSAL",
           version: "1.0.0",
-          state: conceptSet.concepts.length > 0 ? "SUCCEEDED" : "SKIPPED",
-          ...(conceptSet.concepts.length > 0
-            ? {}
-            : { reason: conceptSet.failure_code ?? "AI_DISABLED" }),
+          // A stage that tried and failed is not a stage that was never switched on. Reporting a
+          // provider outage as "not activated" tells the reader to wait for a feature, when what
+          // they should do is press the button again.
+          ...conceptStageRecord(conceptSet),
         },
         {
           stage: "VALIDATION",
           version: "1.0.0",
-          state: conceptSet.validations.length > 0 ? "SUCCEEDED" : "SKIPPED",
-          ...(conceptSet.validations.length > 0 ? {} : { reason: "PACK_NOT_ACTIVATED" }),
+          // With no concepts there is nothing to validate; that is not the pack's fault, and
+          // saying "pack not activated" would send the reader after the wrong thing.
+          ...validationStageRecord(conceptSet),
         },
         {
           stage: "SCENARIO",

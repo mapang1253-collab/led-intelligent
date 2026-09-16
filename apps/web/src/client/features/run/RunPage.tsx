@@ -32,25 +32,35 @@ function StageRow({ record }: { record: StageRecord }) {
   const done = record.state === "SUCCEEDED";
   const skipped = record.state === "SKIPPED";
   const degraded = record.state === "DEGRADED";
+  const failed = record.state === "FAILED";
   const running = record.state === "RUNNING";
 
   const statusText = done
     ? th.progress.stageSucceeded
-    : degraded
-      ? th.progress.stageDegraded
-      : skipped
-        ? th.progress.stageSkipped
-        : running
-          ? th.progress.stageRunning
-          : th.progress.stagePending;
+    : failed
+      ? th.progress.stageFailed
+      : degraded
+        ? th.progress.stageDegraded
+        : skipped
+          ? th.progress.stageSkipped
+          : running
+            ? th.progress.stageRunning
+            : th.progress.stagePending;
 
   const color = done
     ? "var(--color-pass)"
-    : degraded
-      ? "var(--color-partial)"
-      : skipped
-        ? "var(--color-unknown)"
-        : "var(--color-ink-muted)";
+    : failed
+      ? "var(--color-fail)"
+      : degraded
+        ? "var(--color-partial)"
+        : skipped
+          ? "var(--color-unknown)"
+          : "var(--color-ink-muted)";
+
+  // Why a stage did not complete, where a short reason exists for it.
+  const reasonText = record.reason
+    ? ((th.progress.stageReason as Record<string, string>)[record.reason] ?? undefined)
+    : undefined;
 
   return (
     <li className="flex items-center justify-between gap-4 border-border border-b py-3 last:border-b-0">
@@ -66,8 +76,9 @@ function StageRow({ record }: { record: StageRecord }) {
         </span>
         {label}
       </span>
-      <span className="text-sm" style={{ color }}>
+      <span className="text-right text-sm" style={{ color }}>
         {statusText}
+        {reasonText && <span className="block text-ink-muted text-xs">{reasonText}</span>}
       </span>
     </li>
   );
