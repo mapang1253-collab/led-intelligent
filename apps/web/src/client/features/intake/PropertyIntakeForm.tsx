@@ -118,17 +118,20 @@ export function PropertyIntakeForm() {
     // Site facts follow the same rule: a measurement not taken is absent, never zero.
     const sitePayload = Object.fromEntries(Object.entries(site).filter(([, v]) => v.trim() !== ""));
 
-    createRun.mutate(
-      {
-        province_id: provinceId,
-        district_id: districtId,
-        subdistrict_id: subdistrictId,
-        ...optionalPayload,
-        ...sitePayload,
-        ...(nearLargeWater ? { near_large_water_body: true } : {}),
-      },
-      { onSuccess: (run) => navigate(`/runs/${run.run_id}`) },
-    );
+    const intake = {
+      province_id: provinceId,
+      district_id: districtId,
+      subdistrict_id: subdistrictId,
+      ...optionalPayload,
+      ...sitePayload,
+      ...(nearLargeWater ? { near_large_water_body: true } : {}),
+    };
+
+    createRun.mutate(intake, {
+      // The intake travels in router state, never in storage: it is what a retry has to repeat,
+      // and it lives exactly as long as this navigation does.
+      onSuccess: (run) => navigate(`/runs/${run.run_id}`, { state: { intake } }),
+    });
   }
 
   return (

@@ -68,6 +68,9 @@ export const th = {
     queued: "รอคิวการวิเคราะห์",
     running: "กำลังวิเคราะห์ข้อมูล",
     cancel: "ยกเลิกการวิเคราะห์",
+    retry: "ลองวิเคราะห์อีกครั้ง",
+    retryNote: "จะเริ่มการวิเคราะห์ใหม่สำหรับพื้นที่เดิม ผลเดิมจะไม่ถูกแก้ไข",
+    retrying: "กำลังเริ่มใหม่",
     backToIntake: "กลับไปหน้ากรอกข้อมูล",
     expiresAt: "ผลลัพธ์นี้จะหมดอายุ",
     targetHeading: "พื้นที่ที่วิเคราะห์",
@@ -75,7 +78,8 @@ export const th = {
     stageSucceeded: "เสร็จแล้ว",
     stageSkipped: "ยังไม่เปิดใช้งาน",
     stageDegraded: "ได้ข้อมูลไม่ครบ",
-    stageFailed: "ไม่สำเร็จ ลองใหม่ได้",
+    stageFailed: "ไม่สำเร็จ",
+    stageFailedRetryable: "ไม่สำเร็จ ลองใหม่ได้",
     stageRunning: "กำลังทำงาน",
     stagePending: "รอดำเนินการ",
     stage: {
@@ -88,6 +92,7 @@ export const th = {
     },
     stageReason: {
       NO_CANDIDATES: "ยังไม่มีแนวคิดให้ตรวจ",
+      AI_FAILURE: "ไม่ได้ชุดแนวคิดที่ครบพอจะสรุปผล",
       AI_PROVIDER_BUSY: "บริการ AI หนาแน่นชั่วคราว",
       AI_QUOTA_EXHAUSTED: "โควตา AI หมดแล้ววันนี้",
       AI_TIMEOUT: "ใช้เวลานานเกินกำหนด",

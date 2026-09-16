@@ -28,6 +28,8 @@ export interface StageRecord {
     | "CANCELLED"
     | "SKIPPED";
   reason?: string;
+  /** Set on a failed stage: whether running the same request again could plausibly get past it. */
+  retryable?: boolean;
 }
 
 export interface EvidenceGroup {

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { conceptStageRecord, validationStageRecord } from "./analysis-runs.js";
+import {
+  comparisonStageRecord,
+  conceptStageRecord,
+  validationStageRecord,
+} from "./analysis-runs.js";
 
 /**
  * A stage that tried and failed is not a stage that was never switched on. The app told a user
@@ -18,7 +22,20 @@ describe("concept stage", () => {
     expect(conceptStageRecord({ concepts: [], failure_code: "AI_PROVIDER_BUSY" })).toEqual({
       state: "FAILED",
       reason: "AI_PROVIDER_BUSY",
+      retryable: true,
     });
+  });
+
+  it("offers a retry only where another attempt could get past the failure", () => {
+    // A busy provider, a slow one, and an answer the validator rejected: all worth another run.
+    for (const code of ["AI_PROVIDER_BUSY", "AI_TIMEOUT", "AI_OUTPUT_INVALID"]) {
+      expect(conceptStageRecord({ concepts: [], failure_code: code }).retryable).toBe(true);
+    }
+    // A spent allowance, an unconfigured budget and a provider we cannot reach fail identically
+    // on a second attempt; saying "try again" would send the reader into the same wall.
+    for (const code of ["AI_QUOTA_EXHAUSTED", "AI_BUDGET_NOT_CONFIGURED", "AI_UNAVAILABLE"]) {
+      expect(conceptStageRecord({ concepts: [], failure_code: code }).retryable).toBe(false);
+    }
   });
 
   it("reports an exhausted quota and an invalid answer as failures too", () => {
@@ -27,6 +44,12 @@ describe("concept stage", () => {
     );
     expect(conceptStageRecord({ concepts: [], failure_code: "AI_OUTPUT_INVALID" }).state).toBe(
       "FAILED",
+    );
+  });
+
+  it("never marks a stage that was never switched on as retryable", () => {
+    expect(conceptStageRecord({ concepts: [], failure_code: "AI_DISABLED" }).retryable).toBe(
+      undefined,
     );
   });
 
@@ -58,5 +81,26 @@ describe("validation stage", () => {
     expect(
       validationStageRecord({ concepts: [{}], validations: [], failure_code: "PACK_NOT_REVIEWED" }),
     ).toEqual({ state: "SKIPPED", reason: "PACK_NOT_REVIEWED" });
+  });
+});
+
+describe("comparison stage", () => {
+  it("succeeds when a final analysis was decided", () => {
+    // INSUFFICIENT_EVIDENCE is a decision the stage reached, not a stage that never ran.
+    expect(
+      comparisonStageRecord({ concepts: [{}], final: { status: "INSUFFICIENT_EVIDENCE" } }),
+    ).toEqual({ state: "SUCCEEDED" });
+  });
+
+  it("does not claim there were no candidates while candidates are on the screen", () => {
+    const record = comparisonStageRecord({ concepts: [{}], final: null });
+    expect(record.reason).not.toBe("NO_CANDIDATES");
+  });
+
+  it("blames the missing candidates only when there really are none", () => {
+    expect(comparisonStageRecord({ concepts: [], final: null })).toEqual({
+      state: "SKIPPED",
+      reason: "NO_CANDIDATES",
+    });
   });
 });

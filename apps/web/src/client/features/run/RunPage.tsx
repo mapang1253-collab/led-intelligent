@@ -8,15 +8,22 @@ import {
   Info,
   LoaderCircle,
   MapPin,
+  RotateCw,
   TriangleAlert,
 } from "lucide-react";
 import { useRef } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { TerrainBackdrop } from "../design-system/TerrainBackdrop.js";
 import { ConceptPanel } from "./ConceptPanel.js";
 import { EvidencePanel } from "./EvidencePanel.js";
 import { FinalResultPanel } from "./FinalResultPanel.js";
-import { type StageRecord, isTerminal, useCancelRun, useRun } from "./useAnalysisRun.js";
+import {
+  type StageRecord,
+  isTerminal,
+  useCancelRun,
+  useCreateRun,
+  useRun,
+} from "./useAnalysisRun.js";
 
 /**
  * Run progress and outcome. Progress shows real stage states, never a fabricated percentage
@@ -38,7 +45,10 @@ function StageRow({ record }: { record: StageRecord }) {
   const statusText = done
     ? th.progress.stageSucceeded
     : failed
-      ? th.progress.stageFailed
+      ? // Only a failure another attempt could get past is described as worth retrying.
+        record.retryable
+        ? th.progress.stageFailedRetryable
+        : th.progress.stageFailed
       : degraded
         ? th.progress.stageDegraded
         : skipped
@@ -86,10 +96,22 @@ function StageRow({ record }: { record: StageRecord }) {
 
 export function RunPage() {
   const { runId } = useParams();
-  // Fixed at mount so the 2s→5s polling schedule measures from when this run was opened.
-  const startedAt = useRef(Date.now()).current;
+  const location = useLocation();
+  const navigate = useNavigate();
+  // Measured from when THIS run was opened. Keyed by run id because a retry navigates to a new run
+  // without unmounting this screen, and the schedule must restart at two seconds for it.
+  const clock = useRef({ runId, at: Date.now() });
+  if (clock.current.runId !== runId) {
+    clock.current = { runId, at: Date.now() };
+  }
+  const startedAt = clock.current.at;
   const run = useRun(runId, startedAt);
   const cancel = useCancelRun(runId);
+  const retry = useCreateRun();
+
+  // The request that produced this run, carried by the navigation that opened it. Absent after a
+  // page reload or a pasted link, and a retry is simply not offered then.
+  const intake = (location.state as { intake?: Record<string, unknown> } | null)?.intake;
 
   const envelope = run.data;
   const state = envelope?.run_state;
@@ -102,6 +124,10 @@ export function RunPage() {
   const evidenceStage = envelope?.stage_records?.find((s) => s.stage === "EVIDENCE_ACQUISITION");
   const conceptStage = envelope?.stage_records?.find((s) => s.stage === "CONCEPT_PROPOSAL");
   const unavailable = envelope?.errors?.some((e) => e.code === "RUN_NOT_AVAILABLE");
+  const canRetry =
+    isTerminal(state) &&
+    Boolean(intake) &&
+    envelope?.stage_records?.some((s) => s.state === "FAILED" && s.retryable) === true;
 
   return (
     <div className="relative min-h-screen text-ink">
@@ -215,6 +241,30 @@ export function RunPage() {
                   timeStyle: "short",
                 })}
               </p>
+            )}
+
+            {canRetry && intake && (
+              <div className="mt-5">
+                <button
+                  type="button"
+                  disabled={retry.isPending}
+                  onClick={() =>
+                    retry.mutate(intake, {
+                      onSuccess: (created) =>
+                        navigate(`/runs/${created.run_id}`, { state: { intake } }),
+                    })
+                  }
+                  className="inline-flex items-center gap-2 rounded-pill bg-signature px-5 py-2.5 font-semibold text-sm"
+                >
+                  {retry.isPending ? (
+                    <LoaderCircle size={15} className="animate-spin" aria-hidden="true" />
+                  ) : (
+                    <RotateCw size={15} aria-hidden="true" />
+                  )}
+                  {retry.isPending ? th.progress.retrying : th.progress.retry}
+                </button>
+                <p className="mt-2 text-ink-muted text-xs">{th.progress.retryNote}</p>
+              </div>
             )}
 
             {!isTerminal(state) && (

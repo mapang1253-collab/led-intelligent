@@ -56,17 +56,25 @@ const LEGAL_PACK = mr55Pack as unknown as LegalRulePack;
 /** States that mean the stage ran and did not get there, versus never having been switched on. */
 const NOT_ACTIVATED_REASONS = new Set(["AI_DISABLED", "NO_EVIDENCE"]);
 
+/**
+ * Failures a fresh run could plausibly get past: a busy or slow provider, and an answer the
+ * validator rejected even after its one repair (the model is sampled, so another run may parse).
+ * Everything else — an exhausted allowance, an unconfigured budget, a provider we cannot reach —
+ * would fail the same way again, and offering "try again" there sends the reader into a wall.
+ */
+const RETRYABLE_REASONS = new Set(["AI_PROVIDER_BUSY", "AI_TIMEOUT", "AI_OUTPUT_INVALID"]);
+
 export function conceptStageRecord(set: {
   concepts: readonly unknown[];
   failure_code: string | null;
-}): { state: string; reason?: string } {
+}): { state: string; reason?: string; retryable?: boolean } {
   if (set.concepts.length > 0) {
     return { state: "SUCCEEDED" };
   }
   const reason = set.failure_code ?? "AI_DISABLED";
   return NOT_ACTIVATED_REASONS.has(reason)
     ? { state: "SKIPPED", reason }
-    : { state: "FAILED", reason };
+    : { state: "FAILED", reason, retryable: RETRYABLE_REASONS.has(reason) };
 }
 
 export function validationStageRecord(set: {
@@ -81,6 +89,21 @@ export function validationStageRecord(set: {
     return { state: "SKIPPED", reason: "NO_CANDIDATES" };
   }
   return { state: "SKIPPED", reason: set.failure_code ?? "PACK_NOT_ACTIVATED" };
+}
+
+/**
+ * Comparison is where the final status is decided. A run that produced a final analysis ran it and
+ * succeeded — INSUFFICIENT_EVIDENCE is a decision, not a stage that never happened. Reporting it as
+ * "no candidates to compare" contradicts the concepts listed directly above it on the same screen.
+ */
+export function comparisonStageRecord(set: {
+  concepts: readonly unknown[];
+  final: unknown;
+}): { state: string; reason?: string } {
+  if (set.final) {
+    return { state: "SUCCEEDED" };
+  }
+  return { state: "SKIPPED", reason: set.concepts.length === 0 ? "NO_CANDIDATES" : "AI_FAILURE" };
 }
 
 function aiMode(env: Env): AiMode {
@@ -303,7 +326,7 @@ analysisRuns.get("/:run_id", async (c) => {
           state: "SKIPPED",
           reason: "COMPONENT_NOT_ACTIVATED",
         },
-        { stage: "COMPARISON", version: "1.0.0", state: "SKIPPED", reason: "NO_CANDIDATES" },
+        { stage: "COMPARISON", version: "1.0.0", ...comparisonStageRecord(conceptSet) },
       ],
       // Present only when a candidate set existed and a decision could be made. A run that never
       // produced one keeps this null and reports an operational state instead.
