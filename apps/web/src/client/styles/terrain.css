@@ -1,10 +1,7 @@
 /**
- * Land-survey backdrop. Replaces the earlier starfield, which was visually generic and said nothing
- * about the product: this one reads as a survey sheet — elevation contours over an irregular
- * cadastral parcel grid, scanned by a slow sweep, with a few pulsing survey points.
- *
- * Static SVG + CSS keyframes only (no rAF loop), and every animation stops under
- * prefers-reduced-motion.
+ * Map backdrop: the 77 provinces of Thailand with pulsing coordinate markers and a scan line
+ * travelling down the country. Static SVG + CSS keyframes only (no rAF loop); all motion stops
+ * under prefers-reduced-motion.
  */
 
 .terrain {
@@ -40,59 +37,50 @@
   position: absolute;
   inset: 0;
   mask-image: radial-gradient(
-    ellipse 62% 58% at 50% 45%,
-    transparent 0%,
-    rgba(0, 0, 0, 0.35) 45%,
-    rgba(0, 0, 0, 0.85) 72%,
+    ellipse 70% 62% at 50% 42%,
+    rgba(0, 0, 0, 0.18) 0%,
+    rgba(0, 0, 0, 0.45) 48%,
+    rgba(0, 0, 0, 0.9) 78%,
     #000 100%
   );
   -webkit-mask-image: radial-gradient(
-    ellipse 62% 58% at 50% 45%,
-    transparent 0%,
-    rgba(0, 0, 0, 0.35) 45%,
-    rgba(0, 0, 0, 0.85) 72%,
+    ellipse 70% 62% at 50% 42%,
+    rgba(0, 0, 0, 0.18) 0%,
+    rgba(0, 0, 0, 0.45) 48%,
+    rgba(0, 0, 0, 0.9) 78%,
     #000 100%
   );
 }
 
-/* Cadastral plots: plain boundaries that drift. The self-tracing dash was removed — ten shapes all
-   redrawing at once was the main source of visual noise. */
-.terrain-plots rect {
-  fill: none;
-  stroke: var(--terrain-line);
-  stroke-width: 1.1;
+/**
+ * National outline. Provinces sit at low opacity with a slow breathing pass so the country reads as
+ * present rather than decorative clutter; the whole map drifts a little to keep it alive.
+ */
+.terrain-map-shapes path {
+  fill: var(--map-fill);
+  stroke: var(--map-stroke);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  animation: terrain-breathe 12s ease-in-out infinite alternate;
 }
-.terrain-plots {
-  opacity: 0.6;
-  animation: terrain-pan 34s ease-in-out infinite alternate;
-}
-
-/* Elevation contours: a travelling dash runs along each ring, and the group drifts and breathes. */
-.terrain-contours path {
-  fill: none;
-  stroke: var(--terrain-contour);
-  stroke-width: 1.2;
-  stroke-dasharray: 200 110;
-  animation: terrain-flow 11s linear infinite, terrain-breathe 9s ease-in-out infinite alternate;
-}
-.terrain-contours {
-  animation: terrain-drift 40s ease-in-out infinite alternate;
+.terrain-map {
+  animation: terrain-drift 46s ease-in-out infinite alternate;
 }
 
-/* Survey points: a dot plus an expanding halo, like a measurement being taken. */
-.terrain-pins circle {
-  fill: var(--terrain-pin);
+/* Coordinate markers: a dot with an expanding ring, as if positions were being fixed one by one. */
+.terrain-marker-dot {
+  fill: var(--map-marker);
 }
-.terrain-pins g {
-  animation: terrain-pin-pulse 4.2s ease-in-out infinite;
+.terrain-markers g {
+  animation: terrain-pin-pulse 4.6s ease-in-out infinite;
 }
-.terrain-pins .terrain-pin-halo {
+.terrain-marker-halo {
   fill: none;
-  stroke: var(--terrain-pin);
-  stroke-width: 1.5;
+  stroke: var(--map-marker);
+  stroke-width: 2;
   transform-box: fill-box;
   transform-origin: center;
-  animation: terrain-halo 4.2s ease-out infinite;
+  animation: terrain-halo 4.6s ease-out infinite;
 }
 
 /* Scan sweep: a soft diagonal band crossing the sheet, suggesting analysis in progress. */
@@ -107,40 +95,21 @@
   animation: terrain-scan 14s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-@keyframes terrain-pan {
-  from {
-    transform: translate3d(-5%, 1.5%, 0);
-  }
-  to {
-    transform: translate3d(5%, -1.5%, 0);
-  }
-}
-
-/* Contour flow: dashes run along the ring, reading as a line being surveyed. */
-@keyframes terrain-flow {
-  from {
-    stroke-dashoffset: 360;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
 @keyframes terrain-drift {
   from {
-    transform: translate3d(-4%, 2.5%, 0) scale(1.02);
+    transform: translate3d(-2%, 1.5%, 0) scale(1.01);
   }
   to {
-    transform: translate3d(4%, -2.5%, 0) scale(1.1);
+    transform: translate3d(2%, -1.5%, 0) scale(1.05);
   }
 }
 
 @keyframes terrain-breathe {
   from {
-    opacity: 0.3;
+    opacity: 0.45;
   }
   to {
-    opacity: 0.7;
+    opacity: 0.9;
   }
 }
 
@@ -177,16 +146,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .terrain-plots,
-  .terrain-contours,
-  .terrain-contours path,
-  .terrain-pins g,
-  .terrain-pins .terrain-pin-halo,
+  .terrain-map,
+  .terrain-map-shapes path,
+  .terrain-markers g,
+  .terrain-marker-halo,
   .terrain-sweep {
     animation: none;
-  }
-  .terrain-contours path {
-    stroke-dasharray: none;
   }
   .terrain-sweep {
     opacity: 0;

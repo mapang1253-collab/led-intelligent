@@ -69,13 +69,12 @@ function CardTitle({ children }: { children: ReactNode }) {
   return <h2 className="mb-5 font-bold text-ink text-lg tracking-tight">{children}</h2>;
 }
 
+/** Latin + looped-Thai pairings. Loopless Thai faces are deliberately not offered. */
 const FONTS = [
-  { id: "prompt", name: "Prompt" },
-  { id: "anuphan", name: "Anuphan" },
-  { id: "kanit", name: "Kanit" },
-  { id: "sarabun", name: "Sarabun" },
-  { id: "plex", name: "IBM Plex Sans Thai" },
-  { id: "looped", name: "Noto Looped" },
+  { id: "plex", name: "Inter + Plex Thai" },
+  { id: "sarabun", name: "Inter + Sarabun" },
+  { id: "looped", name: "DM Sans + Noto Looped" },
+  { id: "jakarta", name: "Jakarta + Plex Thai" },
 ] as const;
 
 const PALETTES = [
@@ -110,7 +109,7 @@ const EVIDENCE_FIELDS: ReadonlyArray<readonly [string, string]> = [
 
 export function DesignSystemPreview() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
-  const [font, setFont] = useState<string>("sarabun");
+  const [font, setFont] = useState<string>("plex");
   const [palette, setPalette] = useState<string>("ocean");
   const [section, setSection] = useState<string>(SECTIONS[0] ?? "");
 
@@ -201,7 +200,7 @@ export function DesignSystemPreview() {
           <span className="glass inline-flex items-center gap-1.5 rounded-pill px-3 py-1 font-semibold text-xs">
             <Building2 size={14} /> ต้นแบบเชิงวิชาการ
           </span>
-          <h1 className="mt-5 font-extrabold text-4xl leading-tight tracking-tight md:text-6xl">
+          <h1 className="mt-5 font-bold text-4xl leading-tight tracking-tight md:text-6xl">
             ที่ดินแปลงนี้
             <br />
             <span className="headline-gradient">ใช้ทำอะไรได้คุ้มที่สุด</span>
@@ -230,7 +229,7 @@ export function DesignSystemPreview() {
               <p className="flex items-center gap-1.5 text-ink-muted text-sm">
                 <MapPin size={15} /> ต.บางปลาสร้อย อ.เมืองชลบุรี จ.ชลบุรี
               </p>
-              <p className="mt-1 font-extrabold text-3xl tracking-tight">ที่พักอาศัยให้เช่า</p>
+              <p className="mt-1 font-bold text-3xl tracking-tight">ที่พักอาศัยให้เช่า</p>
             </div>
             <span
               className="rounded-pill px-4 py-2 font-bold text-sm text-white"
@@ -248,7 +247,7 @@ export function DesignSystemPreview() {
                 <p className="flex items-center gap-1.5 text-ink-muted text-sm">
                   <m.Icon size={15} /> {m.label}
                 </p>
-                <p className="mt-1.5 font-extrabold text-2xl tracking-tight">
+                <p className="mt-1.5 font-bold text-2xl tracking-tight">
                   {m.value}
                   <span className="ml-1.5 font-medium text-ink-muted text-sm">{m.unit}</span>
                 </p>
@@ -325,7 +324,7 @@ export function DesignSystemPreview() {
                 หลักฐานตรง
               </span>
             </div>
-            <p className="mt-3 font-extrabold text-4xl tracking-tight">
+            <p className="mt-3 font-bold text-4xl tracking-tight">
               <span className="headline-gradient">17,019</span>
               <span className="ml-2 font-medium text-ink-muted text-base">บาท/เดือน</span>
             </p>
