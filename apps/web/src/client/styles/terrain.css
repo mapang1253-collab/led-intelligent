@@ -215,6 +215,37 @@
   }
 }
 
+/**
+ * Drizzle over the whole sheet.
+ *
+ * A hairline with soft ends rather than a solid bar: a rain streak is the trail of something
+ * falling, and a hard-edged rectangle reads as a scratch on the glass. Each streak carries its own
+ * opacity inline, so the rain has depth without twenty-six separate rules.
+ */
+.terrain-drizzle {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.terrain-drop {
+  position: absolute;
+  top: -6%;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--map-marker), transparent);
+  animation-name: terrain-drop-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes terrain-drop-fall {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(var(--drop-drift, 0), 112vh, 0);
+  }
+}
+
 /* Lights drifting above the city, in the marker colour so they belong to the same drawing. */
 .terrain-spores {
   position: absolute;
@@ -320,7 +351,8 @@
   .terrain-skyline-far,
   .terrain-skyline-near,
   .terrain-window,
-  .terrain-spore {
+  .terrain-spore,
+  .terrain-drop {
     animation: none;
   }
   /* Stilled, the windows would all read as off; half-lit is the honest resting state. */
@@ -330,8 +362,9 @@
   .terrain-sweep {
     opacity: 0;
   }
-  /* The skyline stays; the drifting lights are motion and nothing else, so they go. */
-  .terrain-spores {
+  /* The skyline stays; the lights and the rain are motion and nothing else, so they go. */
+  .terrain-spores,
+  .terrain-drizzle {
     display: none;
   }
 }

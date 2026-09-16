@@ -12,10 +12,11 @@
  * docs/performance-and-reliability.md §7 are unaffected. All motion stops under
  * prefers-reduced-motion.
  *
- * Under the map stands a city skyline in the same line, its windows lighting one at a time. It is
- * kept to the lower half and dimmed through the middle, because the top of every screen carries a
- * heading and the centre is where the reading happens. Every shape here is decorative: the layer is
- * aria-hidden and carries no meaning the screen relies on.
+ * Under the map stands a city skyline in the same line, its windows lighting one at a time, with a
+ * thin drizzle falling across it. The city is kept to the lower half and dimmed through the middle,
+ * because the top of every screen carries a heading and the centre is where the reading happens.
+ * Every shape here is decorative: the layer is aria-hidden and carries no meaning the screen relies
+ * on.
  */
 
 const PROVINCES = [
@@ -334,6 +335,25 @@ function SkylineRow({
   );
 }
 
+/**
+ * Drizzle. Sparse and slow, because ฝนปรอย is not a downpour: 26 streaks over the whole viewport,
+ * each thin enough to read as a hint of rain rather than as lines drawn across the screen.
+ *
+ * Generated from the same hash as everything else here, so the rain falls the same way on every
+ * render. A drift value leans each streak, which is what stops rain from looking like it is falling
+ * in a vacuum.
+ */
+const DRIZZLE = Array.from({ length: 26 }, (_, i) => ({
+  id: i,
+  left: (noise(i, 71) * 104 - 2).toFixed(2),
+  length: 16 + noise(i, 83) * 28,
+  delay: noise(i, 97) * 9,
+  duration: 2.4 + noise(i, 109) * 2.6,
+  drift: 14 + noise(i, 127) * 26,
+  // The stroke token is already low-alpha, so a further 0.2 multiplier left the rain invisible.
+  opacity: 0.45 + noise(i, 139) * 0.5,
+}));
+
 /** Lights drifting above the city: aircraft on approach, and the rest of the shimmer. */
 const SPORES = [
   { left: 7, size: 4, delay: 0, duration: 26, drift: 40 },
@@ -395,6 +415,25 @@ export function TerrainBackdrop() {
             className="terrain-skyline-near"
           />
         </svg>
+      </div>
+
+      <div className="terrain-drizzle">
+        {DRIZZLE.map((drop) => (
+          <span
+            key={drop.id}
+            className="terrain-drop"
+            style={
+              {
+                left: `${drop.left}%`,
+                height: `${drop.length}px`,
+                animationDelay: `${drop.delay}s`,
+                animationDuration: `${drop.duration}s`,
+                opacity: drop.opacity,
+                "--drop-drift": `${drop.drift}px`,
+              } as React.CSSProperties
+            }
+          />
+        ))}
       </div>
 
       <div className="terrain-spores">
