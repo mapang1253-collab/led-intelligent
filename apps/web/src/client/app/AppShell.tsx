@@ -8,6 +8,8 @@ import {
   type LucideIcon,
   MapPin,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   Search,
   Users,
   X,
@@ -56,7 +58,32 @@ function runIdFromPath(pathname: string): string | null {
   return match?.[1] ?? null;
 }
 
-function NavRail({ onNavigate }: { onNavigate?: () => void }) {
+/**
+ * Whether the rail is tucked away, remembered between visits.
+ *
+ * localStorage, not a run artefact: this is which way a reader likes their window, and it never
+ * leaves their browser. Reads and writes are guarded because private windows and blocked site data
+ * make both throw, and a backdrop preference is not worth a blank screen.
+ */
+const RAIL_KEY = "reis.rail.collapsed";
+
+function readCollapsed(): boolean {
+  try {
+    return localStorage.getItem(RAIL_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeCollapsed(collapsed: boolean): void {
+  try {
+    localStorage.setItem(RAIL_KEY, collapsed ? "1" : "0");
+  } catch {
+    // A preference that cannot be saved is still a preference for this session.
+  }
+}
+
+function NavRail({ onNavigate, onCollapse }: { onNavigate?: () => void; onCollapse?: () => void }) {
   const location = useLocation();
   const runId = runIdFromPath(location.pathname);
   const view = useResultView();
@@ -73,10 +100,23 @@ function NavRail({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <nav aria-label={th.nav.label} className="flex h-full flex-col gap-6 p-4">
-      <Link to="/" onClick={onNavigate} className="flex items-center gap-2 px-1">
-        <Building2 size={18} aria-hidden="true" />
-        <span className="font-bold text-sm leading-tight">{th.nav.appName}</span>
-      </Link>
+      <div className="flex items-center gap-2 px-1">
+        <Link to="/" onClick={onNavigate} className="flex min-w-0 items-center gap-2">
+          <Building2 size={18} className="shrink-0" aria-hidden="true" />
+          <span className="truncate font-bold text-sm leading-tight">{th.nav.appName}</span>
+        </Link>
+        {onCollapse && (
+          <button
+            type="button"
+            onClick={onCollapse}
+            aria-label={th.nav.collapse}
+            title={th.nav.collapse}
+            className="ml-auto rounded-card p-1.5 text-ink-muted hover:text-ink"
+          >
+            <PanelLeftClose size={16} aria-hidden="true" />
+          </button>
+        )}
+      </div>
 
       <div>
         <p className="px-3 pb-1.5 font-medium text-ink-muted text-xs">{th.nav.startHeading}</p>
@@ -138,6 +178,12 @@ function NavRail({ onNavigate }: { onNavigate?: () => void }) {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(readCollapsed);
+
+  function setRail(next: boolean) {
+    setCollapsed(next);
+    writeCollapsed(next);
+  }
 
   return (
     <div className="relative min-h-screen text-ink">
@@ -184,9 +230,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       <div className="lg:flex">
-        <aside className="glass sticky top-0 hidden h-screen w-64 shrink-0 overflow-y-auto lg:block">
-          <NavRail />
-        </aside>
+        {collapsed ? (
+          /* Tucked away: one button, out of the way, rather than a rail standing there always. */
+          <button
+            type="button"
+            onClick={() => setRail(false)}
+            aria-label={th.nav.expand}
+            title={th.nav.expand}
+            className="glass sticky top-4 z-20 ml-4 hidden size-10 shrink-0 items-center justify-center self-start rounded-card lg:flex"
+          >
+            <PanelLeftOpen size={18} aria-hidden="true" />
+          </button>
+        ) : (
+          <aside className="glass sticky top-0 hidden h-screen w-64 shrink-0 overflow-y-auto lg:block">
+            <NavRail onCollapse={() => setRail(true)} />
+          </aside>
+        )}
         <div className="min-w-0 flex-1">{children}</div>
       </div>
     </div>

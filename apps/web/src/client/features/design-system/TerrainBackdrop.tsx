@@ -118,67 +118,105 @@ const MARKERS = [
 /**
  * Trees, drawn in the map's own line: the same faint fill and hairline stroke as the province
  * outlines, so the backdrop reads as one drawing rather than as a map with a picture in front of
- * it. An earlier version used filled silhouettes, which was a second visual language on the same
- * sheet.
+ * it.
  *
- * One tree is defined once in a 100x140 box and placed by transform. The stroke is
- * non-scaling, so a tree drawn at half size keeps the map's line weight instead of a thinner one.
+ * The shape follows an ordinary broadleaf tree — a trunk that flares at the root and forks into
+ * boughs, under a lumpy crown. The crown is one outline with a few arcs inside it: an earlier
+ * version stacked six full ellipses, and six complete outlines read as a cluster of bubbles rather
+ * than as foliage. The silhouette carries the shape; the arcs only suggest where the masses sit.
+ *
+ * One tree is defined once in a 200x200 box and placed by transform. The stroke is non-scaling, so
+ * a tree drawn at half size keeps the map's line weight instead of a thinner one.
  */
-const TREE_TRUNK = "M 45 160 C 45 132, 43 112, 42 88 L 58 88 C 57 112, 55 132, 55 160 Z";
+const TREE_TRUNK =
+  "M 78 200 C 84 174, 92 160, 94 140 C 95 129, 91 120, 86 112 L 97 105 " +
+  "C 102 114, 104 121, 105 130 C 110 119, 117 110, 127 103 L 134 112 " +
+  "C 121 121, 113 132, 111 146 C 110 166, 114 184, 122 200 Z";
 
+/** Boughs reaching up into the crown, drawn as open strokes. */
 const TREE_BRANCHES = [
-  "M 48 104 C 42 94, 36 86, 31 78",
-  "M 53 100 C 60 91, 66 84, 71 77",
-  "M 50 96 C 50 86, 50 78, 50 68",
+  "M 92 132 C 84 124, 76 118, 68 114",
+  "M 108 124 C 116 116, 124 110, 133 106",
+  "M 100 120 C 100 108, 101 98, 103 90",
 ];
 
-const TREE_CANOPY =
-  "M 50 10 C 72 10, 88 22, 92 40 C 104 48, 100 68, 86 74 C 80 90, 66 100, 50 98 " +
-  "C 34 100, 20 90, 14 74 C 0 68, -4 48, 8 40 C 12 22, 28 10, 50 10 Z";
+const TREE_CROWN =
+  "M 100 8 C 133 3, 159 18, 167 45 C 187 53, 191 79, 172 93 " +
+  "C 170 113, 147 125, 123 120 C 111 130, 88 130, 76 120 " +
+  "C 52 125, 30 113, 28 93 C 9 79, 13 53, 33 45 C 41 18, 67 3, 100 8 Z";
+
+/** Arcs inside the crown, hinting at where the masses of leaves sit. */
+const TREE_CROWN_LINES = [
+  "M 44 76 C 59 57, 85 52, 101 62",
+  "M 109 59 C 128 50, 150 59, 158 77",
+  "M 68 105 C 88 96, 113 96, 132 107",
+];
 
 /**
- * Where each tree stands. They share a ground line rather than floating at their own heights, and
- * each leans a little, so a stand of six does not read as one shape stamped six times.
+ * Where each tree stands. Three a side, not six: the authors asked for fewer, and a sparse stand
+ * lets each tree read as a tree. They share a ground line computed from their own scale, and each
+ * leans a degree or two so three do not look like one shape stamped three times.
  */
-const GROUND_Y = 604;
-const TREE_HEIGHT = 160;
+const GROUND_Y = 598;
+const TREE_HEIGHT = 200;
 
 const TREES = [
-  { x: 6, scale: 1.55, tilt: -2.5 },
-  { x: 116, scale: 1.05, tilt: 1.8 },
-  { x: 188, scale: 1.8, tilt: 1.2 },
-  { x: 318, scale: 0.9, tilt: -2 },
-  { x: 386, scale: 1.3, tilt: 2.4 },
-  { x: 492, scale: 0.8, tilt: -1.4 },
+  { x: -4, scale: 1.35, tilt: -2.5 },
+  { x: 150, scale: 0.85, tilt: 2 },
+  { x: 268, scale: 1.05, tilt: -1.4 },
 ] as const;
 
-/** Drifting motes. Fixed values rather than random, so every render is the same picture. */
+/** Fireflies: motes that drift up and pulse. */
 const SPORES = [
-  { left: 5, size: 4, delay: 0, duration: 26, drift: 40 },
-  { left: 12, size: 3, delay: 6, duration: 34, drift: -28 },
-  { left: 19, size: 5, delay: 12, duration: 30, drift: 22 },
-  { left: 27, size: 3, delay: 3, duration: 38, drift: -34 },
-  { left: 35, size: 4, delay: 17, duration: 28, drift: 30 },
-  { left: 44, size: 3, delay: 23, duration: 35, drift: 24 },
-  { left: 56, size: 4, delay: 8, duration: 31, drift: -30 },
-  { left: 65, size: 3, delay: 19, duration: 32, drift: -26 },
-  { left: 73, size: 5, delay: 21, duration: 27, drift: 36 },
-  { left: 81, size: 3, delay: 2, duration: 36, drift: -20 },
-  { left: 89, size: 4, delay: 14, duration: 30, drift: 26 },
-  { left: 95, size: 3, delay: 28, duration: 33, drift: -32 },
+  { left: 7, size: 4, delay: 0, duration: 26, drift: 40 },
+  { left: 16, size: 3, delay: 6, duration: 34, drift: -28 },
+  { left: 24, size: 5, delay: 12, duration: 30, drift: 22 },
+  { left: 33, size: 3, delay: 3, duration: 38, drift: -34 },
+  { left: 44, size: 4, delay: 17, duration: 28, drift: 30 },
+  { left: 57, size: 3, delay: 23, duration: 35, drift: 24 },
+  { left: 68, size: 4, delay: 8, duration: 31, drift: -30 },
+  { left: 77, size: 5, delay: 19, duration: 27, drift: 36 },
+  { left: 86, size: 3, delay: 2, duration: 36, drift: -20 },
+  { left: 94, size: 4, delay: 14, duration: 30, drift: 26 },
+] as const;
+
+/**
+ * Dipterocarp seeds — ลูกยาง — falling from the canopy. They are the one thing here that moves the
+ * way a real thing moves: the wings make them autorotate on the way down, so each spins about its
+ * own body rather than sliding. Placed under the stands at either side, since that is where a seed
+ * falling from these trees would land.
+ */
+const SEEDS = [
+  { left: 9, delay: 0, duration: 14, drift: 34, spin: 2.2, scale: 1 },
+  { left: 18, delay: 5, duration: 18, drift: -26, spin: 2.8, scale: 0.8 },
+  { left: 27, delay: 11, duration: 16, drift: 40, spin: 2.4, scale: 0.9 },
+  { left: 73, delay: 3, duration: 17, drift: -34, spin: 2.6, scale: 0.85 },
+  { left: 82, delay: 9, duration: 15, drift: 28, spin: 2.1, scale: 1 },
+  { left: 91, delay: 14, duration: 19, drift: -22, spin: 3, scale: 0.75 },
 ] as const;
 
 function Tree({ x, scale, tilt }: { x: number; scale: number; tilt: number }) {
   // Placed by its base, so every trunk meets the same ground line whatever its size.
   const top = GROUND_Y - TREE_HEIGHT * scale;
   return (
-    <g transform={`translate(${x} ${top}) scale(${scale}) rotate(${tilt} 50 160)`}>
-      <path className="terrain-tree-shape" d={TREE_CANOPY} vectorEffect="non-scaling-stroke" />
+    <g transform={`translate(${x} ${top}) scale(${scale}) rotate(${tilt} 100 200)`}>
+      <path className="terrain-tree-shape" d={TREE_CROWN} vectorEffect="non-scaling-stroke" />
       <path className="terrain-tree-shape" d={TREE_TRUNK} vectorEffect="non-scaling-stroke" />
-      {TREE_BRANCHES.map((d) => (
+      {[...TREE_BRANCHES, ...TREE_CROWN_LINES].map((d) => (
         <path key={d} className="terrain-tree-branch" d={d} vectorEffect="non-scaling-stroke" />
       ))}
     </g>
+  );
+}
+
+/** One seed: a body with two wings, sized to spin convincingly at this scale. */
+function Seed() {
+  return (
+    <svg className="terrain-seed-art" viewBox="0 0 28 40" aria-hidden="true">
+      <path className="terrain-seed-wing" d="M 14 30 C 8 23, 4 12, 6 2 C 11 9, 14 20, 14 30 Z" />
+      <path className="terrain-seed-wing" d="M 14 30 C 20 23, 24 12, 22 2 C 17 9, 14 20, 14 30 Z" />
+      <ellipse className="terrain-seed-body" cx="14" cy="33" rx="3.4" ry="4.6" />
+    </svg>
   );
 }
 
@@ -242,6 +280,28 @@ export function TerrainBackdrop() {
           <CanopySide />
           <CanopySide mirrored />
         </svg>
+      </div>
+
+      {/* Seeds spinning down from the canopy, and fireflies drifting up through it. */}
+      <div className="terrain-seeds">
+        {SEEDS.map((seed) => (
+          <span
+            key={seed.left}
+            className="terrain-seed"
+            style={
+              {
+                left: `${seed.left}%`,
+                animationDelay: `${seed.delay}s`,
+                animationDuration: `${seed.duration}s`,
+                "--seed-drift": `${seed.drift}px`,
+                "--seed-spin": `${seed.spin}s`,
+                "--seed-scale": seed.scale,
+              } as React.CSSProperties
+            }
+          >
+            <Seed />
+          </span>
+        ))}
       </div>
 
       <div className="terrain-spores">
