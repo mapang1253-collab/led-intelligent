@@ -1,25 +1,42 @@
 import { th } from "@reis/i18n";
+import { Building2 } from "lucide-react";
 import { Route, Routes } from "react-router";
 import { DesignSystemPreview } from "../features/design-system/DesignSystemPreview.js";
+import { TerrainBackdrop } from "../features/design-system/TerrainBackdrop.js";
+import { PropertyIntakeForm } from "../features/intake/PropertyIntakeForm.js";
 
-function IntakePlaceholder() {
+function IntakePage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-canvas p-6 text-ink">
-      <div className="max-w-md text-center">
-        <h1 className="font-semibold text-xl">{th.app.title}</h1>
-        <p className="mt-2 text-ink-muted text-sm">กำลังพัฒนา — หน้ากรอกข้อมูลทรัพย์สิน</p>
-        <a className="mt-4 inline-block text-primary underline" href="/design">
-          ดูระบบออกแบบ (design system)
-        </a>
-      </div>
-    </main>
+    <div className="relative min-h-screen text-ink">
+      <TerrainBackdrop />
+
+      <header className="px-6 pt-16 pb-10">
+        <div className="mx-auto max-w-4xl">
+          <span className="glass inline-flex items-center gap-1.5 rounded-pill px-3 py-1 font-semibold text-xs">
+            <Building2 size={14} aria-hidden="true" /> {th.app.academicBadge}
+          </span>
+          <h1 className="mt-5 font-bold text-4xl leading-tight tracking-tight md:text-5xl">
+            ที่ดินแปลงนี้
+            <br />
+            <span className="headline-gradient">ใช้ทำอะไรได้คุ้มที่สุด</span>
+          </h1>
+          <p className="mt-3 max-w-xl text-base text-ink-muted">{th.app.tagline}</p>
+        </div>
+      </header>
+
+      <main className="px-6 pb-16">
+        <div className="mx-auto max-w-4xl">
+          <PropertyIntakeForm />
+        </div>
+      </main>
+    </div>
   );
 }
 
 export function App() {
   return (
     <Routes>
-      <Route path="/" element={<IntakePlaceholder />} />
+      <Route path="/" element={<IntakePage />} />
       <Route path="/design" element={<DesignSystemPreview />} />
     </Routes>
   );

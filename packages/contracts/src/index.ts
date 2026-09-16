@@ -24,6 +24,13 @@ export interface Versioned {
 /** Decimal-precision values cross contracts as strings (see docs/technology-stack.md §9). */
 export type DecimalString = Brand<string, "DecimalString">;
 
+export {
+  type AdministrativeAreaOption,
+  type AdministrativeAreaResponse,
+  type PropertyIntake,
+  propertyIntakeSchema,
+} from "./intake.js";
+
 export type {
   AcquisitionOutcome,
   AcquisitionResult,

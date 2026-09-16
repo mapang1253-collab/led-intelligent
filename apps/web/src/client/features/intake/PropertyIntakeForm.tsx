@@ -1,0 +1,247 @@
+import { th } from "@reis/i18n";
+import { ArrowRight, ChevronDown, Info, Plus } from "lucide-react";
+import { useState } from "react";
+import { AreaSelect } from "./AreaSelect.js";
+import { useDistricts, useProvinces, useSubdistricts } from "./useAdministrativeAreas.js";
+
+/**
+ * Progressive property intake (docs/project-overview.md §7). The minimum is province → district →
+ * subdistrict; everything else is optional and only narrows the output scope.
+ *
+ * Choosing a parent clears its children, so an intake can never carry a subdistrict that does not
+ * belong to the selected district — the same invariant the server enforces independently.
+ */
+
+interface OptionalFields {
+  address_line: string;
+  title_deed_number: string;
+  map_sheet: string;
+  land_number: string;
+  land_area_rai: string;
+  land_area_ngan: string;
+  land_area_wa: string;
+}
+
+const EMPTY_OPTIONAL: OptionalFields = {
+  address_line: "",
+  title_deed_number: "",
+  map_sheet: "",
+  land_number: "",
+  land_area_rai: "",
+  land_area_ngan: "",
+  land_area_wa: "",
+};
+
+function OptionalTextField({
+  label,
+  value,
+  placeholder,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  placeholder?: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <label className="flex flex-col gap-1.5">
+      <span className="font-medium text-sm">{label}</span>
+      <input
+        type="text"
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className="rounded-card border border-border-strong bg-surface px-4 py-3 text-base text-ink placeholder:text-ink-muted"
+      />
+    </label>
+  );
+}
+
+export function PropertyIntakeForm() {
+  const [provinceId, setProvinceId] = useState("");
+  const [districtId, setDistrictId] = useState("");
+  const [subdistrictId, setSubdistrictId] = useState("");
+  const [optional, setOptional] = useState<OptionalFields>(EMPTY_OPTIONAL);
+  const [showOptional, setShowOptional] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const provinces = useProvinces();
+  const districts = useDistricts(provinceId || undefined);
+  const subdistricts = useSubdistricts(districtId || undefined);
+
+  // Selecting a parent invalidates its children.
+  function selectProvince(id: string) {
+    setProvinceId(id);
+    setDistrictId("");
+    setSubdistrictId("");
+  }
+  function selectDistrict(id: string) {
+    setDistrictId(id);
+    setSubdistrictId("");
+  }
+
+  const hasPropertyDetail =
+    optional.title_deed_number.trim() !== "" ||
+    optional.map_sheet.trim() !== "" ||
+    optional.land_number.trim() !== "" ||
+    optional.address_line.trim() !== "";
+
+  function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    const nextErrors: Record<string, string> = {};
+    if (!provinceId) nextErrors.province_id = th.validation.provinceRequired;
+    if (!districtId) nextErrors.district_id = th.validation.districtRequired;
+    if (!subdistrictId) nextErrors.subdistrict_id = th.validation.subdistrictRequired;
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+
+    // TODO(next): POST /api/v1/analysis-runs and route to the run's progress view
+    // (docs/api-contracts.md §3). The route does not exist yet.
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="glass rounded-card p-6 md:p-8" noValidate>
+      <h2 className="font-bold text-xl tracking-tight">{th.intake.heading}</h2>
+      <p className="mt-2 text-ink-muted text-sm">{th.intake.description}</p>
+
+      <div className="mt-6 grid gap-4 md:grid-cols-3">
+        <AreaSelect
+          label={th.intake.provinceLabel}
+          placeholder={th.intake.provincePlaceholder}
+          options={provinces.data}
+          value={provinceId}
+          onChange={selectProvince}
+          isLoading={provinces.isLoading}
+          isError={provinces.isError}
+          onRetry={() => provinces.refetch()}
+          errorMessage={errors.province_id}
+        />
+
+        <AreaSelect
+          label={th.intake.districtLabel}
+          placeholder={th.intake.districtPlaceholder}
+          disabledHint={th.intake.districtDisabledHint}
+          options={districts.data}
+          value={districtId}
+          onChange={selectDistrict}
+          disabled={!provinceId}
+          isLoading={districts.isLoading && Boolean(provinceId)}
+          isError={districts.isError}
+          onRetry={() => districts.refetch()}
+          errorMessage={errors.district_id}
+        />
+
+        <AreaSelect
+          label={th.intake.subdistrictLabel}
+          placeholder={th.intake.subdistrictPlaceholder}
+          disabledHint={th.intake.subdistrictDisabledHint}
+          options={subdistricts.data}
+          value={subdistrictId}
+          onChange={setSubdistrictId}
+          disabled={!districtId}
+          isLoading={subdistricts.isLoading && Boolean(districtId)}
+          isError={subdistricts.isError}
+          onRetry={() => subdistricts.refetch()}
+          errorMessage={errors.subdistrict_id}
+        />
+      </div>
+
+      <div className="mt-6">
+        <button
+          type="button"
+          onClick={() => setShowOptional((open) => !open)}
+          aria-expanded={showOptional}
+          className="flex items-center gap-2 font-medium text-signature-text text-sm"
+        >
+          {showOptional ? <ChevronDown size={16} /> : <Plus size={16} />}
+          {th.intake.optionalToggle}
+        </button>
+
+        {showOptional && (
+          <div className="mt-4 rounded-card bg-surface-sunken p-5">
+            <p className="mb-4 flex items-start gap-2 text-ink-muted text-sm">
+              <Info size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+              {th.intake.optionalHelp}
+            </p>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <OptionalTextField
+                label={th.intake.addressLabel}
+                placeholder={th.intake.addressPlaceholder}
+                value={optional.address_line}
+                onChange={(v) => setOptional((o) => ({ ...o, address_line: v }))}
+              />
+              <OptionalTextField
+                label={th.intake.titleDeedLabel}
+                value={optional.title_deed_number}
+                onChange={(v) => setOptional((o) => ({ ...o, title_deed_number: v }))}
+              />
+              <OptionalTextField
+                label={th.intake.mapSheetLabel}
+                value={optional.map_sheet}
+                onChange={(v) => setOptional((o) => ({ ...o, map_sheet: v }))}
+              />
+              <OptionalTextField
+                label={th.intake.landNumberLabel}
+                value={optional.land_number}
+                onChange={(v) => setOptional((o) => ({ ...o, land_number: v }))}
+              />
+            </div>
+
+            <fieldset className="mt-4">
+              <legend className="mb-1.5 font-medium text-sm">{th.intake.landAreaLabel}</legend>
+              <div className="grid grid-cols-3 gap-3">
+                {(
+                  [
+                    ["land_area_rai", th.intake.raiUnit],
+                    ["land_area_ngan", th.intake.nganUnit],
+                    ["land_area_wa", th.intake.waUnit],
+                  ] as const
+                ).map(([key, unit]) => (
+                  <label key={key} className="flex flex-col gap-1">
+                    <span className="text-ink-muted text-xs">{unit}</span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min={0}
+                      step="any"
+                      value={optional[key]}
+                      onChange={(e) => setOptional((o) => ({ ...o, [key]: e.target.value }))}
+                      className="rounded-card border border-border-strong bg-surface px-3 py-2.5 text-base text-ink"
+                    />
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          </div>
+        )}
+      </div>
+
+      {/* Scope is set by the evidence available, so say up front what the answer can claim. */}
+      <div
+        className="mt-6 rounded-card p-4 text-sm"
+        style={{
+          backgroundColor: "var(--color-signature-wash)",
+          color: "var(--color-signature-text)",
+        }}
+      >
+        <p className="font-semibold">{th.intake.scopeNoticeTitle}</p>
+        <p className="mt-1">
+          {hasPropertyDetail ? th.intake.scopeNoticeProperty : th.intake.scopeNoticeArea}
+        </p>
+      </div>
+
+      <button
+        type="submit"
+        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-pill px-7 py-3.5 font-bold text-base text-white md:w-auto"
+        style={{
+          background:
+            "linear-gradient(120deg, var(--grad-deep-from), var(--grad-deep-via), var(--grad-deep-to))",
+        }}
+      >
+        {th.intake.submit}
+        <ArrowRight size={18} strokeWidth={2.5} aria-hidden="true" />
+      </button>
+    </form>
+  );
+}
