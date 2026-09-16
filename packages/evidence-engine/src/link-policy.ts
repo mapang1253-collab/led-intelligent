@@ -22,7 +22,31 @@ import type {
  *     breath as the number.
  */
 
-export const HOUSEHOLD_INCOME_REQUIREMENT = "demand.household_income_context";
+/**
+ * An analytical question, and what kind of subject can answer it.
+ *
+ * `subject_kind` is the distinction that stops two very different figures from being graded alike:
+ * a registered-population count *is* a statement about the area, while a household-income mean is a
+ * statement about a cohort that lives in it. At an exact geographic match the first identifies its
+ * subject exactly and the second still only partially.
+ */
+export interface EvidenceRequirement {
+  readonly requirement_id: string;
+  readonly purpose_th: string;
+  readonly subject_kind: "AREA_ITSELF" | "COHORT_WITHIN_AREA";
+}
+
+export const HOUSEHOLD_INCOME_REQUIREMENT: EvidenceRequirement = {
+  requirement_id: "demand.household_income_context",
+  purpose_th: "บริบทรายได้ครัวเรือนของพื้นที่ สำหรับประกอบการพิจารณาด้านดีมานด์",
+  subject_kind: "COHORT_WITHIN_AREA",
+};
+
+export const POPULATION_REQUIREMENT: EvidenceRequirement = {
+  requirement_id: "demand.resident_population",
+  purpose_th: "ขนาดประชากรในพื้นที่ สำหรับประกอบการพิจารณาด้านดีมานด์",
+  subject_kind: "AREA_ITSELF",
+};
 
 const AREA_LEVEL_RANK = { PROVINCE: 1, DISTRICT: 2, SUBDISTRICT: 3 } as const;
 
@@ -67,15 +91,21 @@ export function temporalMatchFor(periodEndYear: number, currentYear: number): Te
   return "DATED";
 }
 
-function subjectMatchFor(geography: GeographyMatch): SubjectMatch {
-  // The subject of a household-income figure is a surveyed cohort, never the analysed site. Even at
-  // an exact geographic match the identity is a partial one.
-  return geography === "EXACT" ? "PARTIAL" : "PROXY";
+function subjectMatchFor(
+  geography: GeographyMatch,
+  requirement: EvidenceRequirement,
+): SubjectMatch {
+  if (geography !== "EXACT") {
+    // A figure about a different area is a proxy for this one, however close the areas are.
+    return "PROXY";
+  }
+  // A cohort statistic never identifies the analysed area itself, even at the same geography.
+  return requirement.subject_kind === "AREA_ITSELF" ? "EXACT" : "PARTIAL";
 }
 
 function purposeFitnessFor(geography: GeographyMatch): PurposeFitness {
-  // A sample survey of household income can characterise demand context. It can never, at any
-  // geography, establish what a particular site is worth — so FIT is unreachable here by design.
+  // Published area statistics can characterise demand context. None of them can, at any geography,
+  // establish what a particular site is worth — so FIT stays unreachable here by design.
   return geography === "EXACT" ? "FIT_WITH_CAVEAT" : "CONTEXT_ONLY";
 }
 
@@ -92,6 +122,12 @@ function targetNameFor(target: LinkTarget): string {
 /** Thai Buddhist Era is 543 years ahead of the Common Era. */
 const BE_CE_OFFSET = 543;
 
+const LEVEL_NAMES_TH = {
+  PROVINCE: "จังหวัด",
+  DISTRICT: "อำเภอ",
+  SUBDISTRICT: "ตำบล",
+} as const;
+
 function disclosureFor(
   observation: StoredObservation,
   target: LinkTarget,
@@ -101,9 +137,14 @@ function disclosureFor(
   const parts: string[] = [];
   parts.push(
     `${observation.measure_name_th} ของกลุ่ม "${observation.population_th}" ` +
-      `ระดับ${observation.geography_level === "PROVINCE" ? "จังหวัด" : observation.geography_level === "DISTRICT" ? "อำเภอ" : "ตำบล"}` +
+      `ระดับ${LEVEL_NAMES_TH[observation.geography_level]}` +
       ` (${observation.area_name_th}) ปี ${observation.source_vintage}`,
   );
+
+  // A computed figure must never read as one the source printed.
+  if (observation.epistemic_status === "DERIVED") {
+    parts.push("เป็นค่าที่คำนวณจากข้อมูลย่อยที่แหล่งข้อมูลเผยแพร่ ไม่ใช่ตัวเลขที่แหล่งข้อมูลประกาศโดยตรง");
+  }
 
   if (geography === "CONTAINING_AREA") {
     parts.push(`ไม่ใช่ข้อมูลของ${targetNameFor(target)}โดยตรง แต่เป็นข้อมูลของพื้นที่ที่ครอบคลุมพื้นที่เป้าหมายอยู่`);
@@ -126,10 +167,11 @@ function disclosureFor(
  * Ordering is deterministic — newest period first, then cohort name — so two runs over the same
  * corpus present evidence in the same order.
  */
-export function buildHouseholdIncomeLinks(
+export function buildEvidenceLinks(
   observations: readonly StoredObservation[],
   target: LinkTarget,
   currentYear: number,
+  requirement: EvidenceRequirement,
 ): EvidenceLinkDraft[] {
   const ordered = [...observations].sort(
     (a, b) =>
@@ -141,11 +183,12 @@ export function buildHouseholdIncomeLinks(
     const temporal = temporalMatchFor(observation.period_end_year, currentYear);
     return {
       observation_id: observation.observation_id,
-      requirement_id: HOUSEHOLD_INCOME_REQUIREMENT,
-      purpose_th: "บริบทรายได้ครัวเรือนของพื้นที่ สำหรับประกอบการพิจารณาด้านดีมานด์",
-      // Context, never primary evidence: nothing in an HBU conclusion may rest on this alone.
+      requirement_id: requirement.requirement_id,
+      purpose_th: requirement.purpose_th,
+      // Context, never primary evidence: nothing in an HBU conclusion may rest on this alone while
+      // the validation stages are inactive.
       role: "CONTEXTUAL",
-      subject_match: subjectMatchFor(geography),
+      subject_match: subjectMatchFor(geography, requirement),
       geography_match: geography,
       temporal_match: temporal,
       property_similarity: "NOT_APPLICABLE",
@@ -155,12 +198,21 @@ export function buildHouseholdIncomeLinks(
       actual_level: "AREA",
       substitution_reason:
         geography === "CONTAINING_AREA"
-          ? "ไม่มีข้อมูลรายได้ครัวเรือนที่เผยแพร่ในระดับพื้นที่เป้าหมาย จึงใช้ข้อมูลของพื้นที่ที่ครอบคลุมแทน"
+          ? `ไม่มีข้อมูล${observation.measure_name_th}ที่เผยแพร่ในระดับพื้นที่เป้าหมาย จึงใช้ข้อมูลของพื้นที่ที่ครอบคลุมแทน`
           : null,
       decision_impact: "CONTEXT",
       disclosure_th: disclosureFor(observation, target, geography, temporal),
     };
   });
+}
+
+/** Kept for callers that only need the household-income question. */
+export function buildHouseholdIncomeLinks(
+  observations: readonly StoredObservation[],
+  target: LinkTarget,
+  currentYear: number,
+): EvidenceLinkDraft[] {
+  return buildEvidenceLinks(observations, target, currentYear, HOUSEHOLD_INCOME_REQUIREMENT);
 }
 
 export { BE_CE_OFFSET };

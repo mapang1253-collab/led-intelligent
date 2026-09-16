@@ -1,6 +1,12 @@
 import type { StoredObservation } from "@reis/contracts";
 import { describe, expect, it } from "vitest";
-import { type LinkTarget, buildHouseholdIncomeLinks, temporalMatchFor } from "./link-policy.js";
+import {
+  type LinkTarget,
+  POPULATION_REQUIREMENT,
+  buildEvidenceLinks,
+  buildHouseholdIncomeLinks,
+  temporalMatchFor,
+} from "./link-policy.js";
 
 /**
  * The policy's job is to stop evidence from claiming more than it is. These tests pin the
@@ -134,5 +140,63 @@ describe("buildHouseholdIncomeLinks", () => {
 
   it("returns nothing when there is nothing to link", () => {
     expect(buildHouseholdIncomeLinks([], subdistrictTarget, 2026)).toEqual([]);
+  });
+});
+
+describe("subject identity by requirement", () => {
+  it("lets an area statistic identify the area exactly, but never a cohort statistic", () => {
+    const provinceTarget: LinkTarget = { ...subdistrictTarget, level: "PROVINCE" };
+
+    const [population] = buildEvidenceLinks(
+      [observation({ measure_name_th: "จำนวนประชากรตามทะเบียนราษฎร", population_th: "รวมทั้งสิ้น" })],
+      provinceTarget,
+      2026,
+      POPULATION_REQUIREMENT,
+    );
+    // A head-count of this area is a statement about this area.
+    expect(population?.subject_match).toBe("EXACT");
+
+    const [income] = buildHouseholdIncomeLinks([observation()], provinceTarget, 2026);
+    // A cohort mean is not, even at the same geography.
+    expect(income?.subject_match).toBe("PARTIAL");
+  });
+
+  it("downgrades an area statistic to PROXY once the geography stops matching", () => {
+    const [link] = buildEvidenceLinks(
+      [observation()],
+      subdistrictTarget,
+      2026,
+      POPULATION_REQUIREMENT,
+    );
+    expect(link?.subject_match).toBe("PROXY");
+    expect(link?.requirement_id).toBe("demand.resident_population");
+  });
+
+  it("says in the disclosure when a figure was computed rather than published", () => {
+    const [derived] = buildEvidenceLinks(
+      [observation({ epistemic_status: "DERIVED" })],
+      { ...subdistrictTarget, level: "PROVINCE" },
+      2026,
+      POPULATION_REQUIREMENT,
+    );
+    expect(derived?.disclosure_th).toContain("ไม่ใช่ตัวเลขที่แหล่งข้อมูลประกาศโดยตรง");
+
+    const [observed] = buildEvidenceLinks(
+      [observation()],
+      { ...subdistrictTarget, level: "PROVINCE" },
+      2026,
+      POPULATION_REQUIREMENT,
+    );
+    expect(observed?.disclosure_th).not.toContain("ไม่ใช่ตัวเลขที่แหล่งข้อมูลประกาศโดยตรง");
+  });
+
+  it("names the measure in the substitution reason it records", () => {
+    const [link] = buildEvidenceLinks(
+      [observation({ measure_name_th: "จำนวนประชากรตามทะเบียนราษฎร" })],
+      subdistrictTarget,
+      2026,
+      POPULATION_REQUIREMENT,
+    );
+    expect(link?.substitution_reason).toContain("จำนวนประชากรตามทะเบียนราษฎร");
   });
 });

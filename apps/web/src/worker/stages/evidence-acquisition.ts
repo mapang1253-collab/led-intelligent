@@ -7,7 +7,12 @@ import {
   loadRunAreaNames,
   saveEvidenceLinks,
 } from "@reis/data-access";
-import { HOUSEHOLD_INCOME_REQUIREMENT, buildHouseholdIncomeLinks } from "@reis/evidence-engine";
+import {
+  type EvidenceRequirement,
+  HOUSEHOLD_INCOME_REQUIREMENT,
+  POPULATION_REQUIREMENT,
+  buildEvidenceLinks,
+} from "@reis/evidence-engine";
 
 /**
  * Evidence acquisition for one run (docs/architecture.md §2, docs/data-architecture.md §7).
@@ -22,7 +27,16 @@ import { HOUSEHOLD_INCOME_REQUIREMENT, buildHouseholdIncomeLinks } from "@reis/e
  * responses — one is an approval that has not been given, the other is a coverage gap.
  */
 
-const MEASURE_HOUSEHOLD_INCOME = "household_income_monthly_mean";
+/**
+ * The questions this increment can gather evidence for, and the measure that speaks to each.
+ *
+ * A measure with no activated source simply contributes nothing; the stage still reports honestly,
+ * because "no source activated" and "activated but no coverage here" are different results.
+ */
+const REQUIREMENTS: readonly { measureId: string; requirement: EvidenceRequirement }[] = [
+  { measureId: "registered_population", requirement: POPULATION_REQUIREMENT },
+  { measureId: "household_income_monthly_mean", requirement: HOUSEHOLD_INCOME_REQUIREMENT },
+];
 
 export type EvidenceStageState = "SUCCEEDED" | "DEGRADED" | "SKIPPED";
 
@@ -48,37 +62,44 @@ export async function runEvidenceAcquisition(
     return { state: "SKIPPED", reason: "SOURCE_NOT_ACTIVATED", linkCount: 0 };
   }
 
-  const observations = await loadActiveObservations(db, {
-    measureId: MEASURE_HOUSEHOLD_INCOME,
-    areaIds: areaChain(run),
-  });
-  if (observations.length === 0) {
-    // An activated source that publishes nothing for this area is a coverage gap, never a zero.
-    return { state: "DEGRADED", reason: "NO_EVIDENCE_FOR_AREA", linkCount: 0 };
+  const areas = await loadRunAreaNames(db, run);
+  const target = {
+    province_name_th: areas.province,
+    district_name_th: areas.district,
+    subdistrict_name_th: areas.subdistrict,
+    level: "SUBDISTRICT" as const,
+    requested_scope: run.requested_scope,
+  };
+
+  const drafts = [];
+  for (const { measureId, requirement } of REQUIREMENTS) {
+    const observations = await loadActiveObservations(db, {
+      measureId,
+      areaIds: areaChain(run),
+    });
+    drafts.push(...buildEvidenceLinks(observations, target, now.getUTCFullYear(), requirement));
   }
 
-  const areas = await loadRunAreaNames(db, run);
-  const links = buildHouseholdIncomeLinks(
-    observations,
-    {
-      province_name_th: areas.province,
-      district_name_th: areas.district,
-      subdistrict_name_th: areas.subdistrict,
-      level: "SUBDISTRICT",
-      requested_scope: run.requested_scope,
-    },
-    now.getUTCFullYear(),
-  );
+  if (drafts.length === 0) {
+    // Activated sources that publish nothing for this area is a coverage gap, never a zero.
+    return { state: "DEGRADED", reason: "NO_EVIDENCE_FOR_AREA", linkCount: 0 };
+  }
 
   const written = await saveEvidenceLinks(
     db,
     run.run_id,
     run.subdistrict_id,
     "RUN_TARGET_AREA",
-    links,
+    drafts,
   );
   return { state: "SUCCEEDED", linkCount: written };
 }
+
+const LEVEL_NAMES_TH = {
+  PROVINCE: "จังหวัด",
+  DISTRICT: "อำเภอ",
+  SUBDISTRICT: "ตำบล",
+} as const;
 
 export interface EvidenceGroup {
   readonly requirement_id: string;
@@ -122,7 +143,7 @@ export function groupEvidenceForDisplay(links: readonly StoredEvidenceLink[]): E
       attribution_th: first.observation.attribution_th,
       geography_note_th:
         first.geography_match === "CONTAINING_AREA"
-          ? `ข้อมูลระดับ${first.observation.geography_level === "PROVINCE" ? "จังหวัด" : "อำเภอ"} (${first.observation.area_name_th}) ครอบคลุมพื้นที่เป้าหมาย ไม่ใช่ข้อมูลเฉพาะพื้นที่เป้าหมาย`
+          ? `ข้อมูลระดับ${LEVEL_NAMES_TH[first.observation.geography_level]} (${first.observation.area_name_th}) ครอบคลุมพื้นที่เป้าหมาย ไม่ใช่ข้อมูลเฉพาะพื้นที่เป้าหมาย`
           : `ข้อมูลตรงระดับพื้นที่เป้าหมาย (${first.observation.area_name_th})`,
       purpose_fitness: first.purpose_fitness,
       items: group.map((link) => ({
@@ -138,4 +159,4 @@ export function groupEvidenceForDisplay(links: readonly StoredEvidenceLink[]): E
   });
 }
 
-export { HOUSEHOLD_INCOME_REQUIREMENT, MEASURE_HOUSEHOLD_INCOME };
+export { REQUIREMENTS };

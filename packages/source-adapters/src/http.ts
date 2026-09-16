@@ -23,6 +23,14 @@ const DEFAULT_TIMEOUT_MS = 20_000;
  */
 const DEFAULT_MAX_BYTES = 32 * 1024 * 1024;
 
+export type FetchTextResult =
+  | { readonly outcome: "SUCCESS"; readonly text: string }
+  | {
+      readonly outcome: Exclude<AcquisitionOutcome, "SUCCESS" | "OUTSIDE_COVERAGE">;
+      readonly reason: string;
+      readonly retryable: boolean;
+    };
+
 export type FetchJsonResult =
   | { readonly outcome: "SUCCESS"; readonly payload: unknown }
   | {
@@ -106,10 +114,43 @@ async function readBounded(response: Response, maxBytes: number): Promise<string
   return new TextDecoder().decode(joined);
 }
 
+/**
+ * Acquires a text body under the same status, size and retry rules as `fetchJson`.
+ *
+ * Not every authoritative publisher serves JSON: DOPA publishes pipe-delimited text files. The
+ * transport rules do not change with the payload format, so the two share everything but parsing.
+ */
+export async function fetchText(
+  url: string,
+  options: FetchJsonOptions = {},
+): Promise<FetchTextResult> {
+  const result = await fetchBody(url, options, "text/plain, */*");
+  if (result.outcome !== "SUCCESS") {
+    return result;
+  }
+  return { outcome: "SUCCESS", text: result.text };
+}
+
 export async function fetchJson(
   url: string,
   options: FetchJsonOptions = {},
 ): Promise<FetchJsonResult> {
+  const result = await fetchBody(url, options, "application/json");
+  if (result.outcome !== "SUCCESS") {
+    return result;
+  }
+  try {
+    return { outcome: "SUCCESS", payload: JSON.parse(result.text) };
+  } catch {
+    return failure("INVALID_RESPONSE", "response body was not valid JSON", false);
+  }
+}
+
+async function fetchBody(
+  url: string,
+  options: FetchJsonOptions,
+  accept: string,
+): Promise<FetchTextResult> {
   const fetchImpl = options.fetchImpl ?? fetch;
   const maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES;
   const controller = new AbortController();
@@ -117,7 +158,7 @@ export async function fetchJson(
 
   try {
     const response = await fetchImpl(url, {
-      headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
+      headers: { "User-Agent": USER_AGENT, Accept: accept },
       signal: controller.signal,
     });
 
@@ -135,11 +176,7 @@ export async function fetchJson(
       );
     }
 
-    try {
-      return { outcome: "SUCCESS", payload: JSON.parse(text) };
-    } catch {
-      return failure("INVALID_RESPONSE", "response body was not valid JSON", false);
-    }
+    return { outcome: "SUCCESS", text };
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
       return failure("TIMEOUT", "request exceeded its deadline", true);

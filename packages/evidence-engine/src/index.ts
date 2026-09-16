@@ -5,7 +5,10 @@
  */
 export {
   HOUSEHOLD_INCOME_REQUIREMENT,
+  POPULATION_REQUIREMENT,
+  type EvidenceRequirement,
   type LinkTarget,
+  buildEvidenceLinks,
   buildHouseholdIncomeLinks,
   temporalMatchFor,
 } from "./link-policy.js";
