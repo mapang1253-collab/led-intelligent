@@ -376,10 +376,14 @@ describe("the tall-building limb of ข้อ 41 วรรคสอง", () => {
     ).toBe("APPLICABLE");
   });
 
-  it("no longer carries a signature, because the rules changed", async () => {
-    // Editing a threshold or a clause must invalidate the review rather than inherit it.
-    expect(pack.lifecycle_state).toBe("DRAFT");
-    expect(pack.review).toBeNull();
+  it("is the version that carries both limbs", () => {
+    // Pinned to the version, not to the review state: whether the pack happens to be signed right
+    // now is a fact about the repository that changes, and the earlier integrity test already
+    // guards that a signature, if present, still matches the rules.
     expect(pack.version).toBe("1.1.0");
+    const band = pack.rules.find((rule) => rule.rule_id === "mr55.c41.2.1");
+    const kinds = (band?.applicability.any_of ?? []).map((option) => option.kind);
+    expect(kinds).toContain("CHARACTERISTIC");
+    expect(kinds).toContain("MEASUREMENT");
   });
 });

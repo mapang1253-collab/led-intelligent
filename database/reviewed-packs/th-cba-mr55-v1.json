@@ -2,10 +2,25 @@
   "pack_id": "th.cba.mr55",
   "version": "1.1.0",
   "title_th": "ชุดกฎควบคุมอาคาร: กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543) — ที่ว่าง แนวอาคารและระยะร่น",
-  "lifecycle_state": "DRAFT",
+  "lifecycle_state": "ACADEMIC_REVIEWED",
   "jurisdiction_coverage_th": "ใช้บังคับทั่วประเทศในเขตที่มีการประกาศใช้พระราชบัญญัติควบคุมอาคาร พ.ศ. 2522 ชุดกฎนี้ครอบคลุมเฉพาะหมวดที่ว่าง แนวอาคารและระยะร่น ไม่ครอบคลุมผังเมืองรวม การใช้ประโยชน์ที่ดิน หรือข้อบัญญัติท้องถิ่น",
-  "declared_critical_families": ["DEVELOPMENT_INTENSITY", "SETBACK_ACCESS"],
-  "review": null,
+  "declared_critical_families": [
+    "DEVELOPMENT_INTENSITY",
+    "SETBACK_ACCESS"
+  ],
+  "review": {
+    "reviewers": [
+      "อรณภา",
+      "สุรัตนาพร"
+    ],
+    "reviewed_on": "2026-09-16",
+    "content_hash": "673512c575136003770b7ae328aebf55d32a68cbfc9e237d4bd65f22a9d42b7a",
+    "evidence_basis_th": "ตัวบทจากฉบับรวมของสมาคมสถาปนิกสยาม ตรวจสอบเมื่อ 2026-09-16 ปรับปรุง v1.1.0 เพิ่มเงื่อนไขอาคารสูงตามข้อ 41 วรรคสอง",
+    "limitations_th": [
+      "ครอบคลุมเฉพาะที่ว่าง แนวอาคารและระยะร่น ไม่ครอบคลุมผังเมืองรวมและข้อบัญญัติท้องถิ่น",
+      "ยังไม่ได้ทานกับราชกิจจานุเบกษาต้นฉบับ"
+    ]
+  },
   "rules": [
     {
       "rule_id": "mr55.c33.1",
