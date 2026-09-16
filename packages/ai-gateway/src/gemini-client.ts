@@ -92,6 +92,11 @@ function classify(error: unknown): ModelResponse {
   if (/abort|timeout|deadline/i.test(message)) {
     return { outcome: "FAILED", code: "AI_TIMEOUT", detail: message, retryable: true };
   }
+  if (status === 503 || /UNAVAILABLE|high demand|overloaded/i.test(message)) {
+    // Provider-side overload, not a fault of ours and not a quota problem. Distinguished from a
+    // flat failure so the reader is told it is worth trying again rather than that it is broken.
+    return { outcome: "FAILED", code: "AI_PROVIDER_BUSY", detail: message, retryable: true };
+  }
   if (status === 401 || status === 403) {
     return { outcome: "FAILED", code: "AI_UNAVAILABLE", detail: message, retryable: false };
   }

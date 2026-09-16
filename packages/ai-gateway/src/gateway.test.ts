@@ -208,3 +208,20 @@ describe("response handling", () => {
     expect(result.record.stop_reason).toBe("EVIDENCE_SPACE_COVERED");
   });
 });
+
+describe("provider overload", () => {
+  it("separates a temporary overload from a flat failure", async () => {
+    const client = vi.fn<ModelClient>(async () => ({
+      outcome: "FAILED",
+      code: "AI_PROVIDER_BUSY",
+      detail: "503 high demand",
+      retryable: true,
+    }));
+    const result = await proposeConcepts({ mode: "LIVE_AI", brief: BRIEF, client });
+
+    // Reported as worth retrying — but this gateway still does not retry by itself.
+    expect(result.outcome === "FAILED" && result.code).toBe("AI_PROVIDER_BUSY");
+    expect(result.outcome === "FAILED" && result.retryable).toBe(true);
+    expect(client).toHaveBeenCalledTimes(1);
+  });
+});

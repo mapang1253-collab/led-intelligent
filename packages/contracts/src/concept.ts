@@ -105,6 +105,8 @@ export type AiFailureCode =
   | "AI_OUTPUT_INVALID"
   | "AI_QUOTA_EXHAUSTED"
   | "AI_TIMEOUT"
+  /** The provider is up but temporarily overloaded — pressing again shortly usually works. */
+  | "AI_PROVIDER_BUSY"
   | "AI_UNAVAILABLE"
   | "AI_DISABLED"
   | "AI_NO_DEFENSIBLE_CONCEPTS";
