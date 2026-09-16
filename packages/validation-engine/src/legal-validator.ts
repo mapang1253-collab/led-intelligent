@@ -457,9 +457,15 @@ function aggregate(counts: AggregateCounts): {
   if (counts.criticalUnresolvedCount > 0 || counts.unresolvedApplicabilityCount > 0) {
     const unresolved = counts.criticalUnresolvedCount + counts.unresolvedApplicabilityCount;
     if (counts.resolvedCount === 0) {
+      // An identified approval is something that *was* determined, so the reason must not claim
+      // nothing was.
+      const approvals =
+        counts.approvalRequiredCount > 0
+          ? ` และมีรายการที่ต้องขออนุญาตอีก ${counts.approvalRequiredCount} รายการ`
+          : "";
       return {
         status: "UNKNOWN",
-        status_reason_th: `ยังไม่มีข้อมูลพอจะตรวจสอบข้อกำหนดใดได้เลย (ค้างอยู่ ${unresolved} ข้อ)`,
+        status_reason_th: `ยังไม่มีข้อมูลพอจะสรุปผลข้อกำหนดที่วัดได้ (ค้างอยู่ ${unresolved} ข้อ)${approvals}`,
       };
     }
     return {

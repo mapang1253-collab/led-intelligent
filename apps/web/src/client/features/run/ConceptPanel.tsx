@@ -37,6 +37,7 @@ function StatusChip({ status }: { status: string }) {
 }
 
 function RuleRow({ outcome }: { outcome: RuleOutcomeView }) {
+  const unresolved = outcome.applicability === "UNRESOLVED";
   return (
     <li className="border-border border-b py-2.5 last:border-b-0">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -46,6 +47,10 @@ function RuleRow({ outcome }: { outcome: RuleOutcomeView }) {
         </span>
         <StatusChip status={outcome.status} />
       </div>
+      {/* A rule that might or might not reach this land is not the same as one that does. */}
+      {unresolved && (
+        <p className="mt-1 text-ink-muted text-xs">{th.concepts.unresolvedApplicability}</p>
+      )}
       {/* What the rule demands of this land, stated whether or not a verdict is possible yet. */}
       {outcome.requirement_th && (
         <p className="mt-1 font-medium text-sm">

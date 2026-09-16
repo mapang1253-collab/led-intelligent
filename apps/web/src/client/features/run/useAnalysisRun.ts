@@ -55,6 +55,7 @@ export interface RuleOutcomeView {
   rule_id: string;
   title_th: string;
   status: string;
+  applicability: string;
   clause_th: string;
   instrument_th: string;
   explanation_th: string;

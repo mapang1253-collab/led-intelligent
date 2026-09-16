@@ -95,14 +95,23 @@ describe("pack integrity", () => {
     const result = await verifyPackIntegrity({
       ...pack,
       lifecycle_state: "ACADEMIC_REVIEWED",
+      review: null,
     } as LegalRulePack);
     expect(result.ok).toBe(false);
     expect(result.ok === false && result.reason_th).toContain("ไม่มีบันทึกการตรวจทาน");
   });
 
-  it("refuses the pack as shipped, because it has not been reviewed yet", async () => {
-    const result = await verifyPackIntegrity(pack);
-    expect(result.ok).toBe(false);
+  it("keeps the committed pack self-consistent: if it is signed, the signature still matches", async () => {
+    // Guards the file in the repository, whatever state it is in. A signed pack whose rules were
+    // edited afterwards fails here rather than silently executing in production.
+    if (pack.review === null) {
+      expect(pack.lifecycle_state).not.toBe("ACADEMIC_REVIEWED");
+      return;
+    }
+    expect(pack.review.content_hash).toBe(await computePackHash(pack));
+    expect(pack.review.reviewers.length).toBeGreaterThan(0);
+    expect(pack.review.limitations_th.length).toBeGreaterThan(0);
+    expect((await verifyPackIntegrity(pack)).ok).toBe(true);
   });
 
   it("accepts a correctly signed pack and rejects it once a threshold changes", async () => {

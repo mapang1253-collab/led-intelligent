@@ -291,11 +291,15 @@ analysisRuns.get("/:run_id", async (c) => {
                     explanation_th: outcome.explanation_th,
                   })),
                   outcomes: validation.outcomes
-                    .filter((outcome) => outcome.applicability === "APPLICABLE")
+                    // Rules whose applicability could not be settled are shown too: "we cannot yet
+                    // tell whether this reaches you" is information, and it is what the summary
+                    // counts. Hiding them made the count disagree with the list.
+                    .filter((outcome) => outcome.applicability !== "NOT_APPLICABLE")
                     .map((outcome) => ({
                       rule_id: outcome.rule_id,
                       title_th: outcome.title_th,
                       status: outcome.status,
+                      applicability: outcome.applicability,
                       clause_th: outcome.source.clause_th,
                       instrument_th: outcome.source.instrument_th,
                       explanation_th: outcome.explanation_th,

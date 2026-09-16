@@ -383,3 +383,24 @@ describe("outcome provenance", () => {
     expect(result.outcomes[0]?.rule_version).toBe("1.0.0");
   });
 });
+
+describe("aggregate wording", () => {
+  it("does not claim nothing was determined when an approval was identified", () => {
+    const approval = rule({
+      rule_id: "rule.approval",
+      effect: "APPROVAL_REQUIRED",
+      predicate: null,
+      criticality: "NON_CRITICAL",
+    });
+    const unresolvable = rule({
+      rule_id: "rule.unresolvable",
+      inputs: [{ input_id: "other", label_th: "อื่น", unit: "ม.", obtained_from_th: "สำรวจ" }],
+      predicate: { kind: "NUMERIC", input_id: "other", op: "gte", value: "1", unit: "ม." },
+    });
+    const result = validateLegal(pack([approval, unresolvable]), concept({ inputs: {} }), TARGET);
+
+    expect(result.status).toBe("UNKNOWN");
+    expect(result.status_reason_th).toContain("ต้องขออนุญาต");
+    expect(result.approval_required).toHaveLength(1);
+  });
+});
