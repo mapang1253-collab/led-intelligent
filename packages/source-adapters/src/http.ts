@@ -31,6 +31,14 @@ export type FetchTextResult =
       readonly retryable: boolean;
     };
 
+export type FetchBytesResult =
+  | { readonly outcome: "SUCCESS"; readonly bytes: Uint8Array }
+  | {
+      readonly outcome: Exclude<AcquisitionOutcome, "SUCCESS" | "OUTSIDE_COVERAGE">;
+      readonly reason: string;
+      readonly retryable: boolean;
+    };
+
 export type FetchJsonResult =
   | { readonly outcome: "SUCCESS"; readonly payload: unknown }
   | {
@@ -76,8 +84,14 @@ function classifyStatus(status: number): FetchJsonFailure | null {
   return null;
 }
 
-/** Reads the body, refusing to buffer more than `maxBytes`. */
-async function readBounded(response: Response, maxBytes: number): Promise<string | null> {
+/**
+ * Reads the body as bytes, refusing to buffer more than `maxBytes`.
+ *
+ * Bytes rather than text because the character set is the publisher's choice, not ours: Thai
+ * government CSV exports are still issued in TIS-620, and decoding those as UTF-8 replaces every
+ * Thai name with U+FFFD before a parser ever sees it.
+ */
+async function readBounded(response: Response, maxBytes: number): Promise<Uint8Array | null> {
   const declared = Number(response.headers.get("content-length"));
   if (Number.isFinite(declared) && declared > maxBytes) {
     return null;
@@ -85,8 +99,8 @@ async function readBounded(response: Response, maxBytes: number): Promise<string
 
   const body = response.body;
   if (!body) {
-    const text = await response.text();
-    return new TextEncoder().encode(text).byteLength > maxBytes ? null : text;
+    const buffer = new Uint8Array(await response.arrayBuffer());
+    return buffer.byteLength > maxBytes ? null : buffer;
   }
 
   const reader = body.getReader();
@@ -111,7 +125,7 @@ async function readBounded(response: Response, maxBytes: number): Promise<string
     joined.set(chunk, offset);
     offset += chunk.byteLength;
   }
-  return new TextDecoder().decode(joined);
+  return joined;
 }
 
 /**
@@ -128,7 +142,18 @@ export async function fetchText(
   if (result.outcome !== "SUCCESS") {
     return result;
   }
-  return { outcome: "SUCCESS", text: result.text };
+  return { outcome: "SUCCESS", text: new TextDecoder().decode(result.bytes) };
+}
+
+/**
+ * Acquires a body without deciding its character set, for publishers who do not use UTF-8. The
+ * caller decodes, because only the caller knows what the publisher issued.
+ */
+export async function fetchBytes(
+  url: string,
+  options: FetchJsonOptions = {},
+): Promise<FetchBytesResult> {
+  return fetchBody(url, options, "text/csv, text/plain, */*");
 }
 
 export async function fetchJson(
@@ -140,7 +165,7 @@ export async function fetchJson(
     return result;
   }
   try {
-    return { outcome: "SUCCESS", payload: JSON.parse(result.text) };
+    return { outcome: "SUCCESS", payload: JSON.parse(new TextDecoder().decode(result.bytes)) };
   } catch {
     return failure("INVALID_RESPONSE", "response body was not valid JSON", false);
   }
@@ -150,7 +175,7 @@ async function fetchBody(
   url: string,
   options: FetchJsonOptions,
   accept: string,
-): Promise<FetchTextResult> {
+): Promise<FetchBytesResult> {
   const fetchImpl = options.fetchImpl ?? fetch;
   const maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES;
   const controller = new AbortController();
@@ -167,8 +192,8 @@ async function fetchBody(
       return statusFailure;
     }
 
-    const text = await readBounded(response, maxBytes);
-    if (text === null) {
+    const bytes = await readBounded(response, maxBytes);
+    if (bytes === null) {
       return failure(
         "INVALID_RESPONSE",
         `response body exceeded the ${maxBytes}-byte limit`,
@@ -176,7 +201,7 @@ async function fetchBody(
       );
     }
 
-    return { outcome: "SUCCESS", text };
+    return { outcome: "SUCCESS", bytes };
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
       return failure("TIMEOUT", "request exceeded its deadline", true);

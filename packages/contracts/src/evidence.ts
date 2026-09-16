@@ -21,11 +21,21 @@ export type GeographyLevel = "PROVINCE" | "DISTRICT" | "SUBDISTRICT";
  * job (docs/data-architecture.md §5). Missing is represented by the absence of an Observation plus
  * a reason, never by zero.
  */
-export interface Observation {
+/**
+ * Exactly one representation per figure. A range is not a scalar and must never be flattened into
+ * one (database/migrations/0003, evidence.observation_value), so the two forms are alternatives the
+ * compiler keeps apart rather than three fields a caller may fill in any combination.
+ */
+export type ObservationFigure =
+  | { readonly value: string; readonly value_low?: undefined; readonly value_high?: undefined }
+  | { readonly value?: undefined; readonly value_low: string; readonly value_high: string };
+
+export type Observation = ObservationFacts & ObservationFigure;
+
+interface ObservationFacts {
   readonly measure_id: string;
   /** The exact population/cohort this figure describes; never dropped when aggregating. */
   readonly population: string;
-  readonly value: string;
   readonly unit: string;
   readonly geography_level: GeographyLevel;
   /** Stable administrative code (DOPA-style) of the subject area. */

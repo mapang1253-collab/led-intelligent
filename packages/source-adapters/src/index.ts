@@ -13,7 +13,7 @@
  * and an OSM extract. OSM and GISTDA need geometry handling and are scheduled after the
  * non-spatial sources land.
  */
-export { USER_AGENT, fetchJson, fetchText } from "./http.js";
+export { USER_AGENT, fetchBytes, fetchJson, fetchText } from "./http.js";
 export type { FetchJsonOptions, FetchJsonResult, FetchTextResult } from "./http.js";
 export {
   BUILDING_VALUATION_MEASURE_ID,
@@ -44,3 +44,12 @@ export {
   fetchSesIncomeTable,
   parseSesIncomeRows,
 } from "./nso/index.js";
+export {
+  CONDOMINIUM_VALUATION_MEASURE_ID,
+  CONDOMINIUM_VALUATION_SOURCE_PRODUCT_ID,
+  CONDOMINIUM_VALUATION_URL,
+  type CondominiumValuationResult,
+  areaCodeOf,
+  fetchCondominiumValuation,
+  parseCondominiumValuationCsv,
+} from "./treasury/condominium-valuation.js";
