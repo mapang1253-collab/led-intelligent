@@ -12,7 +12,8 @@
   "dependencies": {
     "@reis/contracts": "workspace:*",
     "@reis/domain": "workspace:*",
-    "@reis/evidence-engine": "workspace:*"
+    "@reis/evidence-engine": "workspace:*",
+    "decimal.js": "^10.4.3"
   },
   "devDependencies": {
     "typescript": "^5.7.2",

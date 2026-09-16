@@ -21,3 +21,22 @@ export {
   type FinalStatusOutcome,
   decideFinalStatus,
 } from "./final-status.js";
+export {
+  type ConstructionValuationRequest,
+  type LandArea,
+  type LandValuationRequest,
+  type ValuationMethod,
+  type ValuationMethodPack,
+  type ValuationResult,
+  type ValuationStep,
+  squareWaToSquareMetres,
+  toSquareWa,
+  valueConstruction,
+  valueLand,
+} from "./assessed-valuation.js";
+export {
+  type MethodIntegrity,
+  canonicalMethodContent,
+  computeMethodHash,
+  verifyMethodIntegrity,
+} from "./valuation-integrity.js";

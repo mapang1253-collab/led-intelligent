@@ -28,7 +28,8 @@
     "pack:review": "node tools/ingestion/review-pack.mjs",
     "ai:budget": "node --env-file=apps/web/.dev.vars tools/ingestion/ai-budget.mjs",
     "purge:expired": "node --env-file=apps/web/.env.migration tools/ingestion/purge-expired.mjs",
-    "ingest:treasury-building": "pnpm run build:adapters && node --env-file=apps/web/.env.migration tools/ingestion/ingest-treasury-building-valuation.mjs"
+    "ingest:treasury-building": "pnpm run build:adapters && node --env-file=apps/web/.env.migration tools/ingestion/ingest-treasury-building-valuation.mjs",
+    "valuation:review": "node tools/ingestion/review-valuation.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
