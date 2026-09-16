@@ -164,6 +164,16 @@ Every OSM-derived feature should carry **extraction date** and a **coverage/conf
 | Admin hierarchy artefacts | Unexpected municipality label in Bangkok result [Verified] | Name-based joins unreliable |
 | Community effects | Organised/imported edits vary; no warranty [Documented] | Sudden jumps in counts over time unrelated to real change |
 
+## 10b. Subdistrict boundaries are not in OSM (probed 2026-09-16)
+
+A direct Overpass query for `ตำบลบางปลาสร้อย` at `admin_level=8` returned zero elements,
+while `อำเภอเมืองชลบุรี` (`admin_level=6`) and `จังหวัดชลบุรี` (`admin_level=4`) both
+resolved with centres. Thai subdistrict boundaries are therefore **not available** from
+OSM for this project's purposes, and no radius around a subdistrict can be computed from
+OSM alone. The public Overpass endpoint also returned repeated HTTP 504s under light use.
+
+See [`docs/adr/0004-no-property-imagery-or-surroundings.md`](../adr/0004-no-property-imagery-or-surroundings.md).
+
 ## 11. Licensing & attribution
 
 **Documented:**
