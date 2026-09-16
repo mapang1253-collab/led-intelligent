@@ -170,6 +170,15 @@ interface RowSpec {
   readonly maxW: number;
   readonly minGap: number;
   readonly maxGap: number;
+  /**
+   * How far the first tower alone is pulled back in from the band's left edge.
+   *
+   * The row is laid out from off-screen so the city carries on past the frame, but the leftmost
+   * tower was losing more than half its width to the edge and reading as chipped rather than as
+   * continuing. Only that one tower moves — the cursor behind it does not — so the rest of the row
+   * stays exactly where it was and the lead tower keeps clear sky between itself and its neighbour.
+   */
+  readonly lead: number;
 }
 
 function row(spec: RowSpec): Tower[] {
@@ -180,7 +189,7 @@ function row(spec: RowSpec): Tower[] {
     const h = spec.minH + noise(i, spec.seed + 7) * (spec.maxH - spec.minH);
     const roofPick = noise(i, spec.seed + 31);
     towers.push({
-      x,
+      x: i === 0 ? x + spec.lead : x,
       w,
       h,
       mast: h > spec.maxH * 0.78,
@@ -202,6 +211,8 @@ const FAR_TOWERS = row({
   maxW: 100,
   minGap: 34,
   maxGap: 104,
+  /* Smaller than the near row's: this row drifts only ±0.6%, so it was never cut as deeply. */
+  lead: 20,
 });
 
 const NEAR_TOWERS = row({
@@ -212,6 +223,10 @@ const NEAR_TOWERS = row({
   maxW: 122,
   minGap: 86,
   maxGap: 190,
+  /* This row drifts ±1.4% of the band, which at the far swing left only 19 of the lead tower's 73
+     units on screen. Pulled in this far it keeps between 43 and 71 of them at every point in the
+     cycle, and is still cut by the edge throughout, so the city never looks like it stops here. */
+  lead: 24,
 });
 
 /**
