@@ -1,15 +1,22 @@
+import { BASE_DISCLAIMER_TH } from "@reis/analysis-engine";
 import { formatTargetTh } from "@reis/domain";
 import { th } from "@reis/i18n";
 import {
   ArrowLeft,
+  Calculator,
   Check,
   CircleDashed,
   Clock,
+  Coins,
   Info,
+  LayoutList,
+  Lightbulb,
   LoaderCircle,
   MapPin,
   RotateCw,
+  ShieldAlert,
   TriangleAlert,
+  Users,
 } from "lucide-react";
 import { useRef } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
@@ -17,6 +24,7 @@ import { TerrainBackdrop } from "../design-system/TerrainBackdrop.js";
 import { ConceptPanel } from "./ConceptPanel.js";
 import { EvidencePanel } from "./EvidencePanel.js";
 import { FinalResultPanel } from "./FinalResultPanel.js";
+import { type ResultTab, ResultTabs } from "./ResultTabs.js";
 import { ValuationPanel } from "./ValuationPanel.js";
 import {
   type StageRecord,
@@ -125,10 +133,95 @@ export function RunPage() {
   const evidenceStage = envelope?.stage_records?.find((s) => s.stage === "EVIDENCE_ACQUISITION");
   const conceptStage = envelope?.stage_records?.find((s) => s.stage === "CONCEPT_PROPOSAL");
   const unavailable = envelope?.errors?.some((e) => e.code === "RUN_NOT_AVAILABLE");
+  // Evidence is split by what a reader came to look at: what property here costs, versus who lives
+  // here and what they earn. Both remain full evidence groups, with every caveat they carry.
+  const allEvidence = envelope?.partial_artifacts?.evidence;
+  const PRICE_REQUIREMENTS = new Set([
+    "economic.construction_cost_reference",
+    "economic.condominium_price_reference",
+    "economic.land_price_reference",
+  ]);
+  const priceGroups = allEvidence?.filter((g) => PRICE_REQUIREMENTS.has(g.requirement_id));
+  const areaGroups = allEvidence?.filter((g) => !PRICE_REQUIREMENTS.has(g.requirement_id));
+
   const canRetry =
     isTerminal(state) &&
     Boolean(intake) &&
     envelope?.stage_records?.some((s) => s.state === "FAILED" && s.retryable) === true;
+
+  const tabs: ResultTab[] = [
+    {
+      id: "overview",
+      label: th.resultTabs.overview,
+      icon: LayoutList,
+      render: () => (
+        <>
+          <section className="glass mt-5 rounded-card p-6">
+            <h2 className="mb-1 font-semibold text-ink-muted text-sm">
+              {th.progress.stageHeading}
+            </h2>
+            <ul>
+              {envelope?.stage_records?.map((record) => (
+                <StageRow key={record.stage} record={record} />
+              ))}
+            </ul>
+          </section>
+          <FinalResultPanel final={final} />
+        </>
+      ),
+    },
+    {
+      id: "prices",
+      label: th.resultTabs.prices,
+      icon: Coins,
+      count: priceGroups?.length ?? 0,
+      render: () =>
+        priceGroups && priceGroups.length > 0 ? (
+          <EvidencePanel groups={priceGroups} stageState={evidenceStage?.state} />
+        ) : (
+          // Said plainly: no figures here is a fact about this system's coverage, not about the place.
+          <section className="glass mt-5 rounded-card p-6">
+            <p className="text-ink-muted text-sm leading-relaxed">{th.resultTabs.noPrices}</p>
+          </section>
+        ),
+    },
+    {
+      id: "area",
+      label: th.resultTabs.area,
+      icon: Users,
+      count: areaGroups?.length ?? 0,
+      render: () => <EvidencePanel groups={areaGroups} stageState={evidenceStage?.state} />,
+    },
+    {
+      id: "valuation",
+      label: th.resultTabs.valuation,
+      icon: Calculator,
+      render: () => (
+        <ValuationPanel
+          groups={allEvidence}
+          // Carried from the intake so the land calculator starts with what was already typed.
+          intakeArea={{
+            rai: intake?.land_area_rai as string | undefined,
+            ngan: intake?.land_area_ngan as string | undefined,
+            wa: intake?.land_area_wa as string | undefined,
+          }}
+        />
+      ),
+    },
+    {
+      id: "concepts",
+      label: th.resultTabs.concepts,
+      icon: Lightbulb,
+      count: envelope?.partial_artifacts?.concepts?.length ?? 0,
+      render: () => (
+        <ConceptPanel
+          concepts={envelope?.partial_artifacts?.concepts}
+          stageReason={conceptStage?.reason}
+          mode={envelope?.partial_artifacts?.candidate_search?.mode}
+        />
+      ),
+    },
+  ];
 
   return (
     <div className="relative min-h-screen text-ink">
@@ -187,39 +280,21 @@ export function RunPage() {
               </section>
             )}
 
-            <section className="glass mt-5 rounded-card p-6">
-              <h2 className="mb-1 font-semibold text-sm text-ink-muted">
-                {th.progress.stageHeading}
-              </h2>
-              <ul>
-                {envelope?.stage_records?.map((record) => (
-                  <StageRow key={record.stage} record={record} />
-                ))}
-              </ul>
-            </section>
-
-            <FinalResultPanel final={final} />
-
-            <EvidencePanel
-              groups={envelope?.partial_artifacts?.evidence}
-              stageState={evidenceStage?.state}
-            />
-
-            <ValuationPanel
-              groups={envelope?.partial_artifacts?.evidence}
-              // Carried from the intake so the land calculator starts with what was already typed.
-              intakeArea={{
-                rai: intake?.land_area_rai as string | undefined,
-                ngan: intake?.land_area_ngan as string | undefined,
-                wa: intake?.land_area_wa as string | undefined,
+            {/* Above the tabs and above every price table, per docs/output-policy.md §3. An
+                unselected tab panel is a collapsed area, which §3 forbids as its only home. */}
+            <p
+              className="mt-5 flex items-start gap-2.5 rounded-card p-4 text-sm leading-relaxed"
+              style={{
+                backgroundColor: "var(--color-partial-soft)",
+                color: "var(--color-partial)",
+                border: "1px solid color-mix(in srgb, var(--color-partial) 35%, transparent)",
               }}
-            />
+            >
+              <ShieldAlert size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
+              {final?.disclaimer_th ?? BASE_DISCLAIMER_TH}
+            </p>
 
-            <ConceptPanel
-              concepts={envelope?.partial_artifacts?.concepts}
-              stageReason={conceptStage?.reason}
-              mode={envelope?.partial_artifacts?.candidate_search?.mode}
-            />
+            <ResultTabs tabs={tabs} />
 
             {notActivated && (
               <section
