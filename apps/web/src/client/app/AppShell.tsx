@@ -1,5 +1,6 @@
 import { th } from "@reis/i18n";
 import {
+  Activity,
   Building2,
   Calculator,
   Coins,
@@ -88,6 +89,7 @@ function NavRail({ onNavigate, onCollapse }: { onNavigate?: () => void; onCollap
   const runId = runIdFromPath(location.pathname);
   const view = useResultView();
   const onIntake = location.pathname === "/";
+  const onStatus = location.pathname === "/status";
 
   const itemClass = (active: boolean) =>
     `flex items-center gap-2.5 rounded-card px-3 py-2.5 text-sm transition-colors ${
@@ -166,6 +168,20 @@ function NavRail({ onNavigate, onCollapse }: { onNavigate?: () => void; onCollap
           );
         })}
         {!runId && <p className="mt-1.5 px-3 text-ink-muted text-xs">{th.nav.resultLocked}</p>}
+      </div>
+
+      <div>
+        <p className="px-3 pb-1.5 font-medium text-ink-muted text-xs">{th.nav.systemHeading}</p>
+        <Link
+          to="/status"
+          onClick={onNavigate}
+          aria-current={onStatus ? "page" : undefined}
+          className={itemClass(onStatus)}
+          style={itemStyle(onStatus)}
+        >
+          <Activity size={16} aria-hidden="true" />
+          {th.nav.systemStatus}
+        </Link>
       </div>
 
       <p className="mt-auto flex items-start gap-2 px-3 text-ink-muted text-xs leading-relaxed">

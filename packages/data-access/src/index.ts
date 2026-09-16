@@ -20,10 +20,14 @@ export {
   administrativeChainIsValid,
   listDistricts,
   listProvinces,
+  aiStatus,
   searchAreas,
+  sourceStatuses,
   wellDocumentedAreas,
   listSubdistricts,
   type AreaChoice,
+  type AiStatus,
+  type SourceStatus,
 } from "./repositories/administrative-areas.js";
 export {
   type ActiveSourceSummary,

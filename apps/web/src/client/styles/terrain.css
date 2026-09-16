@@ -216,48 +216,43 @@
 }
 
 /**
- * The moon: a crescent of light in the same colours as everything else on the sheet.
+ * The street network: the faintest thing on the sheet, by design.
  *
- * Smaller than the disc it replaces, and with no outline at all — a hairline ring around a perfect
- * circle was the stiffest mark in the scene. It sits in the upper right, the one quarter no screen
- * here puts a heading or a column into. The halo breathes over a minute and a half, slow enough
- * that it is never caught moving, which is the point of the one still thing in the scene.
+ * A plan is what a city is laid out on, not what anyone is looking at, so it runs at a fraction of
+ * the map's opacity and is masked away from the middle where the reading happens. Junctions are
+ * marked only every third crossing — a dot at every one turns a plan into a circuit board.
  */
-.terrain-moon {
-  position: absolute;
-  top: 8%;
-  right: 13%;
-  width: 84px;
-  height: 84px;
-}
-.terrain-moon-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--map-marker) 30%, transparent));
-}
-.terrain-moon-halo {
-  position: absolute;
-  inset: -80%;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    color-mix(in srgb, var(--map-marker) 13%, transparent) 0%,
-    transparent 62%
+.terrain-streets {
+  opacity: 0.4;
+  mask-image: radial-gradient(
+    ellipse 64% 58% at 50% 46%,
+    transparent 0%,
+    rgba(0, 0, 0, 0.5) 54%,
+    #000 88%
   );
-  animation: terrain-moon-breathe 92s ease-in-out infinite alternate;
+  -webkit-mask-image: radial-gradient(
+    ellipse 64% 58% at 50% 46%,
+    transparent 0%,
+    rgba(0, 0, 0, 0.5) 54%,
+    #000 88%
+  );
 }
-
-@keyframes terrain-moon-breathe {
-  from {
-    opacity: 0.55;
-    transform: scale(0.94);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1.06);
-  }
+.terrain-arterial {
+  fill: none;
+  stroke: var(--map-stroke);
+  stroke-width: 1;
+  stroke-linecap: round;
+}
+.terrain-cross {
+  fill: none;
+  stroke: var(--map-stroke);
+  stroke-width: 1;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+.terrain-junction {
+  fill: var(--map-marker);
+  opacity: 0.4;
 }
 
 /**
@@ -324,8 +319,8 @@
 /**
  * Stars: points of light that stay where they are and change only in brightness.
  *
- * This is the sparkle a sky with a moon in it already implies, rather than particles added over
- * the top — nothing here drifts across the page. Each star carries its own resting opacity inline,
+ * The night sky supplies its own sparkle, so nothing has to be added over the top. Each star
+ * carries its own resting opacity inline,
  * which gives the field depth without fifty-four separate rules, and its own cycle length, so the
  * sky never pulses as one.
  *
@@ -451,8 +446,7 @@
   .terrain-window,
   .terrain-star,
   .terrain-mote,
-  .terrain-mote-dot,
-  .terrain-moon-halo {
+  .terrain-mote-dot {
     animation: none;
   }
   /* Stilled, the windows would all read as off; half-lit is the honest resting state. */

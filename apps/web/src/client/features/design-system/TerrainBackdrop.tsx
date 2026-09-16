@@ -1,5 +1,3 @@
-import { useId } from "react";
-
 /**
  * Backdrop motif: the map this product actually works on. All 77 province outlines of Thailand,
  * drawn from public-domain boundary data, with coordinate markers pulsing on a spread of provinces
@@ -15,9 +13,10 @@ import { useId } from "react";
  * prefers-reduced-motion.
  *
  * Under the map stands a city skyline in the same line, its windows lighting one at a time, with a
- * crescent moon and a field of stars above it, with a few lights wandering over the rooftops.
- * Everything that shimmers here belongs to the scene: stars twinkle where they hang, windows come
- * on where they are, and the drifting lights stay over the city rather than crossing the page.
+ * field of stars above it and a few lights wandering over the rooftops. Behind all of it runs a
+ * faint street network — the plan the city is laid out on. Everything that shimmers belongs to the
+ * scene: stars twinkle where they hang, windows come on where they are, and the drifting lights
+ * stay over the city rather than crossing the page.
  *
  * The moon is the only still thing here, and it earns its place by explaining the rest: a night
  * scene with nothing to say it is night is just buildings in the dark. The city is kept to the lower half and dimmed through the middle,
@@ -343,6 +342,44 @@ function SkylineRow({
 }
 
 /**
+ * A street network under everything: the plan a city is laid out on.
+ *
+ * Arterials run the full width at slight angles, cross streets connect them, and a junction is
+ * marked where two meet. It is drawn at a fraction of the map's opacity and masked away from the
+ * middle, because it is the faintest thing on the sheet by design — a plan is the substrate, not a
+ * subject.
+ */
+const ARTERIAL_COUNT = 7;
+
+const ARTERIALS = Array.from({ length: ARTERIAL_COUNT }, (_, i) => {
+  const y = ((i + 0.5) / ARTERIAL_COUNT) * 600;
+  const tilt = (noise(i, 401) - 0.5) * 120;
+  const bend = (noise(i, 409) - 0.5) * 70;
+  return {
+    id: i,
+    d: `M -40 ${y + tilt} C 280 ${y + bend}, 700 ${y - bend}, 1040 ${y - tilt}`,
+    y,
+    tilt,
+    bend,
+  };
+});
+
+/** Cross streets, each spanning two neighbouring arterials at a slant. */
+const CROSS_STREETS = ARTERIALS.slice(0, -1).flatMap((arterial, row) =>
+  Array.from({ length: 4 }, (_, k) => {
+    const x = 60 + ((k + noise(row * 4 + k, 419)) / 4) * 900;
+    const next = ARTERIALS[row + 1];
+    const skew = (noise(row * 4 + k, 421) - 0.5) * 90;
+    return {
+      id: `${row}-${k}`,
+      d: `M ${x} ${arterial.y} L ${x + skew} ${next ? next.y : arterial.y + 90}`,
+      x,
+      y: arterial.y,
+    };
+  }),
+);
+
+/**
  * A few lights wandering over the city.
  *
  * Two motions, on two elements. The outer one carries the light slowly upward; the inner one sways
@@ -386,41 +423,6 @@ const STARS = Array.from({ length: 54 }, (_, i) => {
   };
 });
 
-/**
- * A crescent, cut by masking one disc out of another.
- *
- * A full circle with a hairline ring was the stiffest thing on the sheet: a perfect outline reads
- * as geometry, and the moon is the one element here that is light rather than structure. So there
- * is no stroke at all — the shape is carried by a gradient that brightens toward the lit rim, and
- * the softness is the point rather than a compromise.
- */
-function Moon() {
-  const id = useId();
-  const maskId = `${id}-crescent`;
-  const fillId = `${id}-glow`;
-  return (
-    <div className="terrain-moon" aria-hidden="true">
-      <span className="terrain-moon-halo" />
-      <svg className="terrain-moon-svg" viewBox="0 0 100 100">
-        <title>พระจันทร์เสี้ยวประกอบการตกแต่ง</title>
-        <defs>
-          <mask id={maskId}>
-            <circle cx="50" cy="50" r="42" fill="#fff" />
-            {/* Offset up and right, so the crescent thins toward its horns as a real one does. */}
-            <circle cx="70" cy="38" r="40" fill="#000" />
-          </mask>
-          <radialGradient id={fillId} cx="28%" cy="62%" r="78%">
-            <stop offset="0%" stopColor="var(--map-marker)" stopOpacity="0.62" />
-            <stop offset="58%" stopColor="var(--map-marker)" stopOpacity="0.34" />
-            <stop offset="100%" stopColor="var(--map-marker)" stopOpacity="0.1" />
-          </radialGradient>
-        </defs>
-        <circle cx="50" cy="50" r="42" fill={`url(#${fillId})`} mask={`url(#${maskId})`} />
-      </svg>
-    </div>
-  );
-}
-
 export function TerrainBackdrop() {
   return (
     <div className="terrain" aria-hidden="true">
@@ -452,6 +454,34 @@ export function TerrainBackdrop() {
         </svg>
 
         <div className="terrain-sweep" />
+
+        {/* The plan, under the map and fainter than it. */}
+        <svg
+          className="terrain-svg terrain-streets"
+          viewBox="0 0 1000 600"
+          preserveAspectRatio="none"
+        >
+          <title>โครงข่ายผังเมืองประกอบการตกแต่ง</title>
+          {ARTERIALS.map((road) => (
+            <path
+              key={road.id}
+              className="terrain-arterial"
+              d={road.d}
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
+          {CROSS_STREETS.map((road) => (
+            <path
+              key={road.id}
+              className="terrain-cross"
+              d={road.d}
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
+          {CROSS_STREETS.filter((_, i) => i % 3 === 0).map((road) => (
+            <circle key={road.id} className="terrain-junction" cx={road.x} cy={road.y} r="2" />
+          ))}
+        </svg>
       </div>
 
       <div className="terrain-canopy-wrap">
@@ -469,9 +499,6 @@ export function TerrainBackdrop() {
           />
         </svg>
       </div>
-
-      {/* Above the city, in the empty quarter of the sky, and never behind the headline. */}
-      <Moon />
 
       <div className="terrain-motes">
         {MOTES.map((mote) => (

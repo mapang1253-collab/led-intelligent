@@ -4,6 +4,7 @@ import { Route, Routes } from "react-router";
 import { DesignSystemPreview } from "../features/design-system/DesignSystemPreview.js";
 import { PropertyIntakeForm } from "../features/intake/PropertyIntakeForm.js";
 import { RunPage } from "../features/run/RunPage.js";
+import { SystemStatusPage } from "../features/status/SystemStatusPage.js";
 import { AppShell } from "./AppShell.js";
 
 /** The front door: choosing where to look is the first thing the app asks for. */
@@ -45,6 +46,7 @@ export function App() {
             <Routes>
               <Route path="/" element={<IntakePage />} />
               <Route path="/runs/:runId" element={<RunPage />} />
+              <Route path="/status" element={<SystemStatusPage />} />
             </Routes>
           </AppShell>
         }

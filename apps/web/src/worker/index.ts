@@ -1,14 +1,33 @@
+import type { LegalRulePack } from "@reis/contracts";
 import {
+  aiStatus,
   createDb,
   listDistricts,
   listProvinces,
   listSubdistricts,
   purgeExpiredRuns,
   searchAreas,
+  sourceStatuses,
   wellDocumentedAreas,
 } from "@reis/data-access";
 import { Hono } from "hono";
+import mr55Pack from "../../../../database/reviewed-packs/th-cba-mr55-v1.json" with {
+  type: "json",
+};
+import valuationMethod from "../../../../database/reviewed-packs/th-valuation-assessed-v1.json" with {
+  type: "json",
+};
 import { analysisRuns } from "./routes/analysis-runs.js";
+import { readBudgetLimits } from "./stages/budgeted-client.js";
+
+const LEGAL_PACK = mr55Pack as unknown as LegalRulePack;
+const VALUATION_METHOD = valuationMethod as unknown as {
+  method_id: string;
+  version: string;
+  title_th: string;
+  lifecycle_state: string;
+  review: { reviewers: string[]; reviewed_on: string } | null;
+};
 
 /**
  * Public HTTP API (docs/api-contracts.md §3, docs/technology-stack.md §7). Static SPA assets are
@@ -103,6 +122,56 @@ app.get("/api/v1/administrative-areas/well-documented", async (c) => {
   try {
     const data = await wellDocumentedAreas(db, 6);
     return c.json({ schema_version: SCHEMA_VERSION, data });
+  } finally {
+    await db.destroy();
+  }
+});
+
+/**
+ * System status: what this deployment can currently do, and on whose authority.
+ *
+ * It exists because every "there is no data here" answer the app gives should be checkable.
+ * Sources appear whether or not they are switched on, with the names of the people who reviewed
+ * them, and the rule pack and valuation method report their lifecycle state and version. Nothing
+ * here is secret — counts, states, versions and reviewer names are exactly what an academic
+ * reviewer needs to see — and nothing about any run is included.
+ */
+app.get("/api/v1/system-status", async (c) => {
+  const db = createDb(c.env.HYPERDRIVE.connectionString);
+  try {
+    const [sources, ai] = await Promise.all([sourceStatuses(db), aiStatus(db)]);
+    const limits = readBudgetLimits(c.env);
+    const reserve = limits ? limits.rpd * (limits.dailyReservePercent / 100) : 0;
+    return c.json({
+      schema_version: SCHEMA_VERSION,
+      sources,
+      legal_pack: {
+        pack_id: LEGAL_PACK.pack_id,
+        version: LEGAL_PACK.version,
+        title_th: LEGAL_PACK.title_th,
+        lifecycle_state: LEGAL_PACK.lifecycle_state,
+        rule_count: LEGAL_PACK.rules.length,
+        reviewers: LEGAL_PACK.review?.reviewers ?? null,
+        reviewed_on: LEGAL_PACK.review?.reviewed_on ?? null,
+      },
+      valuation_method: {
+        method_id: VALUATION_METHOD.method_id,
+        version: VALUATION_METHOD.version,
+        title_th: VALUATION_METHOD.title_th,
+        lifecycle_state: VALUATION_METHOD.lifecycle_state,
+        reviewers: VALUATION_METHOD.review?.reviewers ?? null,
+        reviewed_on: VALUATION_METHOD.review?.reviewed_on ?? null,
+      },
+      ai: {
+        mode: c.env.AI_MODE ?? "AI_DISABLED",
+        model: "gemini-3.1-flash-lite",
+        calls_today: ai.calls_today,
+        outcomes: ai.outcomes,
+        // Null when no budget is recorded, which is itself the thing worth reporting.
+        daily_limit: limits?.rpd ?? null,
+        usable_today: limits ? Math.floor(limits.rpd - reserve) : null,
+      },
+    });
   } finally {
     await db.destroy();
   }

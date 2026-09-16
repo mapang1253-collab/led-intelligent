@@ -218,3 +218,65 @@ export async function wellDocumentedAreas(db: Db, limit = 6): Promise<AreaChoice
   });
   return rows;
 }
+
+/** What a source currently contributes, for the status screen. */
+export interface SourceStatus {
+  product_id: string;
+  title_th: string;
+  attribution_th: string;
+  activation_state: string;
+  coverage_note_th: string | null;
+  observations: number;
+  reviewers: string[] | null;
+  reviewed_at: string | null;
+}
+
+/**
+ * Every registered source with its activation state and how many current figures it holds.
+ *
+ * Inactive products are included rather than filtered out: a status screen that lists only what is
+ * switched on cannot answer "why is there no land price here", which is the question it exists for.
+ */
+export async function sourceStatuses(db: Db): Promise<SourceStatus[]> {
+  const { rows } = await db.executeQuery<SourceStatus>({
+    sql: `SELECT p.product_id, p.title_th, p.attribution_th, p.activation_state,
+                 p.coverage_note_th,
+                 COALESCE(o.n, 0)::int AS observations,
+                 ar.reviewer_names AS reviewers,
+                 to_char(ar.reviewed_at, 'YYYY-MM-DD') AS reviewed_at
+            FROM source.source_product p
+            LEFT JOIN source.activation_record ar ON ar.id = p.activation_record_id
+            LEFT JOIN LATERAL (
+              SELECT count(*) AS n
+                FROM evidence.observation ob
+                JOIN source.product_version pv ON pv.id = ob.source_product_version_id
+               WHERE pv.source_product_id = p.id AND ob.is_current
+            ) o ON true
+           ORDER BY p.activation_state DESC, p.product_id`,
+    parameters: [],
+    query: { kind: "SelectQueryNode" } as never,
+  });
+  return rows;
+}
+
+/** Today's AI usage against the recorded ceiling, for the status screen. */
+export interface AiStatus {
+  calls_today: number;
+  outcomes: { outcome: string; n: number }[];
+}
+
+export async function aiStatus(db: Db): Promise<AiStatus> {
+  const { rows } = await db.executeQuery<{ outcome: string; n: number }>({
+    sql: `SELECT outcome, count(*)::int AS n
+            FROM operations.ai_call_log
+           WHERE created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Bangkok')
+           GROUP BY outcome
+           ORDER BY n DESC`,
+    parameters: [],
+    query: { kind: "SelectQueryNode" } as never,
+  });
+  return {
+    calls_today: rows.reduce((sum, row) => sum + row.n, 0),
+    outcomes: rows,
+  };
+}
