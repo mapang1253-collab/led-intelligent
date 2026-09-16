@@ -261,6 +261,47 @@
 }
 
 /**
+ * Lights drifting up over the city.
+ *
+ * Masked to the lower band. Loose over the whole viewport these were particles crossing a page;
+ * held above the rooftops they belong to the thing underneath them. Eight of them, each rising over
+ * half a minute or more, which is slow enough to notice only if you are looking for it.
+ */
+.terrain-motes {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.45) 46%, #000 74%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.45) 46%, #000 74%);
+}
+.terrain-mote {
+  position: absolute;
+  bottom: -3%;
+  border-radius: 50%;
+  background: var(--map-marker);
+  box-shadow: 0 0 7px var(--map-marker);
+  opacity: 0;
+  animation-name: terrain-mote-rise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes terrain-mote-rise {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.7);
+    opacity: 0;
+  }
+  18%,
+  74% {
+    opacity: var(--mote-peak, 0.4);
+  }
+  100% {
+    transform: translate3d(var(--mote-drift, 0), -72vh, 0) scale(1);
+    opacity: 0;
+  }
+}
+
+/**
  * Stars: points of light that stay where they are and change only in brightness.
  *
  * This is the sparkle a sky with a moon in it already implies, rather than particles added over
@@ -389,12 +430,17 @@
   .terrain-skyline-near,
   .terrain-window,
   .terrain-star,
+  .terrain-mote,
   .terrain-moon-halo {
     animation: none;
   }
   /* Stilled, the windows would all read as off; half-lit is the honest resting state. */
   .terrain-window {
     opacity: 0.45;
+  }
+  /* A drifting light that has stopped drifting is a dot in the sky, so it goes. */
+  .terrain-motes {
+    display: none;
   }
   .terrain-sweep {
     opacity: 0;

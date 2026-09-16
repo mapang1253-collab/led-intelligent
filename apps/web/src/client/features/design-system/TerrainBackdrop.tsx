@@ -15,9 +15,9 @@ import { useId } from "react";
  * prefers-reduced-motion.
  *
  * Under the map stands a city skyline in the same line, its windows lighting one at a time, with a
- * crescent moon and a field of stars above it. Everything that shimmers here belongs to the scene:
- * stars twinkle where they hang, windows come on where they are. Nothing drifts across the page,
- * which is what free-floating motes did and why they are gone.
+ * crescent moon and a field of stars above it, with a few lights drifting up over the rooftops.
+ * Everything that shimmers here belongs to the scene: stars twinkle where they hang, windows come
+ * on where they are, and the drifting lights stay over the city rather than crossing the page.
  *
  * The moon is the only still thing here, and it earns its place by explaining the rest: a night
  * scene with nothing to say it is night is just buildings in the dark. The city is kept to the lower half and dimmed through the middle,
@@ -343,6 +343,23 @@ function SkylineRow({
 }
 
 /**
+ * A few lights drifting up over the city.
+ *
+ * These came out once already for floating across the page like particles laid over it. Eight,
+ * slow, and masked to the band above the rooftops, they read instead as something the city is
+ * giving off — which is the difference between atmosphere and confetti.
+ */
+const MOTES = Array.from({ length: 8 }, (_, i) => ({
+  id: i,
+  left: (6 + noise(i, 307) * 88).toFixed(2),
+  size: 2 + noise(i, 311) * 2.4,
+  delay: noise(i, 313) * 22,
+  duration: 30 + noise(i, 317) * 22,
+  drift: (noise(i, 331) - 0.5) * 90,
+  opacity: 0.28 + noise(i, 337) * 0.34,
+}));
+
+/**
  * Stars. Fixed where they hang and twinkling in place — the sparkle a sky with a moon in it already
  * implies, rather than particles added over the top.
  *
@@ -448,6 +465,26 @@ export function TerrainBackdrop() {
 
       {/* Above the city, in the empty quarter of the sky, and never behind the headline. */}
       <Moon />
+
+      <div className="terrain-motes">
+        {MOTES.map((mote) => (
+          <span
+            key={mote.id}
+            className="terrain-mote"
+            style={
+              {
+                left: `${mote.left}%`,
+                width: `${mote.size}px`,
+                height: `${mote.size}px`,
+                animationDelay: `${mote.delay}s`,
+                animationDuration: `${mote.duration}s`,
+                "--mote-peak": mote.opacity,
+                "--mote-drift": `${mote.drift}px`,
+              } as React.CSSProperties
+            }
+          />
+        ))}
+      </div>
 
       <div className="terrain-stars">
         {STARS.map((star) => (
