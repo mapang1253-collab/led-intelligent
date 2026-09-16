@@ -65,6 +65,17 @@ export const CONDOMINIUM_PRICE_REQUIREMENT: EvidenceRequirement = {
   subject_kind: "COHORT_WITHIN_AREA",
 };
 
+/**
+ * Treasury assessed land values. The subject is a land unit — a position, such as highway frontage
+ * — inside the area, so an exact geographic match still leaves the subject partly identified: which
+ * of the area's land units a particular plot occupies is not something this evidence can say.
+ */
+export const LAND_PRICE_REQUIREMENT: EvidenceRequirement = {
+  requirement_id: "economic.land_price_reference",
+  purpose_th: "ราคาประเมินที่ดินของราชการตามหน่วยที่ดิน สำหรับใช้เป็นจุดอ้างอิงเชิงเปรียบเทียบ",
+  subject_kind: "COHORT_WITHIN_AREA",
+};
+
 export const POPULATION_REQUIREMENT: EvidenceRequirement = {
   requirement_id: "demand.resident_population",
   purpose_th: "ขนาดประชากรในพื้นที่ สำหรับประกอบการพิจารณาด้านดีมานด์",

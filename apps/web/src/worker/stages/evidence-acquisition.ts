@@ -13,6 +13,7 @@ import {
   CONSTRUCTION_COST_REQUIREMENT,
   type EvidenceRequirement,
   HOUSEHOLD_INCOME_REQUIREMENT,
+  LAND_PRICE_REQUIREMENT,
   POPULATION_REQUIREMENT,
   buildEvidenceLinks,
 } from "@reis/evidence-engine";
@@ -46,6 +47,10 @@ const REQUIREMENTS: readonly { measureId: string; requirement: EvidenceRequireme
   {
     measureId: "assessed_condominium_value_per_sqm",
     requirement: CONDOMINIUM_PRICE_REQUIREMENT,
+  },
+  {
+    measureId: "assessed_land_value_per_sqwa",
+    requirement: LAND_PRICE_REQUIREMENT,
   },
 ];
 
