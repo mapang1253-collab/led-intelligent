@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { useRef } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
-import { TerrainBackdrop } from "../design-system/TerrainBackdrop.js";
+import { useResultView } from "../../app/AppShell.js";
 import { ConceptPanel } from "./ConceptPanel.js";
 import { EvidencePanel } from "./EvidencePanel.js";
 import { FinalResultPanel } from "./FinalResultPanel.js";
@@ -114,6 +114,9 @@ export function RunPage() {
     clock.current = { runId, at: Date.now() };
   }
   const startedAt = clock.current.at;
+  // The open topic lives in the URL, so the navigation rail can link straight to it and the tab
+  // strip and the rail can never disagree about which one is open.
+  const view = useResultView();
   const run = useRun(runId, startedAt);
   const cancel = useCancelRun(runId);
   const retry = useCreateRun();
@@ -224,10 +227,8 @@ export function RunPage() {
   ];
 
   return (
-    <div className="relative min-h-screen text-ink">
-      <TerrainBackdrop />
-
-      <main className="mx-auto max-w-3xl px-6 py-12">
+    <div className="text-ink">
+      <main className="mx-auto max-w-3xl px-6 py-10 lg:py-12">
         <Link
           to="/"
           className="inline-flex items-center gap-2 text-ink-muted text-sm hover:text-ink"
@@ -294,7 +295,7 @@ export function RunPage() {
               {final?.disclaimer_th ?? BASE_DISCLAIMER_TH}
             </p>
 
-            <ResultTabs tabs={tabs} />
+            <ResultTabs tabs={tabs} activeId={view} />
 
             {notActivated && (
               <section

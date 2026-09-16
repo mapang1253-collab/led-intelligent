@@ -1,12 +1,14 @@
 import type { LucideIcon } from "lucide-react";
-import { useId, useRef, useState } from "react";
+import { useId, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router";
 
 /**
- * Topic tabs for the result screen.
+ * Topic switcher for the result screen, for widths where the navigation rail is not on screen.
  *
- * The screen had become one long column: status, then every figure the run collected, then the
- * calculator, then the concepts. Reading it meant scrolling past four things to reach the fifth.
- * Tabs let a reader ask for the one thing they came for.
+ * The rail owns this job wherever there is room for it; duplicating it beside itself would be two
+ * controls for one choice. Below that width the rail is a drawer, and switching topic should not
+ * cost a drawer open each time, so the strip appears there instead. Both read and write the same
+ * `view` in the URL, so they can never disagree about which topic is open.
  *
  * What must NOT move into a tab is the academic disclaimer. docs/output-policy.md §3 forbids it
  * being reachable only through a collapsed area, and an unselected tab panel is exactly that, so it
@@ -23,10 +25,25 @@ export interface ResultTab {
   readonly render: () => React.ReactNode;
 }
 
-export function ResultTabs({ tabs }: { tabs: readonly ResultTab[] }) {
-  const [activeId, setActiveId] = useState(tabs[0]?.id ?? "");
+export function ResultTabs({
+  tabs,
+  activeId,
+}: {
+  tabs: readonly ResultTab[];
+  /** Owned by the URL, so the strip and the navigation rail cannot disagree. */
+  activeId: string;
+}) {
   const baseId = useId();
   const strip = useRef<HTMLDivElement>(null);
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+
+  function setActiveId(id: string) {
+    const next = new URLSearchParams(params);
+    next.set("view", id);
+    // Replaced rather than pushed: switching topic is not a step to walk back through.
+    navigate({ search: next.toString() }, { replace: true });
+  }
 
   const active = tabs.find((tab) => tab.id === activeId) ?? tabs[0];
   if (!active) {
@@ -52,13 +69,14 @@ export function ResultTabs({ tabs }: { tabs: readonly ResultTab[] }) {
 
   return (
     <div className="mt-5">
+      {/* Hidden where the rail is visible: one choice, one control. */}
       {/* Horizontal and scrollable rather than stacked: a phone keeps one row and swipes it. */}
       <div
         ref={strip}
         role="tablist"
         aria-label="หัวข้อผลการวิเคราะห์"
         onKeyDown={onKeyDown}
-        className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1"
+        className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 lg:hidden"
       >
         {tabs.map((tab) => {
           const selected = tab.id === active.id;

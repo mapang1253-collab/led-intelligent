@@ -2,16 +2,15 @@ import { th } from "@reis/i18n";
 import { Building2 } from "lucide-react";
 import { Route, Routes } from "react-router";
 import { DesignSystemPreview } from "../features/design-system/DesignSystemPreview.js";
-import { TerrainBackdrop } from "../features/design-system/TerrainBackdrop.js";
 import { PropertyIntakeForm } from "../features/intake/PropertyIntakeForm.js";
 import { RunPage } from "../features/run/RunPage.js";
+import { AppShell } from "./AppShell.js";
 
+/** The front door: choosing where to look is the first thing the app asks for. */
 function IntakePage() {
   return (
-    <div className="relative min-h-screen text-ink">
-      <TerrainBackdrop />
-
-      <header className="px-6 pt-16 pb-10">
+    <>
+      <header className="px-6 pt-12 pb-8 lg:pt-16 lg:pb-10">
         <div className="mx-auto max-w-4xl">
           <span className="glass inline-flex items-center gap-1.5 rounded-pill px-3 py-1 font-semibold text-xs">
             <Building2 size={14} aria-hidden="true" /> {th.app.academicBadge}
@@ -30,16 +29,26 @@ function IntakePage() {
           <PropertyIntakeForm />
         </div>
       </main>
-    </div>
+    </>
   );
 }
 
 export function App() {
   return (
     <Routes>
-      <Route path="/" element={<IntakePage />} />
-      <Route path="/runs/:runId" element={<RunPage />} />
+      {/* The design preview stands alone; everything a reader uses lives inside the shell. */}
       <Route path="/design" element={<DesignSystemPreview />} />
+      <Route
+        path="*"
+        element={
+          <AppShell>
+            <Routes>
+              <Route path="/" element={<IntakePage />} />
+              <Route path="/runs/:runId" element={<RunPage />} />
+            </Routes>
+          </AppShell>
+        }
+      />
     </Routes>
   );
 }
