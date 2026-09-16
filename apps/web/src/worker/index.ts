@@ -1,5 +1,6 @@
 import { createDb, listDistricts, listProvinces, listSubdistricts } from "@reis/data-access";
 import { Hono } from "hono";
+import { analysisRuns } from "./routes/analysis-runs.js";
 
 /**
  * Public HTTP API (docs/api-contracts.md §3, docs/technology-stack.md §7). Static SPA assets are
@@ -57,8 +58,7 @@ app.get("/api/v1/administrative-areas/subdistricts", async (c) => {
   }
 });
 
-// TODO(Day 7-8): POST /api/v1/analysis-runs, GET /api/v1/analysis-runs/:run_id,
-//                POST /api/v1/analysis-runs/:run_id/cancel — see docs/api-contracts.md §3.
+app.route("/api/v1/analysis-runs", analysisRuns);
 
 /**
  * Anything that is not an API route belongs to the SPA: hand it back to the assets layer so

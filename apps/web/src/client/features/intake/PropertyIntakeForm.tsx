@@ -1,6 +1,8 @@
 import { th } from "@reis/i18n";
 import { ArrowRight, ChevronDown, Info, Plus } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router";
+import { useCreateRun } from "../run/useAnalysisRun.js";
 import { AreaSelect } from "./AreaSelect.js";
 import { useDistricts, useProvinces, useSubdistricts } from "./useAdministrativeAreas.js";
 
@@ -65,6 +67,8 @@ export function PropertyIntakeForm() {
   const [showOptional, setShowOptional] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const navigate = useNavigate();
+  const createRun = useCreateRun();
   const provinces = useProvinces();
   const districts = useDistricts(provinceId || undefined);
   const subdistricts = useSubdistricts(districtId || undefined);
@@ -95,8 +99,21 @@ export function PropertyIntakeForm() {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    // TODO(next): POST /api/v1/analysis-runs and route to the run's progress view
-    // (docs/api-contracts.md §3). The route does not exist yet.
+    // Optional fields are omitted when blank rather than sent as empty strings: an absent fact is
+    // not the same as a fact asserted to be empty.
+    const optionalPayload = Object.fromEntries(
+      Object.entries(optional).filter(([, v]) => v.trim() !== ""),
+    );
+
+    createRun.mutate(
+      {
+        province_id: provinceId,
+        district_id: districtId,
+        subdistrict_id: subdistrictId,
+        ...optionalPayload,
+      },
+      { onSuccess: (run) => navigate(`/runs/${run.run_id}`) },
+    );
   }
 
   return (
@@ -231,15 +248,18 @@ export function PropertyIntakeForm() {
         </p>
       </div>
 
+      {createRun.isError && <p className="mt-4 text-fail text-sm">{th.error.generic}</p>}
+
       <button
         type="submit"
-        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-pill px-7 py-3.5 font-bold text-base text-white md:w-auto"
+        disabled={createRun.isPending}
+        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-pill px-7 py-3.5 font-bold text-base text-white disabled:opacity-60 md:w-auto"
         style={{
           background:
             "linear-gradient(120deg, var(--grad-deep-from), var(--grad-deep-via), var(--grad-deep-to))",
         }}
       >
-        {th.intake.submit}
+        {createRun.isPending ? th.intake.submitting : th.intake.submit}
         <ArrowRight size={18} strokeWidth={2.5} aria-hidden="true" />
       </button>
     </form>

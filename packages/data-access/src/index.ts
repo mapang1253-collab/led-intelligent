@@ -6,6 +6,16 @@
 export { createDb } from "./connection.js";
 export type { Database } from "./schema.js";
 export {
+  type AnalysisRunRow,
+  type CreateAnalysisRunInput,
+  type OutputScope,
+  type RunState,
+  createAnalysisRun,
+  findRunForCapability,
+  loadRunAreaNames,
+  setRunState,
+} from "./repositories/analysis-runs.js";
+export {
   type AdministrativeAreaSummary,
   listDistricts,
   listProvinces,

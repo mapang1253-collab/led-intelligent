@@ -4,15 +4,27 @@
 
 ## สถานะปัจจุบันของรีโพนี้
 
-รีโพนี้เป็น **รีโพสำหรับสเปกเท่านั้น** (specification-only): งานวิจัย สถาปัตยกรรม การออกแบบระบบ และสเปกการพัฒนาที่เสร็จสมบูรณ์แล้ว
-สำหรับเว็บแอป Highest-and-Best-Use (HBU) ที่เน้นทรัพย์สินเป็นศูนย์กลาง ครอบคลุมทั้งประเทศไทย (โปรเจกต์ระดับมหาวิทยาลัย)
-**ยังไม่มีโค้ดแอปพลิเคชันใด ๆ** — ไม่มี `package.json` ไม่มี `apps/` ไม่มี `packages/` ไม่มีอะไรให้ install, build, lint หรือ test
+รีโพนี้เป็นเว็บแอป Highest-and-Best-Use (HBU) ที่เน้นทรัพย์สินเป็นศูนย์กลาง ครอบคลุมทั้งประเทศไทย (โปรเจกต์ระดับมหาวิทยาลัย)
+เอกสารสเปก/สถาปัตยกรรมใน `docs/` ยังคงเป็นแหล่งอำนาจสูงสุด และตอนนี้มีโค้ดที่รันได้จริงอยู่ในรีโพแล้ว
 ชลบุรี/EEC เป็นเพียงพื้นที่วิจัยและ fixture สำหรับตรวจสอบความถูกต้องเท่านั้น ไม่ใช่ขอบเขตของผลิตภัณฑ์
+
+**สิ่งที่สร้างแล้ว (ใช้งานได้จริง):** workspace pnpm ครบทุก package ตาม §4 · migration
+`database/migrations/0001` (reference.administrative_area ทั่วประเทศ 77/928/7436) และ `0002`
+(analysis.analysis_run + CHECK หมดอายุ 24 ชม.) · Worker Hono ที่ `/api/v1/administrative-areas` และ
+`/api/v1/analysis-runs` (สร้าง/อ่าน/ยกเลิก run พร้อม capability cookie แบบ HttpOnly เก็บเฉพาะ digest) ·
+SPA React 19 + React Router: หน้ากรอกข้อมูลทรัพย์สิน (`features/intake`), หน้าความคืบหน้า/ผลลัพธ์ของ run
+(`features/run`), ระบบ design token + พื้นหลังแผนที่เคลื่อนไหว (`features/design-system`) ·
+adapter NSO SES income (ยังไม่ activate) · Hyperdrive เชื่อม Supabase
+
+**สิ่งที่ยังไม่ทำ (ตั้งใจ):** stage หลักฐาน/ตรวจสอบ/scenario/AI ยัง **ไม่ activate** ตาม
+[`docs/adr/0001-first-increment-scope.md`](docs/adr/0001-first-increment-scope.md) — run จึงคืน `PARTIAL`
+พร้อม `final_analysis: null` และ notice `ANALYTICAL_STAGES_NOT_ACTIVATED` ซึ่งเป็นพฤติกรรมที่ถูกต้อง
+ไม่ใช่บั๊ก ห้ามเติมผลวิเคราะห์ปลอมเพื่อให้หน้าจอดูสมบูรณ์เด็ดขาด
 
 **Architecture Freeze v1.0** ถูกประกาศโดยเจ้าของโปรเจกต์เมื่อ 2026-09-15 (เวลาเอเชีย/กรุงเทพฯ) ดู
 [`ARCHITECTURE-FREEZE.md`](ARCHITECTURE-FREEZE.md) สำหรับ baseline ที่ล็อกไว้และกฎการเปลี่ยนแปลง
-การพัฒนาแอปพลิเคชันจะเริ่มก็ต่อเมื่อคำสั่งของผู้ใช้ในขณะนั้นร้องขออย่างชัดเจนเท่านั้น คำขอให้สร้าง/พัฒนาโปรเจกต์นี้ถือเป็นการอนุญาตที่เพียงพอแล้ว
-ก่อนหน้านั้น ให้ถือว่านี่คือรีโพเอกสาร: อ่าน อธิบาย วางแผน — **อย่าเริ่ม scaffold แอปโดยไม่มีการร้องขอ**
+เจ้าของโปรเจกต์ได้อนุญาตให้พัฒนาแอปแล้ว การเขียนโค้ดต่อจึงทำได้ แต่ต้องอยู่ภายใต้ baseline ที่ freeze ไว้เสมอ
+กำหนดส่งงาน: **27 กันยายน 2569**
 
 ## ลำดับการอ่านที่จำเป็นและลำดับความสำคัญของเอกสาร
 
@@ -78,13 +90,14 @@
 
 ## คำสั่งที่ใช้ในโปรเจกต์
 
-**ยังไม่มีคำสั่งเหล่านี้ให้ใช้งานจริง** — ยังไม่มี `package.json` หรือ workspace เมื่อเริ่มพัฒนาแล้ว `docs/technology-stack.md` §13
-กำหนดให้ implementation ต้องมีคำสั่งเหล่านี้ครบถ้วน (ห้ามคิดชื่อคำสั่งอื่นขึ้นมาเอง):
+คำสั่งเหล่านี้มีอยู่จริงใน `package.json` ที่ root แล้ว (ชื่อกำหนดโดย `docs/technology-stack.md` §13
+ห้ามคิดชื่อคำสั่งอื่นขึ้นมาเอง):
 
 ```text
 pnpm install
 pnpm setup:check
 pnpm db:migrate
+pnpm db:seed:reference   # เขตการปกครองทั่วประเทศ 77/928/7436 จาก geothai
 pnpm db:seed:academic
 pnpm dev            # รัน React app + Worker ผ่าน Cloudflare Vite plugin เชื่อมกับ Supabase dev DB ที่ hosted ไว้ — ไม่ต้องใช้ Docker
 pnpm typecheck
@@ -122,7 +135,7 @@ PostgreSQL `numeric` สำหรับค่าที่เกี่ยวก�
 ใช้ Cloudflare project เดียวให้บริการทั้ง SPA และ `/api/v1/*` จาก origin เดียวกัน ห้ามใช้ Docker, ห้ามใช้ Next.js/SSR,
 ห้ามใช้ Redis/Kubernetes/GraphQL/WebSockets และยังไม่ใช้ Cloudflare Queues ในช่วงแรก
 
-**โครงสร้างรีโพที่วางแผนไว้** (`docs/technology-stack.md` §4 — ยังไม่ได้สร้างจริง):
+**โครงสร้างรีโพ** (`docs/technology-stack.md` §4 — สร้างครบแล้ว):
 
 ```text
 apps/web/src/{client,worker,workflows}/   # client: routes/components/features; worker: Hono API; workflows: Cloudflare Workflows
@@ -194,11 +207,14 @@ Operations แต่ละ context เป็นเจ้าของความ
 
 ## การทำงานในรีโพนี้ ณ วันนี้
 
-- งานส่วนใหญ่ในรีโพนี้คือการทำเอกสาร/วิเคราะห์: ตอบคำถามเกี่ยวกับการออกแบบ ร่างหรือแก้ไขสเปก หรือให้เหตุผลเกี่ยวกับ
-  ช่องว่างประเภท `OPEN DECISION`/`RQ-*` ให้อ้างอิงเอกสารข้างต้นเสมอ และระบุให้ชัดเจนว่าสิ่งใดเป็น `IMPLEMENTATION CHOICE`
+- งานตอนนี้คือการเขียนโค้ดตามสเปก: ก่อนแตะโค้ดส่วนใด ให้เปิดเอกสารที่ควบคุมส่วนนั้นก่อนเสมอ (ดูตารางแผนที่เอกสาร)
+  และเมื่อให้เหตุผลเรื่องช่องว่าง `OPEN DECISION`/`RQ-*` ให้ระบุชัดเจนว่าสิ่งใดเป็น `IMPLEMENTATION CHOICE`
   ต่างจากการตัดสินใจแบบ `LOCKED`/`RD-*`
+- การตัดสินใจด้านการ implement ที่เบี่ยงจากสเปกหรือเลือกทางใดทางหนึ่งอย่างมีนัยสำคัญ ให้บันทึกเป็น ADR ใน `docs/adr/`
+- ข้อความที่ผู้ใช้เห็นทั้งหมดอยู่ใน `packages/i18n` (ภาษาไทยเท่านั้น) ห้าม hardcode ข้อความไทยในคอมโพเนนต์
+  และ **ห้ามใส่อิโมจิหรือสัญลักษณ์คล้ายอิโมจิในทุกฟังก์ชัน** ให้ใช้ไอคอนจาก `lucide-react` แทน
 - อย่าถือว่าสิ่งใดใน `docs/data-sources/` หรือ `research/` เป็นใบอนุญาตให้ activate แหล่งข้อมูล — การ activate ต้องผ่าน
   gate ใน `docs/implementation-plan.md` §4 เสมอ ไม่ว่าไฟล์วิจัยนั้นจะดูสมบูรณ์เพียงใดก็ตาม
-- หากได้รับคำขอให้เริ่มพัฒนา ให้ทำตามลำดับ work package ใน `docs/implementation-plan.md` §2 (WP0 → WP10)
+- ทำตามลำดับ work package ใน `docs/implementation-plan.md` §2 (WP0 → WP10)
   และคงสถานะ inactive ไว้สำหรับทุกแหล่งข้อมูล/กฎ/วิธีการ/คอมโพเนนต์/พารามิเตอร์จนกว่าจะผ่าน gate ที่บันทึกไว้ —
   ระบบที่มีขอบเขตเล็กกว่าแต่ซื่อสัตย์ต่อสถานะจริง (มีบางส่วน inactive) ถือเป็นพฤติกรรมที่ถูกต้อง ไม่ใช่ความบกพร่อง

@@ -4,6 +4,7 @@ import { Route, Routes } from "react-router";
 import { DesignSystemPreview } from "../features/design-system/DesignSystemPreview.js";
 import { TerrainBackdrop } from "../features/design-system/TerrainBackdrop.js";
 import { PropertyIntakeForm } from "../features/intake/PropertyIntakeForm.js";
+import { RunPage } from "../features/run/RunPage.js";
 
 function IntakePage() {
   return (
@@ -37,6 +38,7 @@ export function App() {
   return (
     <Routes>
       <Route path="/" element={<IntakePage />} />
+      <Route path="/runs/:runId" element={<RunPage />} />
       <Route path="/design" element={<DesignSystemPreview />} />
     </Routes>
   );
