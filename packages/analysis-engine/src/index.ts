@@ -3,8 +3,21 @@
  * docs/analysis-architecture.md: candidate generation/dedup, comparison, and final-status decision
  * (CLEAR_RECOMMENDATION / INCONCLUSIVE / INSUFFICIENT_EVIDENCE). No provider calls.
  *
- * WP4-8 scaffold. Legal/physical/demand validation and the economic registry stay unactivated in
- * the current increment (docs/adr/0001-first-increment-scope.md) — every requirement reports
- * UNKNOWN/UNSUPPORTED_MODEL honestly until those packs are built.
+ * Built so far: the final-status decision and the deterministic Thai rendering required by
+ * docs/output-policy.md. Comparison and the economic registry remain unbuilt, which is why no run
+ * can yet reach CLEAR_RECOMMENDATION.
  */
-export {};
+export {
+  BASE_DISCLAIMER_TH,
+  SCOPE_STATEMENTS_TH,
+  STATUS_STATEMENTS_TH,
+  type FinalAnalysisInput,
+  type VerificationInput,
+  buildVerificationActions,
+  renderFinalAnalysis,
+} from "./output-policy.js";
+export {
+  type FinalStatusInput,
+  type FinalStatusOutcome,
+  decideFinalStatus,
+} from "./final-status.js";

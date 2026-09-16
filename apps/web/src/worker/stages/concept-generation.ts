@@ -5,9 +5,11 @@ import {
   createGeminiClient,
   proposeConcepts,
 } from "@reis/ai-gateway";
+import { type VerificationInput, decideFinalStatus } from "@reis/analysis-engine";
 import type {
   CandidateSearchRecord,
   ConceptUnderTest,
+  FinalAnalysis,
   LegalRulePack,
   LegalValidationResult,
   PotentialUseConcept,
@@ -30,6 +32,8 @@ export interface ConceptStageResult {
   readonly concepts: readonly PotentialUseConcept[];
   readonly record: CandidateSearchRecord | null;
   readonly validations: readonly LegalValidationResult[];
+  /** Null while the run has no candidate set at all — an operational state, not a verdict. */
+  readonly final: FinalAnalysis | null;
 }
 
 /** The critical screens this deployment cannot perform, stated to the model rather than assumed away. */
@@ -114,6 +118,7 @@ export async function runConceptGeneration(input: ConceptStageInput): Promise<Co
       concepts: [],
       record: null,
       validations: [],
+      final: null,
     };
   }
 
@@ -141,6 +146,7 @@ export async function runConceptGeneration(input: ConceptStageInput): Promise<Co
       concepts: [],
       record: proposal.record,
       validations: [],
+      final: null,
     };
   }
 
@@ -153,6 +159,7 @@ export async function runConceptGeneration(input: ConceptStageInput): Promise<Co
       concepts: proposal.concepts,
       record: proposal.record,
       validations: [],
+      final: null,
     };
   }
 
@@ -166,10 +173,120 @@ export async function runConceptGeneration(input: ConceptStageInput): Promise<Co
     }),
   );
 
+  const outcome = decideFinalStatus({
+    analysed_on: input.effectiveOn,
+    output_scope: input.outputScope,
+    search: proposal.record,
+    concepts: proposal.concepts,
+    legal: validations,
+    // No economic component has been built or reviewed, so no common basis for comparison exists.
+    // This is the single fact that keeps every run short of a recommendation.
+    economic_components_available: false,
+    verification: buildVerificationInput(input, validations),
+  });
+
   return {
     state: "SUCCEEDED",
     concepts: proposal.concepts,
     record: proposal.record,
     validations,
+    final: outcome.kind === "ANALYSIS" ? outcome.final : null,
   };
+}
+
+/** Everything the result page must tell the reader to go and check, taken from this run's own state. */
+function buildVerificationInput(
+  input: ConceptStageInput,
+  validations: readonly LegalValidationResult[],
+): VerificationInput {
+  const inputsById = new Map<
+    string,
+    { input_id: string; label_th: string; obtained_from_th: string; rule_ids: string[] }
+  >();
+  const approvals = new Map<string, { title_th: string; clause_th: string }>();
+  const unresolvedApplicability = new Map<string, { rule_id: string; title_th: string }>();
+
+  for (const validation of validations) {
+    for (const outcome of validation.outcomes) {
+      for (const missing of outcome.missing_inputs) {
+        const existing = inputsById.get(missing.input_id);
+        if (existing) {
+          if (!existing.rule_ids.includes(outcome.rule_id)) {
+            existing.rule_ids.push(outcome.rule_id);
+          }
+        } else {
+          inputsById.set(missing.input_id, {
+            input_id: missing.input_id,
+            label_th: missing.label_th,
+            obtained_from_th: missing.obtained_from_th,
+            rule_ids: [outcome.rule_id],
+          });
+        }
+      }
+      if (outcome.applicability === "UNRESOLVED") {
+        unresolvedApplicability.set(outcome.rule_id, {
+          rule_id: outcome.rule_id,
+          title_th: outcome.title_th,
+        });
+      }
+    }
+    for (const approval of validation.approval_required) {
+      approvals.set(approval.rule_id, {
+        title_th: approval.title_th,
+        clause_th: approval.source.clause_th,
+      });
+    }
+  }
+
+  // Measures for which *no* evidence describes the target itself. A measure that also has an
+  // exact-level figure is already answered, and telling the reader to go and find it would waste
+  // their time and cost the list its credibility.
+  const exact = new Set(
+    input.evidence
+      .filter((link) => link.geography_match === "EXACT")
+      .map((link) => link.observation.measure_name_th),
+  );
+  const areaLevel = new Set(
+    input.evidence
+      .filter(
+        (link) =>
+          link.geography_match === "CONTAINING_AREA" &&
+          !exact.has(link.observation.measure_name_th),
+      )
+      .map((link) => link.observation.measure_name_th),
+  );
+
+  return {
+    output_scope: input.outputScope,
+    unresolved_legal_inputs: [...inputsById.values()],
+    approvals: [...approvals.values()],
+    unresolved_applicability: [...unresolvedApplicability.values()],
+    area_level_measures_th: [...areaLevel],
+    // Stated plainly: this pack screens building control only.
+    unscreened_domains_th: [
+      "ผังเมืองรวมและการใช้ประโยชน์ที่ดิน",
+      "ข้อบัญญัติท้องถิ่นและเทศบัญญัติ",
+      "ข้อกำหนดด้านสิ่งแวดล้อมและการประเมินผลกระทบ",
+    ],
+  };
+}
+
+/** Test seam: the evidence-derived parts of the verification input, without a run or a database. */
+export function buildVerificationInputForTest(
+  evidence: readonly StoredEvidenceLink[],
+  outputScope: "AREA" | "PRELIMINARY_PROPERTY" | "PROPERTY",
+): VerificationInput {
+  return buildVerificationInput(
+    {
+      mode: "AI_DISABLED",
+      targetTh: "",
+      effectiveOn: "2026-09-16",
+      outputScope,
+      evidence,
+      pack: { rules: [] } as unknown as LegalRulePack,
+      areaCodes: [],
+      intake: {},
+    },
+    [],
+  );
 }

@@ -203,6 +203,17 @@ export interface ValidationResultTable {
   created_at: ColumnType<string, string | undefined, never>;
 }
 
+/** Matches database/migrations/0006_final_analysis.sql exactly. */
+export interface FinalResultTable {
+  run_id: string;
+  status: "CLEAR_RECOMMENDATION" | "INCONCLUSIVE" | "INSUFFICIENT_EVIDENCE";
+  status_reason: string;
+  output_scope: "AREA" | "PRELIMINARY_PROPERTY" | "PROPERTY";
+  output_policy_version: string;
+  analysis: ColumnType<unknown, string, string>;
+  created_at: ColumnType<string, string | undefined, never>;
+}
+
 export interface Database {
   "reference.administrative_area": AdministrativeAreaTable;
   "analysis.analysis_run": AnalysisRunTable;
@@ -216,4 +227,5 @@ export interface Database {
   "analysis.candidate_search_record": CandidateSearchRecordTable;
   "analysis.potential_use_concept": PotentialUseConceptTable;
   "analysis.validation_result": ValidationResultTable;
+  "analysis.final_result": FinalResultTable;
 }

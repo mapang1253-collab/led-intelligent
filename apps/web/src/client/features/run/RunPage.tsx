@@ -14,6 +14,7 @@ import { Link, useParams } from "react-router";
 import { TerrainBackdrop } from "../design-system/TerrainBackdrop.js";
 import { ConceptPanel } from "./ConceptPanel.js";
 import { EvidencePanel } from "./EvidencePanel.js";
+import { FinalResultPanel } from "./FinalResultPanel.js";
 import { type StageRecord, isTerminal, useCancelRun, useRun } from "./useAnalysisRun.js";
 
 /**
@@ -81,7 +82,11 @@ export function RunPage() {
   const envelope = run.data;
   const state = envelope?.run_state;
   const target = envelope?.partial_artifacts?.resolved_target;
-  const notActivated = envelope?.notices?.some((n) => n.code === "ANALYTICAL_STAGES_NOT_ACTIVATED");
+  const final = envelope?.final_analysis;
+  // Once a final analysis exists the "nothing to show" notice contradicts it: the run did reach a
+  // determination, and that determination is INSUFFICIENT_EVIDENCE with its reasons stated.
+  const notActivated =
+    !final && envelope?.notices?.some((n) => n.code === "ANALYTICAL_STAGES_NOT_ACTIVATED");
   const evidenceStage = envelope?.stage_records?.find((s) => s.stage === "EVIDENCE_ACQUISITION");
   const conceptStage = envelope?.stage_records?.find((s) => s.stage === "CONCEPT_PROPOSAL");
   const unavailable = envelope?.errors?.some((e) => e.code === "RUN_NOT_AVAILABLE");
@@ -111,7 +116,11 @@ export function RunPage() {
           <>
             <header className="mt-6">
               <h1 className="font-bold text-3xl tracking-tight">
-                {isTerminal(state) ? th.notActivated.heading : th.progress.heading}
+                {final
+                  ? th.finalResult.heading
+                  : isTerminal(state)
+                    ? th.notActivated.heading
+                    : th.progress.heading}
               </h1>
               {state && (
                 <p className="mt-2 text-ink-muted text-sm">
@@ -150,6 +159,8 @@ export function RunPage() {
                 ))}
               </ul>
             </section>
+
+            <FinalResultPanel final={final} />
 
             <EvidencePanel
               groups={envelope?.partial_artifacts?.evidence}

@@ -1,5 +1,6 @@
 import type {
   CandidateSearchRecord,
+  FinalAnalysis,
   LegalValidationResult,
   PotentialUseConcept,
 } from "@reis/contracts";
@@ -18,6 +19,7 @@ export interface SavedConceptSet {
   readonly failure_code: string | null;
   readonly concepts: readonly PotentialUseConcept[];
   readonly validations: readonly LegalValidationResult[];
+  readonly final: FinalAnalysis | null;
 }
 
 export async function saveConceptSet(
@@ -28,6 +30,7 @@ export async function saveConceptSet(
     readonly failureCode: string | null;
     readonly concepts: readonly PotentialUseConcept[];
     readonly validations: readonly LegalValidationResult[];
+    readonly final: FinalAnalysis | null;
   },
 ): Promise<void> {
   if (input.record) {
@@ -82,10 +85,29 @@ export async function saveConceptSet(
       .onConflict((oc) => oc.columns(["run_id", "concept_id", "domain"]).doNothing())
       .execute();
   }
+
+  if (input.final) {
+    await saveFinal(db, runId, input.final);
+  }
+}
+
+async function saveFinal(db: Db, runId: string, final: FinalAnalysis): Promise<void> {
+  await db
+    .insertInto("analysis.final_result")
+    .values({
+      run_id: runId,
+      status: final.status,
+      status_reason: final.status_reason,
+      output_scope: final.output_scope,
+      output_policy_version: final.output_policy_version,
+      analysis: JSON.stringify(final),
+    })
+    .onConflict((oc) => oc.column("run_id").doNothing())
+    .execute();
 }
 
 export async function loadConceptSet(db: Db, runId: string): Promise<SavedConceptSet> {
-  const [recordRow, conceptRows, validationRows] = await Promise.all([
+  const [recordRow, conceptRows, validationRows, finalRow] = await Promise.all([
     db
       .selectFrom("analysis.candidate_search_record")
       .selectAll()
@@ -104,6 +126,11 @@ export async function loadConceptSet(db: Db, runId: string): Promise<SavedConcep
       .where("domain", "=", "LEGAL")
       .orderBy("concept_id")
       .execute(),
+    db
+      .selectFrom("analysis.final_result")
+      .select(["analysis"])
+      .where("run_id", "=", runId)
+      .executeTakeFirst(),
   ]);
 
   return {
@@ -121,5 +148,6 @@ export async function loadConceptSet(db: Db, runId: string): Promise<SavedConcep
     failure_code: recordRow?.failure_code ?? null,
     concepts: conceptRows.map((row) => row.concept as PotentialUseConcept),
     validations: validationRows.map((row) => row.result as LegalValidationResult),
+    final: (finalRow?.analysis as FinalAnalysis | undefined) ?? null,
   };
 }

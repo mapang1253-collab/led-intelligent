@@ -87,6 +87,30 @@ export interface ConceptCard {
   } | null;
 }
 
+export interface VerificationActionView {
+  action_id: string;
+  domain: string;
+  priority: string;
+  target_th: string;
+  why_th: string;
+  suggested_source_th: string;
+  could_change_th: string;
+}
+
+export interface FinalAnalysisView {
+  status: string;
+  status_reason: string;
+  output_scope: string;
+  output_policy_version: string;
+  analysed_on: string;
+  disclaimer_th: string;
+  scope_statement_th: string;
+  status_statement_th: string;
+  missing_basis_th: string[];
+  evaluated_concepts_th: string[];
+  verification_actions: VerificationActionView[];
+}
+
 export interface RunEnvelope {
   run_id: string;
   run_state: RunState;
@@ -95,7 +119,7 @@ export interface RunEnvelope {
   created_at?: string;
   expires_at?: string;
   stage_records?: StageRecord[];
-  final_analysis: unknown | null;
+  final_analysis: FinalAnalysisView | null;
   partial_artifacts?: {
     resolved_target?: {
       resolution_level: string;

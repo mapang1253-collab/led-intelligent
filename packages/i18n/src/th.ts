@@ -188,6 +188,42 @@ export const th = {
     PACK_NOT_REVIEWED: "ชุดกฎหมายยังไม่ผ่านการตรวจทาน จึงยังไม่ได้ตรวจข้อกำหนดให้",
   },
 
+  /** หน้าผลลัพธ์สุดท้ายตาม docs/output-policy.md — ข้อความบังคับมาจาก renderer ไม่ใช่จาก AI */
+  finalResult: {
+    heading: "ผลการวิเคราะห์",
+    analysedOn: "วันที่วิเคราะห์",
+    scopeLabel: "ขอบเขตของผลลัพธ์",
+    missingHeading: "สิ่งที่ยังขาดจึงจะสรุปได้",
+    evaluatedHeading: "แนวคิดที่ประเมินแล้ว",
+    evaluatedNote: "แสดงตามลำดับที่เสนอ ไม่ได้เรียงตามความเหมาะสม",
+    verificationHeading: "สิ่งที่ต้องตรวจสอบเพิ่มเติม",
+    verificationNote: "ระบบไม่ได้ติดต่อผู้เชี่ยวชาญให้ และไม่ถือว่ารายการใดดำเนินการแล้ว",
+    whyLabel: "เหตุผล",
+    sourceLabel: "แหล่งที่ควรตรวจสอบ",
+    couldChangeLabel: "ถ้าตรวจสอบแล้วจะเปลี่ยนอะไร",
+    policyLabel: "นโยบายการแสดงผล",
+  },
+
+  finalStatus: {
+    CLEAR_RECOMMENDATION: "มีข้อเสนอที่ชัดเจน",
+    INCONCLUSIVE: "ยังสรุปไม่ได้",
+    INSUFFICIENT_EVIDENCE: "หลักฐานยังไม่เพียงพอ",
+  },
+
+  verificationDomain: {
+    TITLE_AND_IDENTITY: "เอกสารสิทธิ์และการระบุทรัพย์",
+    LAW_AND_PLANNING: "กฎหมาย ผังเมือง และการขออนุญาต",
+    SURVEY_AND_SITE: "การสำรวจ การเข้าถึง และสภาพพื้นที่",
+    MARKET_AND_FINANCE: "ตลาด ดีมานด์ ต้นทุน และสมมติฐานการเงิน",
+    SOURCE_CURRENCY: "ความเป็นปัจจุบันและสิทธิ์ของแหล่งข้อมูล",
+  },
+
+  verificationPriority: {
+    BLOCKING: "ต้องมีก่อนจึงจะสรุปได้",
+    MATERIAL: "มีผลต่อข้อสรุป",
+    ADVISORY: "ควรตรวจสอบ",
+  },
+
   expired: {
     heading: "ผลการวิเคราะห์นี้หมดอายุแล้ว",
     body: "ผลลัพธ์แต่ละครั้งเก็บไว้ 24 ชั่วโมงเท่านั้น และไม่มีการบันทึกประวัติย้อนหลัง กรุณาเริ่มวิเคราะห์ใหม่",

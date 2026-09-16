@@ -88,3 +88,13 @@ export {
   type OpportunityBrief,
   type PotentialUseConcept,
 } from "./concept.js";
+
+export {
+  OUTPUT_POLICY_VERSION,
+  type FinalAnalysis,
+  type FinalStatus,
+  type FinalStatusReason,
+  type VerificationAction,
+  type VerificationDomain,
+  type VerificationPriority,
+} from "./final-analysis.js";

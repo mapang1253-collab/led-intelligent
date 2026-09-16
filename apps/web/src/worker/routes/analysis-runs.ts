@@ -147,6 +147,7 @@ analysisRuns.post("/", async (c) => {
       failureCode: concepts.reason ?? null,
       concepts: concepts.concepts,
       validations: concepts.validations,
+      final: concepts.final,
     });
 
     c.header(
@@ -253,8 +254,9 @@ analysisRuns.get("/:run_id", async (c) => {
         },
         { stage: "COMPARISON", version: "1.0.0", state: "SKIPPED", reason: "NO_CANDIDATES" },
       ],
-      // Present only when a valid analytical decision exists — it does not.
-      final_analysis: null,
+      // Present only when a candidate set existed and a decision could be made. A run that never
+      // produced one keeps this null and reports an operational state instead.
+      final_analysis: conceptSet.final,
       partial_artifacts: {
         resolved_target: {
           resolution_level: "ADMIN_AREA",
