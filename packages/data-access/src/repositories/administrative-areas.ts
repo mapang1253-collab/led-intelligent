@@ -236,22 +236,29 @@ export interface SourceStatus {
  *
  * Inactive products are included rather than filtered out: a status screen that lists only what is
  * switched on cannot answer "why is there no land price here", which is the question it exists for.
+ *
+ * The counts are one grouped pass over the observation table, not a correlated subquery per
+ * product. Written the obvious way — a LATERAL count beside each row — this took six seconds
+ * against 74,000 observations, because it walked them once per source; a status page nobody can
+ * wait for cannot report on anything.
  */
 export async function sourceStatuses(db: Db): Promise<SourceStatus[]> {
   const { rows } = await db.executeQuery<SourceStatus>({
-    sql: `SELECT p.product_id, p.title_th, p.attribution_th, p.activation_state,
+    sql: `WITH counts AS (
+            SELECT pv.source_product_id AS product_key, count(*)::int AS n
+              FROM evidence.observation ob
+              JOIN source.product_version pv ON pv.id = ob.source_product_version_id
+             WHERE ob.is_current
+             GROUP BY pv.source_product_id
+          )
+          SELECT p.product_id, p.title_th, p.attribution_th, p.activation_state,
                  p.coverage_note_th,
-                 COALESCE(o.n, 0)::int AS observations,
+                 COALESCE(c.n, 0) AS observations,
                  ar.reviewer_names AS reviewers,
                  to_char(ar.reviewed_at, 'YYYY-MM-DD') AS reviewed_at
             FROM source.source_product p
+            LEFT JOIN counts c ON c.product_key = p.id
             LEFT JOIN source.activation_record ar ON ar.id = p.activation_record_id
-            LEFT JOIN LATERAL (
-              SELECT count(*) AS n
-                FROM evidence.observation ob
-                JOIN source.product_version pv ON pv.id = ob.source_product_version_id
-               WHERE pv.source_product_id = p.id AND ob.is_current
-            ) o ON true
            ORDER BY p.activation_state DESC, p.product_id`,
     parameters: [],
     query: { kind: "SelectQueryNode" } as never,

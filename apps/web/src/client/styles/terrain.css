@@ -337,12 +337,17 @@
   }
 }
 
+/**
+ * The map's drift also sets its size. Cutting the star field left the upper sky empty, and the
+ * country is the right thing to fill it with — the scale here is what does that, so it lives with
+ * the motion rather than in a separate transform that the animation would overwrite.
+ */
 @keyframes terrain-drift {
   from {
-    transform: translate3d(-2%, 1.5%, 0) scale(1.01);
+    transform: translate3d(-2%, 1.5%, 0) scale(1.18);
   }
   to {
-    transform: translate3d(2%, -1.5%, 0) scale(1.05);
+    transform: translate3d(2%, -1.5%, 0) scale(1.24);
   }
 }
 
