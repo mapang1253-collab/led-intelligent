@@ -78,7 +78,7 @@ export interface GeminiClientOptions {
 const DEFAULT_TIMEOUT_MS = 20_000;
 
 /** Classifies a provider error into this project's codes; unknown failures stay unavailable. */
-function classify(error: unknown): ModelResponse {
+export function classifyProviderError(error: unknown): ModelResponse {
   const message = error instanceof Error ? error.message : String(error);
   const status =
     typeof error === "object" && error !== null && "status" in error
@@ -86,8 +86,17 @@ function classify(error: unknown): ModelResponse {
       : Number.NaN;
 
   if (status === 429 || /RESOURCE_EXHAUSTED|quota|rate limit/i.test(message)) {
-    // Recorded and surfaced; the caller stops rather than retrying into the same wall.
-    return { outcome: "FAILED", code: "AI_QUOTA_EXHAUSTED", detail: message, retryable: false };
+    // A 429 alone does not say which window filled. Google names the quota it enforced, so the
+    // per-day ones are read from the message and everything else stays a rate limit: telling a
+    // reader the day's allowance is gone, when it returns in a minute, is a false statement about
+    // what they can do next. Neither is retried automatically — the caller stops either way.
+    const perDay = /PerDay|per day|daily/i.test(message);
+    return {
+      outcome: "FAILED",
+      code: perDay ? "AI_QUOTA_EXHAUSTED" : "AI_RATE_LIMITED",
+      detail: message,
+      retryable: false,
+    };
   }
   if (/abort|timeout|deadline/i.test(message)) {
     return { outcome: "FAILED", code: "AI_TIMEOUT", detail: message, retryable: true };
@@ -143,7 +152,7 @@ export function createGeminiClient(options: GeminiClientOptions): ModelClient {
       }
       return { outcome: "SUCCESS", text };
     } catch (error) {
-      const classified = classify(error);
+      const classified = classifyProviderError(error);
       // Operator-facing only: a provider failure that reaches no log is undiagnosable in a
       // deployment. This never reaches a user and is never persisted (docs/ai-architecture.md §5
       // forbids storing provider content, not surfacing it to whoever runs the service).

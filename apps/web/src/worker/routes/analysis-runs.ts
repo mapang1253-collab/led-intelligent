@@ -62,7 +62,13 @@ const NOT_ACTIVATED_REASONS = new Set(["AI_DISABLED", "NO_EVIDENCE"]);
  * Everything else — an exhausted allowance, an unconfigured budget, a provider we cannot reach —
  * would fail the same way again, and offering "try again" there sends the reader into a wall.
  */
-const RETRYABLE_REASONS = new Set(["AI_PROVIDER_BUSY", "AI_TIMEOUT", "AI_OUTPUT_INVALID"]);
+const RETRYABLE_REASONS = new Set([
+  "AI_PROVIDER_BUSY",
+  "AI_TIMEOUT",
+  "AI_OUTPUT_INVALID",
+  // A short window that refills on its own — unlike a spent daily allowance.
+  "AI_RATE_LIMITED",
+]);
 
 export function conceptStageRecord(set: {
   concepts: readonly unknown[];

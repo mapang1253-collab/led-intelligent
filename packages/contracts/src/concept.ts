@@ -103,7 +103,14 @@ export interface OpportunityBrief {
 /** Stable reason codes; user-facing Thai is selected from these, never from provider text. */
 export type AiFailureCode =
   | "AI_OUTPUT_INVALID"
+  /** The project's allowance for the whole day is spent; waiting minutes will not help. */
   | "AI_QUOTA_EXHAUSTED"
+  /**
+   * A short window is full — calls per minute, tokens per minute, or a provider 429 while the day's
+   * allowance still has room. Distinct from AI_QUOTA_EXHAUSTED because it clears on its own, and
+   * telling a reader the day's quota is gone when it returns in a minute is simply untrue.
+   */
+  | "AI_RATE_LIMITED"
   | "AI_TIMEOUT"
   /** The provider is up but temporarily overloaded — pressing again shortly usually works. */
   | "AI_PROVIDER_BUSY"

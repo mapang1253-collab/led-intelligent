@@ -26,9 +26,20 @@ describe("concept stage", () => {
     });
   });
 
+  it("separates a full minute from a spent day", () => {
+    // Both arrive as a 429. Only one of them means waiting until tomorrow, and a reader told the
+    // day's quota is gone when it returns in a minute has been told something untrue.
+    expect(conceptStageRecord({ concepts: [], failure_code: "AI_RATE_LIMITED" }).retryable).toBe(
+      true,
+    );
+    expect(conceptStageRecord({ concepts: [], failure_code: "AI_QUOTA_EXHAUSTED" }).retryable).toBe(
+      false,
+    );
+  });
+
   it("offers a retry only where another attempt could get past the failure", () => {
     // A busy provider, a slow one, and an answer the validator rejected: all worth another run.
-    for (const code of ["AI_PROVIDER_BUSY", "AI_TIMEOUT", "AI_OUTPUT_INVALID"]) {
+    for (const code of ["AI_PROVIDER_BUSY", "AI_TIMEOUT", "AI_OUTPUT_INVALID", "AI_RATE_LIMITED"]) {
       expect(conceptStageRecord({ concepts: [], failure_code: code }).retryable).toBe(true);
     }
     // A spent allowance, an unconfigured budget and a provider we cannot reach fail identically

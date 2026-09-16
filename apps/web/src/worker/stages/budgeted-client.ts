@@ -54,6 +54,20 @@ function retryHint(detail: string, now: Date): string | null {
   return match ? parseRetryAfter(match[1] as string, now) : null;
 }
 
+/**
+ * True only when the day's own allowance is gone. A provider block counts as one just if we have
+ * also run out of room today; otherwise the provider is throttling us, not refusing us.
+ */
+function exhaustedForTheDay(decision: {
+  readonly reason: string;
+  readonly remaining_today?: number | null;
+}): boolean {
+  if (decision.reason === "RPD_EXHAUSTED") {
+    return true;
+  }
+  return decision.reason === "PROVIDER_BLOCKED" && decision.remaining_today === 0;
+}
+
 export function budgetedClient(
   db: Db,
   model: string,
@@ -72,9 +86,13 @@ export function budgetedClient(
       });
       const response: ModelResponse = {
         outcome: "FAILED",
-        code: decision.reason === "PROVIDER_BLOCKED" ? "AI_QUOTA_EXHAUSTED" : "AI_QUOTA_EXHAUSTED",
+        // The budget knows which window filled up, and the reader deserves the difference. Only a
+        // spent daily allowance is a spent quota; a per-minute window, or a provider 429 while the
+        // day still has room, clears by itself and is worth trying again.
+        code: exhaustedForTheDay(decision) ? "AI_QUOTA_EXHAUSTED" : "AI_RATE_LIMITED",
         detail: decision.reason,
-        // Never retried automatically: the window belongs to the project, not to this request.
+        // Never retried automatically: the window belongs to the project, not to this request. The
+        // reader is offered the retry instead, so the choice to spend the allowance stays theirs.
         retryable: false,
       };
       return response;
