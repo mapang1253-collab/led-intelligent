@@ -246,49 +246,64 @@
   }
 }
 
-/* Lights drifting above the city, in the marker colour so they belong to the same drawing. */
-.terrain-spores {
+@keyframes terrain-window-light {
+  0%,
+  46%,
+  100% {
+    opacity: 0.08;
+  }
+  55%,
+  86% {
+    opacity: 0.95;
+  }
+}
+
+@keyframes terrain-skyline-drift-far {
+  from {
+    transform: translate3d(-0.6%, 0, 0);
+  }
+  to {
+    transform: translate3d(0.6%, 0, 0);
+  }
+}
+
+@keyframes terrain-skyline-drift-near {
+  from {
+    transform: translate3d(1.4%, 0, 0);
+  }
+  to {
+    transform: translate3d(-1.4%, 0, 0);
+  }
+}
+
+/**
+ * Drizzle over the whole sheet.
+ *
+ * A hairline with soft ends rather than a solid bar: a rain streak is the trail of something
+ * falling, and a hard-edged rectangle reads as a scratch on the glass. Each streak carries its own
+ * opacity inline, so the rain has depth without twenty-six separate rules.
+ */
+.terrain-drizzle {
   position: absolute;
   inset: 0;
   overflow: hidden;
 }
-.terrain-spore {
+.terrain-drop {
   position: absolute;
-  bottom: -4%;
-  border-radius: 50%;
-  background: var(--map-marker);
-  box-shadow: 0 0 8px var(--map-marker);
-  /* Two animations on one element: the rise carries it, the flicker makes it a firefly. */
-  animation-name: terrain-spore-rise, terrain-spore-flicker;
-  opacity: 0;
-  animation-timing-function: linear, ease-in-out;
-  animation-iteration-count: infinite, infinite;
+  top: -6%;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--map-marker), transparent);
+  animation-name: terrain-drop-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
 }
 
-@keyframes terrain-spore-rise {
-  0% {
-    transform: translate3d(0, 0, 0) scale(0.6);
-    opacity: 0;
+@keyframes terrain-drop-fall {
+  from {
+    transform: translate3d(0, 0, 0);
   }
-  12% {
-    opacity: 0.9;
-  }
-  80% {
-    opacity: 0.7;
-  }
-  100% {
-    transform: translate3d(var(--spore-drift, 0), -108vh, 0) scale(1);
-    opacity: 0;
-  }
-}
-
-@keyframes terrain-spore-flicker {
-  0%,
-  100% {
-    filter: brightness(0.5);
-  }
-  50% {
-    filter: brightness(1.9);
+  to {
+    transform: translate3d(var(--drop-drift, 0), 112vh, 0);
   }
 }
 
@@ -351,7 +366,6 @@
   .terrain-skyline-far,
   .terrain-skyline-near,
   .terrain-window,
-  .terrain-spore,
   .terrain-drop {
     animation: none;
   }
@@ -362,8 +376,7 @@
   .terrain-sweep {
     opacity: 0;
   }
-  /* The skyline stays; the lights and the rain are motion and nothing else, so they go. */
-  .terrain-spores,
+  /* The skyline stays; the rain is motion and nothing else, so it goes. */
   .terrain-drizzle {
     display: none;
   }

@@ -13,7 +13,8 @@
  * prefers-reduced-motion.
  *
  * Under the map stands a city skyline in the same line, its windows lighting one at a time, with a
- * thin drizzle falling across it. The city is kept to the lower half and dimmed through the middle,
+ * thin drizzle falling across it. The shimmer is the windows and the rain; there are no free-
+ * floating motes, which read as particles over a page rather than as anything the city is doing. The city is kept to the lower half and dimmed through the middle,
  * because the top of every screen carries a heading and the centre is where the reading happens.
  * Every shape here is decorative: the layer is aria-hidden and carries no meaning the screen relies
  * on.
@@ -354,20 +355,6 @@ const DRIZZLE = Array.from({ length: 26 }, (_, i) => ({
   opacity: 0.45 + noise(i, 139) * 0.5,
 }));
 
-/** Lights drifting above the city: aircraft on approach, and the rest of the shimmer. */
-const SPORES = [
-  { left: 7, size: 4, delay: 0, duration: 26, drift: 40 },
-  { left: 16, size: 3, delay: 6, duration: 34, drift: -28 },
-  { left: 24, size: 4, delay: 12, duration: 30, drift: 22 },
-  { left: 33, size: 3, delay: 3, duration: 38, drift: -34 },
-  { left: 44, size: 4, delay: 17, duration: 28, drift: 30 },
-  { left: 57, size: 3, delay: 23, duration: 35, drift: 24 },
-  { left: 68, size: 4, delay: 8, duration: 31, drift: -30 },
-  { left: 77, size: 4, delay: 19, duration: 27, drift: 36 },
-  { left: 86, size: 3, delay: 2, duration: 36, drift: -20 },
-  { left: 94, size: 4, delay: 14, duration: 30, drift: 26 },
-] as const;
-
 export function TerrainBackdrop() {
   return (
     <div className="terrain" aria-hidden="true">
@@ -430,25 +417,6 @@ export function TerrainBackdrop() {
                 animationDuration: `${drop.duration}s`,
                 opacity: drop.opacity,
                 "--drop-drift": `${drop.drift}px`,
-              } as React.CSSProperties
-            }
-          />
-        ))}
-      </div>
-
-      <div className="terrain-spores">
-        {SPORES.map((spore) => (
-          <span
-            key={spore.left}
-            className="terrain-spore"
-            style={
-              {
-                left: `${spore.left}%`,
-                width: `${spore.size}px`,
-                height: `${spore.size}px`,
-                animationDelay: `${spore.delay}s`,
-                animationDuration: `${spore.duration}s`,
-                "--spore-drift": `${spore.drift}px`,
               } as React.CSSProperties
             }
           />
