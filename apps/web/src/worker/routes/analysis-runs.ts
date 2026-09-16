@@ -1,14 +1,22 @@
+import type { AiMode } from "@reis/ai-gateway";
 import { propertyIntakeSchema } from "@reis/contracts";
+import type { LegalRulePack } from "@reis/contracts";
 import {
   type AnalysisRunRow,
   createAnalysisRun,
   createDb,
   findRunForCapability,
+  loadConceptSet,
   loadRunAreaNames,
   loadRunEvidence,
+  saveConceptSet,
   setRunState,
 } from "@reis/data-access";
 import { Hono } from "hono";
+import mr55Pack from "../../../../../database/reviewed-packs/th-cba-mr55-v1.json" with {
+  type: "json",
+};
+import conceptFixture from "../fixtures/concepts-baseline-v1.json" with { type: "json" };
 import type { Env } from "../index.js";
 import {
   buildCapabilityCookie,
@@ -18,6 +26,7 @@ import {
   isSameOrigin,
   readCapabilityCookie,
 } from "../run-capability.js";
+import { runConceptGeneration } from "../stages/concept-generation.js";
 import {
   type EvidenceStageResult,
   groupEvidenceForDisplay,
@@ -38,6 +47,24 @@ import {
  */
 
 const SCHEMA_VERSION = "1.0.0";
+
+/** The only pack this deployment ships. It executes only if its review record still matches. */
+const LEGAL_PACK = mr55Pack as unknown as LegalRulePack;
+
+function aiMode(env: Env): AiMode {
+  const mode = env.AI_MODE;
+  return mode === "LIVE_AI" || mode === "RECORDED_AI" ? mode : "AI_DISABLED";
+}
+
+/**
+ * The one named fixture this deployment ships, for RECORDED_AI (docs/ai-architecture.md §5). It is
+ * validated exactly like a live response, and the envelope reports the mode, so a reader is never
+ * shown fixture output believing a model produced it.
+ */
+const RECORDED_FIXTURE = {
+  fixture_id: "concepts-baseline-v1",
+  text: JSON.stringify(conceptFixture),
+} as const;
 
 export const analysisRuns = new Hono<{ Bindings: Env }>();
 
@@ -99,6 +126,28 @@ analysisRuns.post("/", async (c) => {
     // interactive path (tools/ingestion/), so this stays inside a request budget.
     const evidence = await runEvidenceAcquisition(db, run);
 
+    // Concepts are proposed once, at creation, and persisted. Polling the progress screen re-reads
+    // them and never re-invokes the model.
+    const areas = await loadRunAreaNames(db, run);
+    const links = await loadRunEvidence(db, run.run_id);
+    const concepts = await runConceptGeneration({
+      mode: aiMode(c.env),
+      apiKey: c.env.GEMINI_API_KEY,
+      targetTh: `ต.${areas.subdistrict} อ.${areas.district} จ.${areas.province}`,
+      effectiveOn: new Date().toISOString().slice(0, 10),
+      outputScope: run.permitted_scope,
+      evidence: links,
+      pack: LEGAL_PACK,
+      areaCodes: [],
+      ...(aiMode(c.env) === "RECORDED_AI" ? { recorded: RECORDED_FIXTURE } : {}),
+    });
+    await saveConceptSet(db, run.run_id, {
+      record: concepts.record,
+      failureCode: concepts.reason ?? null,
+      concepts: concepts.concepts,
+      validations: concepts.validations,
+    });
+
     c.header(
       "Set-Cookie",
       buildCapabilityCookie(capability, new URL(c.req.url).protocol === "https:"),
@@ -115,6 +164,10 @@ analysisRuns.post("/", async (c) => {
         evidence_stage: {
           state: evidence.state,
           ...(evidence.reason ? { reason: evidence.reason } : {}),
+        },
+        concept_stage: {
+          state: concepts.state,
+          ...(concepts.reason ? { reason: concepts.reason } : {}),
         },
       },
       201,
@@ -154,6 +207,10 @@ analysisRuns.get("/:run_id", async (c) => {
         ? { state: "SUCCEEDED", linkCount: evidenceLinks.length }
         : { state: "SKIPPED", reason: "SOURCE_NOT_ACTIVATED", linkCount: 0 };
     const evidenceGroups = groupEvidenceForDisplay(evidenceLinks);
+    const conceptSet = await loadConceptSet(db, run.run_id);
+    const validationByConcept = new Map(
+      conceptSet.validations.map((validation) => [validation.concept_id, validation]),
+    );
 
     return c.json({
       schema_version: SCHEMA_VERSION,
@@ -173,7 +230,20 @@ analysisRuns.get("/:run_id", async (c) => {
           state: evidence.state,
           ...(evidence.reason ? { reason: evidence.reason } : {}),
         },
-        { stage: "VALIDATION", version: "1.0.0", state: "SKIPPED", reason: "PACK_NOT_ACTIVATED" },
+        {
+          stage: "CONCEPT_PROPOSAL",
+          version: "1.0.0",
+          state: conceptSet.concepts.length > 0 ? "SUCCEEDED" : "SKIPPED",
+          ...(conceptSet.concepts.length > 0
+            ? {}
+            : { reason: conceptSet.failure_code ?? "AI_DISABLED" }),
+        },
+        {
+          stage: "VALIDATION",
+          version: "1.0.0",
+          state: conceptSet.validations.length > 0 ? "SUCCEEDED" : "SKIPPED",
+          ...(conceptSet.validations.length > 0 ? {} : { reason: "PACK_NOT_ACTIVATED" }),
+        },
         {
           stage: "SCENARIO",
           version: "1.0.0",
@@ -194,6 +264,47 @@ analysisRuns.get("/:run_id", async (c) => {
         },
         // Evidence gathered for this run, each figure still carrying its own disclosure.
         evidence: evidenceGroups,
+        // Proposals and the screen applied to them. Never a recommendation: the concepts are
+        // unranked and the legal result is reported exactly as the validator produced it.
+        concepts: conceptSet.concepts.map((concept) => {
+          const validation = validationByConcept.get(concept.concept_id);
+          return {
+            concept_id: concept.concept_id,
+            label_th: concept.label_th,
+            description_th: concept.description_th,
+            supporting_reason_th: concept.supporting_reason_th,
+            uncertainty_th: concept.uncertainty_th,
+            building_type_th: concept.building_type_th,
+            unmapped_activities_th: concept.unmapped_activities_th,
+            demand_hypotheses: concept.demand_hypotheses,
+            legal: validation
+              ? {
+                  status: validation.status,
+                  status_reason_th: validation.status_reason_th,
+                  pack_id: validation.pack_id,
+                  pack_version: validation.pack_version,
+                  unresolved_inputs: validation.unresolved_inputs,
+                  approval_required: validation.approval_required.map((outcome) => ({
+                    title_th: outcome.title_th,
+                    clause_th: outcome.source.clause_th,
+                    explanation_th: outcome.explanation_th,
+                  })),
+                  outcomes: validation.outcomes
+                    .filter((outcome) => outcome.applicability === "APPLICABLE")
+                    .map((outcome) => ({
+                      rule_id: outcome.rule_id,
+                      title_th: outcome.title_th,
+                      status: outcome.status,
+                      clause_th: outcome.source.clause_th,
+                      instrument_th: outcome.source.instrument_th,
+                      explanation_th: outcome.explanation_th,
+                      missing_inputs: outcome.missing_inputs,
+                    })),
+                }
+              : null,
+          };
+        }),
+        candidate_search: conceptSet.record,
       },
       errors: [],
       notices: [{ code: "ANALYTICAL_STAGES_NOT_ACTIVATED", retryable: false }],

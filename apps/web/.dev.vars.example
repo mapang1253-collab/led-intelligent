@@ -4,6 +4,11 @@
 # Google AI Studio → https://aistudio.google.com/apikey
 GEMINI_API_KEY=
 
+# AI_DISABLED (default) | RECORDED_AI | LIVE_AI — docs/ai-architecture.md §5.
+# LIVE_AI sends bounded, de-identified context to Google. Do not enable it until the provider's
+# data-use terms have been reviewed and recorded (docs/ai-architecture.md §6-7).
+AI_MODE=AI_DISABLED
+
 # Gemini quota facts recorded from your Google AI Studio project (docs/technology-stack.md §10).
 GEMINI_RPM_LIMIT=
 GEMINI_TPM_LIMIT=

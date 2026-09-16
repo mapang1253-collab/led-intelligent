@@ -51,6 +51,40 @@ export interface EvidenceGroup {
   }[];
 }
 
+export interface RuleOutcomeView {
+  rule_id: string;
+  title_th: string;
+  status: string;
+  clause_th: string;
+  instrument_th: string;
+  explanation_th: string;
+  missing_inputs: { input_id: string; label_th: string; unit: string; obtained_from_th: string }[];
+}
+
+export interface ConceptCard {
+  concept_id: string;
+  label_th: string;
+  description_th: string;
+  supporting_reason_th: string;
+  uncertainty_th: string;
+  building_type_th: string;
+  unmapped_activities_th: string[];
+  demand_hypotheses: {
+    population_th: string;
+    mechanism_th: string;
+    counter_evidence_th: string;
+  }[];
+  legal: {
+    status: string;
+    status_reason_th: string;
+    pack_id: string;
+    pack_version: string;
+    unresolved_inputs: { input_id: string; label_th: string; obtained_from_th: string }[];
+    approval_required: { title_th: string; clause_th: string; explanation_th: string }[];
+    outcomes: RuleOutcomeView[];
+  } | null;
+}
+
 export interface RunEnvelope {
   run_id: string;
   run_state: RunState;
@@ -69,6 +103,7 @@ export interface RunEnvelope {
       output_scope_ceiling: string;
     };
     evidence?: EvidenceGroup[];
+    concepts?: ConceptCard[];
   };
   errors?: { code: string; retryable: boolean }[];
   notices?: { code: string; retryable: boolean }[];

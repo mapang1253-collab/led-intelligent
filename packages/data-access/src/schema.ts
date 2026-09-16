@@ -163,6 +163,46 @@ export interface EvidenceLinkTable {
   created_at: ColumnType<string, string | undefined, never>;
 }
 
+/** Matches database/migrations/0005_concepts_and_validation.sql exactly. */
+export interface CandidateSearchRecordTable {
+  run_id: string;
+  mode: "LIVE_AI" | "RECORDED_AI" | "AI_DISABLED";
+  model: string;
+  calls_made: number;
+  repair_attempted: boolean;
+  stop_reason:
+    | "EVIDENCE_SPACE_COVERED"
+    | "NO_DEFENSIBLE_CONCEPTS"
+    | "AI_FAILURE"
+    | "RESOURCE_TRUNCATED";
+  duplicates_merged: number;
+  rejected: ColumnType<unknown, string, string>;
+  failure_code: string | null;
+  created_at: ColumnType<string, string | undefined, never>;
+}
+
+export interface PotentialUseConceptTable {
+  id: Generated<string>;
+  run_id: string;
+  concept_id: string;
+  label_th: string;
+  concept: ColumnType<unknown, string, string>;
+  created_at: ColumnType<string, string | undefined, never>;
+}
+
+export interface ValidationResultTable {
+  id: Generated<string>;
+  run_id: string;
+  concept_id: string;
+  domain: "LEGAL" | "PHYSICAL" | "DEMAND";
+  status: "PASS" | "FAIL" | "PARTIAL" | "UNKNOWN";
+  pack_id: string;
+  pack_version: string;
+  validator_version: string;
+  result: ColumnType<unknown, string, string>;
+  created_at: ColumnType<string, string | undefined, never>;
+}
+
 export interface Database {
   "reference.administrative_area": AdministrativeAreaTable;
   "analysis.analysis_run": AnalysisRunTable;
@@ -173,4 +213,7 @@ export interface Database {
   "evidence.observation": ObservationTable;
   "evidence.observation_value": ObservationValueTable;
   "evidence.evidence_link": EvidenceLinkTable;
+  "analysis.candidate_search_record": CandidateSearchRecordTable;
+  "analysis.potential_use_concept": PotentialUseConceptTable;
+  "analysis.validation_result": ValidationResultTable;
 }

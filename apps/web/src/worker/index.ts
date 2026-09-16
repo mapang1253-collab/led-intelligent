@@ -10,6 +10,11 @@ import { analysisRuns } from "./routes/analysis-runs.js";
 export type Env = {
   HYPERDRIVE: Hyperdrive;
   GEMINI_API_KEY: string;
+  /**
+   * LIVE_AI | RECORDED_AI | AI_DISABLED (docs/ai-architecture.md §5). Absent means AI_DISABLED:
+   * calling a provider is something a deployment opts into, never a default.
+   */
+  AI_MODE?: string;
   ASSETS: Fetcher;
 };
 

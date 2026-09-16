@@ -12,6 +12,7 @@ import {
 import { useRef } from "react";
 import { Link, useParams } from "react-router";
 import { TerrainBackdrop } from "../design-system/TerrainBackdrop.js";
+import { ConceptPanel } from "./ConceptPanel.js";
 import { EvidencePanel } from "./EvidencePanel.js";
 import { type StageRecord, isTerminal, useCancelRun, useRun } from "./useAnalysisRun.js";
 
@@ -82,6 +83,7 @@ export function RunPage() {
   const target = envelope?.partial_artifacts?.resolved_target;
   const notActivated = envelope?.notices?.some((n) => n.code === "ANALYTICAL_STAGES_NOT_ACTIVATED");
   const evidenceStage = envelope?.stage_records?.find((s) => s.stage === "EVIDENCE_ACQUISITION");
+  const conceptStage = envelope?.stage_records?.find((s) => s.stage === "CONCEPT_PROPOSAL");
   const unavailable = envelope?.errors?.some((e) => e.code === "RUN_NOT_AVAILABLE");
 
   return (
@@ -152,6 +154,11 @@ export function RunPage() {
             <EvidencePanel
               groups={envelope?.partial_artifacts?.evidence}
               stageState={evidenceStage?.state}
+            />
+
+            <ConceptPanel
+              concepts={envelope?.partial_artifacts?.concepts}
+              stageReason={conceptStage?.reason}
             />
 
             {notActivated && (

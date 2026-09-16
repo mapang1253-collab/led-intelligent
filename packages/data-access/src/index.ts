@@ -30,3 +30,8 @@ export {
   loadRunEvidence,
   saveEvidenceLinks,
 } from "./repositories/evidence.js";
+export {
+  type SavedConceptSet,
+  loadConceptSet,
+  saveConceptSet,
+} from "./repositories/concepts.js";
