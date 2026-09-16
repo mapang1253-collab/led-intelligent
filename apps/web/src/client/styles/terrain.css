@@ -147,84 +147,60 @@
   );
 }
 
-/* Each side breathes on its own timing, so the two margins never move as one wall. */
-.terrain-canopy-side {
-  transform-box: view-box;
-  transform-origin: center bottom;
-  animation: terrain-canopy-sway 24s ease-in-out infinite alternate;
-}
-.terrain-canopy-mirrored {
-  animation-duration: 31s;
-  animation-delay: -8s;
-}
-
 /**
- * The trees use the map's own values, not values of their own: same faint fill, same hairline
- * stroke, same colour. That is what keeps one sheet reading as one drawing.
+ * Parcels use the map's own values, not values of their own: same faint fill, same hairline stroke,
+ * same colour. That is what keeps one sheet reading as one drawing. The stroke is non-scaling, so
+ * the field keeps the map's line weight however the band is stretched.
  */
-.terrain-tree-shape {
+.terrain-parcel {
   fill: var(--map-fill);
   stroke: var(--map-stroke);
   stroke-width: 1;
   stroke-linejoin: round;
+  opacity: 0.55;
+  animation: terrain-parcel-breathe 13s ease-in-out infinite alternate;
 }
 
-.terrain-tree-branch {
-  fill: none;
-  stroke: var(--map-stroke);
-  stroke-width: 1;
-  stroke-linecap: round;
-}
-
-/* One tree in each stand breathes, the way the province outlines do. */
-.terrain-canopy-side > g:nth-child(odd) {
-  animation: terrain-breathe 15s ease-in-out infinite alternate;
-}
-
-/**
- * Dipterocarp seeds spinning down from the canopy.
- *
- * Two nested animations rather than one: the outer element falls and drifts, the inner art spins on
- * its own axis at its own rate. Combining them in a single keyframe would tie the spin rate to the
- * fall time, and a seed that completes exactly N turns per descent is the one thing that reads as
- * machinery rather than as a seed.
- */
-.terrain-seeds {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-.terrain-seed {
-  position: absolute;
-  top: -8%;
-  display: block;
-  width: 14px;
-  height: 20px;
-  opacity: 0;
-  transform: scale(var(--seed-scale, 1));
-  animation-name: terrain-seed-fall;
-  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
-  animation-iteration-count: infinite;
-}
-.terrain-seed-art {
-  display: block;
-  width: 100%;
-  height: 100%;
-  transform-origin: 50% 82%;
-  animation: terrain-seed-spin var(--seed-spin, 2.4s) linear infinite;
-}
-.terrain-seed-wing {
-  fill: var(--map-fill);
-  stroke: var(--map-stroke);
-  stroke-width: 1;
-  stroke-linejoin: round;
-}
-.terrain-seed-body {
+/* Survey corners, fixed one after another rather than all at once. */
+.terrain-corner {
   fill: var(--map-marker);
-  opacity: 0.75;
+  animation: terrain-corner-glint 6s ease-in-out infinite;
 }
 
-/* Motes rising between the trees, in the marker colour so they belong to the same drawing. */
+.terrain-parcels {
+  animation: terrain-parcel-drift 52s ease-in-out infinite alternate;
+}
+
+@keyframes terrain-parcel-breathe {
+  from {
+    opacity: 0.32;
+  }
+  to {
+    opacity: 0.8;
+  }
+}
+
+@keyframes terrain-corner-glint {
+  0%,
+  72%,
+  100% {
+    opacity: 0.12;
+  }
+  84% {
+    opacity: 1;
+  }
+}
+
+@keyframes terrain-parcel-drift {
+  from {
+    transform: translate3d(-0.8%, 0, 0);
+  }
+  to {
+    transform: translate3d(0.8%, 0, 0);
+  }
+}
+
+/* Motes rising over the field, in the marker colour so they belong to the same drawing. */
 .terrain-spores {
   position: absolute;
   inset: 0;
@@ -241,41 +217,6 @@
   opacity: 0;
   animation-timing-function: linear, ease-in-out;
   animation-iteration-count: infinite, infinite;
-}
-
-@keyframes terrain-canopy-sway {
-  from {
-    transform: rotate(-0.5deg) translate3d(0, 0, 0);
-  }
-  to {
-    transform: rotate(0.7deg) translate3d(0, -1.2%, 0);
-  }
-}
-
-@keyframes terrain-seed-fall {
-  0% {
-    transform: translate3d(0, 0, 0) scale(var(--seed-scale, 1));
-    opacity: 0;
-  }
-  10% {
-    opacity: 0.85;
-  }
-  88% {
-    opacity: 0.6;
-  }
-  100% {
-    transform: translate3d(var(--seed-drift, 0), 112vh, 0) scale(var(--seed-scale, 1));
-    opacity: 0;
-  }
-}
-
-@keyframes terrain-seed-spin {
-  from {
-    rotate: 0deg;
-  }
-  to {
-    rotate: 360deg;
-  }
 }
 
 @keyframes terrain-spore-rise {
@@ -361,19 +302,20 @@
   .terrain-markers g,
   .terrain-marker-halo,
   .terrain-sweep,
-  .terrain-canopy-side,
-  .terrain-canopy-side > g,
-  .terrain-spore,
-  .terrain-seed,
-  .terrain-seed-art {
+  .terrain-parcels,
+  .terrain-parcel,
+  .terrain-corner,
+  .terrain-spore {
     animation: none;
+  }
+  .terrain-corner {
+    opacity: 0.5;
   }
   .terrain-sweep {
     opacity: 0;
   }
-  /* The trees stay; the motes and the falling seeds are motion and nothing else, so they go. */
-  .terrain-spores,
-  .terrain-seeds {
+  /* The field stays; the motes are motion and nothing else, so they go. */
+  .terrain-spores {
     display: none;
   }
 }
