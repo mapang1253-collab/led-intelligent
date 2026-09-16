@@ -261,40 +261,41 @@
 }
 
 /**
- * Drizzle over the city.
+ * Stars: points of light that stay where they are and change only in brightness.
  *
- * A hairline with soft ends rather than a solid bar: a rain streak is the trail of something
- * falling, and a hard-edged rectangle reads as a scratch on the glass. Each streak carries its own
- * opacity inline, so the rain has depth without twenty-six separate rules.
+ * This is the sparkle a sky with a moon in it already implies, rather than particles added over
+ * the top — nothing here drifts across the page. Each star carries its own resting opacity inline,
+ * which gives the field depth without fifty-four separate rules, and its own cycle length, so the
+ * sky never pulses as one.
  *
- * Masked to the lower half. Rain is the only thing here that crosses the whole viewport
- * continuously, and full-height it was steady motion directly behind tables of prices — the most
- * expensive thing on the page for someone trying to read one. Over the city it is weather; over the
- * text it was interference.
+ * Masked away toward the rooftops: a star behind the skyline would read as a window.
  */
-.terrain-drizzle {
+.terrain-stars {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.35) 44%, #000 72%);
-  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.35) 44%, #000 72%);
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.6) 46%, transparent 68%);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.6) 46%, transparent 68%);
 }
-.terrain-drop {
+.terrain-star {
   position: absolute;
-  top: -6%;
-  width: 1px;
-  background: linear-gradient(to bottom, transparent, var(--map-marker), transparent);
-  animation-name: terrain-drop-fall;
-  animation-timing-function: linear;
+  border-radius: 50%;
+  background: var(--map-marker);
+  box-shadow: 0 0 5px var(--map-marker);
+  animation-name: terrain-star-twinkle;
+  animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
 }
 
-@keyframes terrain-drop-fall {
-  from {
-    transform: translate3d(0, 0, 0);
+@keyframes terrain-star-twinkle {
+  0%,
+  100% {
+    filter: brightness(0.35);
+    transform: scale(0.82);
   }
-  to {
-    transform: translate3d(var(--drop-drift, 0), 112vh, 0);
+  50% {
+    filter: brightness(2.1);
+    transform: scale(1.12);
   }
 }
 
@@ -325,37 +326,6 @@
   }
   to {
     transform: translate3d(-1.4%, 0, 0);
-  }
-}
-
-/**
- * Drizzle over the whole sheet.
- *
- * A hairline with soft ends rather than a solid bar: a rain streak is the trail of something
- * falling, and a hard-edged rectangle reads as a scratch on the glass. Each streak carries its own
- * opacity inline, so the rain has depth without twenty-six separate rules.
- */
-.terrain-drizzle {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-.terrain-drop {
-  position: absolute;
-  top: -6%;
-  width: 1px;
-  background: linear-gradient(to bottom, transparent, var(--map-marker), transparent);
-  animation-name: terrain-drop-fall;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-}
-
-@keyframes terrain-drop-fall {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-  to {
-    transform: translate3d(var(--drop-drift, 0), 112vh, 0);
   }
 }
 
@@ -418,7 +388,7 @@
   .terrain-skyline-far,
   .terrain-skyline-near,
   .terrain-window,
-  .terrain-drop,
+  .terrain-star,
   .terrain-moon-halo {
     animation: none;
   }
@@ -428,10 +398,6 @@
   }
   .terrain-sweep {
     opacity: 0;
-  }
-  /* The skyline stays; the rain is motion and nothing else, so it goes. */
-  .terrain-drizzle {
-    display: none;
   }
 }
 

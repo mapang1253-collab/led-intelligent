@@ -15,9 +15,9 @@ import { useId } from "react";
  * prefers-reduced-motion.
  *
  * Under the map stands a city skyline in the same line, its windows lighting one at a time, with a
- * moon above it and a thin drizzle falling over the city. The shimmer is the windows and the rain;
- * there are no free-floating motes, which read as particles over a page rather than as anything the
- * city is doing.
+ * crescent moon and a field of stars above it. Everything that shimmers here belongs to the scene:
+ * stars twinkle where they hang, windows come on where they are. Nothing drifts across the page,
+ * which is what free-floating motes did and why they are gone.
  *
  * The moon is the only still thing here, and it earns its place by explaining the rest: a night
  * scene with nothing to say it is night is just buildings in the dark. The city is kept to the lower half and dimmed through the middle,
@@ -343,23 +343,24 @@ function SkylineRow({
 }
 
 /**
- * Drizzle. Sparse and slow, because ฝนปรอย is not a downpour: 26 streaks over the whole viewport,
- * each thin enough to read as a hint of rain rather than as lines drawn across the screen.
+ * Stars. Fixed where they hang and twinkling in place — the sparkle a sky with a moon in it already
+ * implies, rather than particles added over the top.
  *
- * Generated from the same hash as everything else here, so the rain falls the same way on every
- * render. A drift value leans each streak, which is what stops rain from looking like it is falling
- * in a vacuum.
+ * Their heights are squared, so they gather high and thin out toward the rooftops: a star behind
+ * the skyline would be a light inside a building.
  */
-const DRIZZLE = Array.from({ length: 26 }, (_, i) => ({
-  id: i,
-  left: (noise(i, 71) * 104 - 2).toFixed(2),
-  length: 16 + noise(i, 83) * 28,
-  delay: noise(i, 97) * 9,
-  duration: 2.4 + noise(i, 109) * 2.6,
-  drift: 14 + noise(i, 127) * 26,
-  // The stroke token is already low-alpha, so a further 0.2 multiplier left the rain invisible.
-  opacity: 0.45 + noise(i, 139) * 0.5,
-}));
+const STARS = Array.from({ length: 54 }, (_, i) => {
+  const depth = noise(i, 211);
+  return {
+    id: i,
+    left: (noise(i, 181) * 100).toFixed(2),
+    top: (depth * depth * 58).toFixed(2),
+    size: 1 + noise(i, 193) * 1.9,
+    delay: noise(i, 197) * 6,
+    duration: 2.6 + noise(i, 199) * 4.4,
+    opacity: 0.3 + noise(i, 223) * 0.6,
+  };
+});
 
 /**
  * A crescent, cut by masking one disc out of another.
@@ -448,21 +449,20 @@ export function TerrainBackdrop() {
       {/* Above the city, in the empty quarter of the sky, and never behind the headline. */}
       <Moon />
 
-      <div className="terrain-drizzle">
-        {DRIZZLE.map((drop) => (
+      <div className="terrain-stars">
+        {STARS.map((star) => (
           <span
-            key={drop.id}
-            className="terrain-drop"
-            style={
-              {
-                left: `${drop.left}%`,
-                height: `${drop.length}px`,
-                animationDelay: `${drop.delay}s`,
-                animationDuration: `${drop.duration}s`,
-                opacity: drop.opacity,
-                "--drop-drift": `${drop.drift}px`,
-              } as React.CSSProperties
-            }
+            key={star.id}
+            className="terrain-star"
+            style={{
+              left: `${star.left}%`,
+              top: `${star.top}%`,
+              width: `${star.size}px`,
+              height: `${star.size}px`,
+              animationDelay: `${star.delay}s`,
+              animationDuration: `${star.duration}s`,
+              opacity: star.opacity,
+            }}
           />
         ))}
       </div>
