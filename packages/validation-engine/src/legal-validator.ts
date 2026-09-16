@@ -76,6 +76,7 @@ function applicabilityFor(rule: LegalRule, concept: ConceptUnderTest): Applicabi
   ) {
     return "NOT_APPLICABLE";
   }
+
   for (const required of rule.applicability.required_characteristics) {
     const stated = concept.characteristics[required.key];
     if (stated === undefined) {
@@ -85,6 +86,28 @@ function applicabilityFor(rule: LegalRule, concept: ConceptUnderTest): Applicabi
       return "NOT_APPLICABLE";
     }
   }
+
+  const anyOf = rule.applicability.any_characteristics ?? [];
+  if (anyOf.length > 0) {
+    const matched = anyOf.some((option) => concept.characteristics[option.key] === option.value);
+    if (!matched) {
+      // Not matching is only decisive once every listed characteristic was actually stated.
+      const allStated = anyOf.every((option) => concept.characteristics[option.key] !== undefined);
+      return allStated ? "NOT_APPLICABLE" : "UNRESOLVED";
+    }
+  }
+
+  for (const condition of rule.applicability.conditions ?? []) {
+    const evaluation = evaluatePredicate(condition, concept.inputs);
+    if (evaluation.status === "UNKNOWN") {
+      // The band this clause applies to cannot be determined, so the clause cannot be ruled out.
+      return "UNRESOLVED";
+    }
+    if (evaluation.status === "FAIL") {
+      return "NOT_APPLICABLE";
+    }
+  }
+
   return "APPLICABLE";
 }
 

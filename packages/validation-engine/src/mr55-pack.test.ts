@@ -1,0 +1,242 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import type { ConceptUnderTest, LegalRulePack } from "@reis/contracts";
+import { describe, expect, it } from "vitest";
+import { type LegalValidationTarget, validateLegal } from "./legal-validator.js";
+import { computePackHash, verifyPackIntegrity } from "./pack-integrity.js";
+
+/**
+ * The real pack, executed. These tests exist to catch an encoding error in the rules themselves —
+ * a threshold typed wrong, an applicability band that overlaps or leaves a gap — which unit tests
+ * of the engine cannot see.
+ */
+
+const PACK_PATH = fileURLToPath(
+  new URL("../../../database/reviewed-packs/th-cba-mr55-v1.json", import.meta.url),
+);
+const pack = JSON.parse(readFileSync(PACK_PATH, "utf8")) as LegalRulePack;
+
+const TARGET: LegalValidationTarget = { area_codes: [20], effective_on: "2026-09-16" };
+
+function reviewed(): LegalRulePack {
+  // Reviewing is a human act; for tests the record is synthesised so the rules can be exercised.
+  // The hash is deliberately not filled in here — integrity is verified in its own tests.
+  return {
+    ...pack,
+    lifecycle_state: "ACADEMIC_REVIEWED",
+    review: {
+      reviewers: ["ทดสอบ"],
+      reviewed_on: "2026-09-16",
+      content_hash: "test",
+      evidence_basis_th: "ทดสอบ",
+      limitations_th: ["ทดสอบ"],
+    },
+  } as LegalRulePack;
+}
+
+function concept(overrides: Partial<ConceptUnderTest> = {}): ConceptUnderTest {
+  return {
+    concept_id: "c1",
+    label_th: "แนวคิดทดสอบ",
+    activity_ids: [],
+    characteristics: {},
+    inputs: {},
+    ...overrides,
+  };
+}
+
+describe("pack shape", () => {
+  it("carries a clause, a citation and a source for every rule", () => {
+    expect(pack.rules.length).toBeGreaterThan(0);
+    for (const rule of pack.rules) {
+      expect(rule.source.clause_th).toMatch(/^ข้อ \d+/);
+      expect(rule.source.instrument_th).toContain("กฎกระทรวง ฉบับที่ 55");
+      expect(rule.source.source_url).toMatch(/^https:\/\//);
+      expect(rule.source.effective_from).toBe("2000-08-07");
+      expect(rule.statement_th.length).toBeGreaterThan(20);
+    }
+  });
+
+  it("gives every predicate its inputs, and every input a way to obtain it", () => {
+    for (const rule of pack.rules) {
+      const declared = new Set(rule.inputs.map((input) => input.input_id));
+      for (const input of rule.inputs) {
+        expect(input.obtained_from_th.length).toBeGreaterThan(0);
+        expect(input.unit.length).toBeGreaterThan(0);
+      }
+      if (rule.predicate === null) continue;
+      const needed =
+        rule.predicate.kind === "RATIO"
+          ? [rule.predicate.numerator_input_id, rule.predicate.denominator_input_id]
+          : [rule.predicate.input_id];
+      for (const id of needed) {
+        expect(declared, `${rule.rule_id} declares ${id}`).toContain(id);
+      }
+      for (const condition of rule.applicability.conditions ?? []) {
+        const conditionInputs =
+          condition.kind === "RATIO"
+            ? [condition.numerator_input_id, condition.denominator_input_id]
+            : [condition.input_id];
+        for (const id of conditionInputs) {
+          expect(declared, `${rule.rule_id} declares condition input ${id}`).toContain(id);
+        }
+      }
+    }
+  });
+
+  it("has unique rule ids", () => {
+    const ids = pack.rules.map((rule) => rule.rule_id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+});
+
+describe("pack integrity", () => {
+  it("refuses a pack whose review record is missing", async () => {
+    const result = await verifyPackIntegrity({
+      ...pack,
+      lifecycle_state: "ACADEMIC_REVIEWED",
+    } as LegalRulePack);
+    expect(result.ok).toBe(false);
+    expect(result.ok === false && result.reason_th).toContain("ไม่มีบันทึกการตรวจทาน");
+  });
+
+  it("refuses the pack as shipped, because it has not been reviewed yet", async () => {
+    const result = await verifyPackIntegrity(pack);
+    expect(result.ok).toBe(false);
+  });
+
+  it("accepts a correctly signed pack and rejects it once a threshold changes", async () => {
+    const hash = await computePackHash(pack);
+    const signed = {
+      ...reviewed(),
+      review: {
+        reviewers: ["ผู้ตรวจ"],
+        reviewed_on: "2026-09-16",
+        content_hash: hash,
+        evidence_basis_th: "ทดสอบ",
+        limitations_th: ["ทดสอบ"],
+      },
+    } as LegalRulePack;
+    expect((await verifyPackIntegrity(signed)).ok).toBe(true);
+
+    const edited = {
+      ...signed,
+      rules: signed.rules.map((rule, index) =>
+        index === 0 && rule.predicate?.kind === "RATIO"
+          ? { ...rule, predicate: { ...rule.predicate, value: "0.05" } }
+          : rule,
+      ),
+    } as LegalRulePack;
+    const after = await verifyPackIntegrity(edited);
+    expect(after.ok).toBe(false);
+    expect(after.ok === false && after.reason_th).toContain("ถูกแก้ไขหลังการตรวจทาน");
+  });
+});
+
+describe("the road-setback bands of ข้อ 41", () => {
+  const rows: [string, string][] = [
+    ["5", "mr55.c41.2.1"],
+    ["9.99", "mr55.c41.2.1"],
+    ["10", "mr55.c41.2.2"],
+    ["20", "mr55.c41.2.2"],
+    ["20.01", "mr55.c41.2.3"],
+    ["30", "mr55.c41.2.3"],
+  ];
+
+  it.each(rows)("a %s m road selects exactly one band: %s", (roadWidth, expected) => {
+    const result = validateLegal(
+      reviewed(),
+      concept({
+        characteristics: { building_type: "ตึกแถว" },
+        inputs: {
+          road_width: roadWidth,
+          setback_from_road_centreline: "0",
+          setback_from_road_boundary: "0",
+        },
+      }),
+      TARGET,
+    );
+    const bands = result.outcomes.filter(
+      (outcome) =>
+        outcome.rule_id.startsWith("mr55.c41.2") && outcome.applicability === "APPLICABLE",
+    );
+    // Exactly one band applies at every width: the clause's ranges must neither overlap nor gap.
+    expect(bands.map((band) => band.rule_id)).toEqual([expected]);
+  });
+
+  it("applies the narrow-road rule of วรรคหนึ่ง only below six metres", () => {
+    const narrow = validateLegal(
+      reviewed(),
+      concept({ inputs: { road_width: "4", setback_from_road_centreline: "3" } }),
+      TARGET,
+    );
+    expect(narrow.outcomes.find((outcome) => outcome.rule_id === "mr55.c41.1")?.applicability).toBe(
+      "APPLICABLE",
+    );
+
+    const wide = validateLegal(
+      reviewed(),
+      concept({ inputs: { road_width: "8", setback_from_road_centreline: "3" } }),
+      TARGET,
+    );
+    expect(wide.outcomes.find((outcome) => outcome.rule_id === "mr55.c41.1")?.applicability).toBe(
+      "NOT_APPLICABLE",
+    );
+  });
+});
+
+describe("the open-space rule of ข้อ 33", () => {
+  it("requires 30 per cent for a dwelling and 10 per cent for a shophouse", () => {
+    const dwelling = validateLegal(
+      reviewed(),
+      concept({
+        characteristics: { building_type: "อาคารอยู่อาศัย" },
+        inputs: { open_space_area: "25", largest_floor_plate_area: "100" },
+      }),
+      TARGET,
+    );
+    const dwellingOutcome = dwelling.outcomes.find((outcome) => outcome.rule_id === "mr55.c33.1");
+    expect(dwellingOutcome?.status).toBe("FAIL");
+    expect(dwelling.status).toBe("FAIL");
+
+    const shophouse = validateLegal(
+      reviewed(),
+      concept({
+        characteristics: { building_type: "ตึกแถว" },
+        inputs: { open_space_area: "25", largest_floor_plate_area: "100" },
+      }),
+      TARGET,
+    );
+    // The same 25 per cent clears the non-residential threshold.
+    expect(shophouse.outcomes.find((outcome) => outcome.rule_id === "mr55.c33.2")?.status).toBe(
+      "PASS",
+    );
+    // …and the residential rule must not also fire on it.
+    expect(
+      shophouse.outcomes.find((outcome) => outcome.rule_id === "mr55.c33.1")?.applicability,
+    ).toBe("NOT_APPLICABLE");
+  });
+});
+
+describe("a concept with nothing measured", () => {
+  it("returns UNKNOWN and names every fact that would be needed", () => {
+    const result = validateLegal(
+      reviewed(),
+      concept({ characteristics: { building_type: "อาคารอยู่อาศัย" } }),
+      TARGET,
+    );
+    expect(result.status).toBe("UNKNOWN");
+    const ids = result.unresolved_inputs.map((input) => input.input_id);
+    expect(ids).toContain("open_space_area");
+    expect(ids).toContain("largest_floor_plate_area");
+    // Nothing was decided against the applicant for want of a measurement.
+    expect(result.outcomes.every((outcome) => outcome.status !== "FAIL")).toBe(true);
+  });
+
+  it("holds the public-land approval open rather than passing it", () => {
+    const result = validateLegal(reviewed(), concept(), TARGET);
+    const approval = result.outcomes.find((outcome) => outcome.rule_id === "mr55.c40");
+    expect(approval?.status).toBe("PARTIAL");
+    expect(result.approval_required.map((outcome) => outcome.rule_id)).toContain("mr55.c40");
+  });
+});

@@ -1,0 +1,1015 @@
+{
+  "pack_id": "th.cba.mr55",
+  "version": "1.0.0",
+  "title_th": "ชุดกฎควบคุมอาคาร: กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543) — ที่ว่าง แนวอาคารและระยะร่น",
+  "lifecycle_state": "DRAFT",
+  "jurisdiction_coverage_th": "ใช้บังคับทั่วประเทศในเขตที่มีการประกาศใช้พระราชบัญญัติควบคุมอาคาร พ.ศ. 2522 ชุดกฎนี้ครอบคลุมเฉพาะหมวดที่ว่าง แนวอาคารและระยะร่น ไม่ครอบคลุมผังเมืองรวม การใช้ประโยชน์ที่ดิน หรือข้อบัญญัติท้องถิ่น",
+  "declared_critical_families": ["DEVELOPMENT_INTENSITY", "SETBACK_ACCESS"],
+  "review": null,
+  "rules": [
+    {
+      "rule_id": "mr55.c33.1",
+      "version": "1.0.0",
+      "title_th": "ที่ว่างของอาคารอยู่อาศัย",
+      "statement_th": "อาคารอยู่อาศัย และอาคารอยู่อาศัยรวม ต้องมีที่ว่างไม่น้อยกว่า 30 ใน 100 ส่วนของพื้นที่ชั้นใดชั้นหนึ่งที่มากที่สุดของอาคาร",
+      "family": "DEVELOPMENT_INTENSITY",
+      "effect": "REQUIREMENT",
+      "criticality": "CRITICAL",
+      "source": {
+        "issuing_authority_th": "รัฐมนตรีว่าการกระทรวงมหาดไทย โดยคำแนะนำของคณะกรรมการควบคุมอาคาร",
+        "instrument_th": "กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "citation_th": "ออกโดยอาศัยอำนาจตามมาตรา 5(3) และมาตรา 8(1) (7) และ (8) แห่งพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "source_url": "https://download.asa.or.th/03media/04law/cba/mr/mr43-55r-bm.pdf",
+        "hierarchy": "MINISTERIAL_REGULATION",
+        "promulgated_on": "2000-08-07",
+        "effective_from": "2000-08-07",
+        "repealed_on": null,
+        "amended_by_th": [
+          "กฎกระทรวง ฉบับที่ 58 (พ.ศ. 2546) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+          "กฎกระทรวง ฉบับที่ 61 (พ.ศ. 2550) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+        ],
+        "clause_th": "ข้อ 33 (1)"
+      },
+      "jurisdiction": {
+        "scope": "NATIONWIDE",
+        "area_codes": [],
+        "coverage_note_th": "ใช้บังคับในเขตที่มีการประกาศใช้พระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+      },
+      "applicability": {
+        "activity_ids": [],
+        "required_characteristics": [],
+        "any_characteristics": [
+          {
+            "key": "building_type",
+            "value": "อาคารอยู่อาศัย"
+          },
+          {
+            "key": "building_type",
+            "value": "อาคารอยู่อาศัยรวม"
+          }
+        ],
+        "note_th": "ใช้กับอาคารอยู่อาศัยและอาคารอยู่อาศัยรวม"
+      },
+      "inputs": [
+        {
+          "input_id": "open_space_area",
+          "label_th": "พื้นที่ว่างปราศจากสิ่งปกคลุม",
+          "unit": "ตารางเมตร",
+          "obtained_from_th": "แบบผังบริเวณ"
+        },
+        {
+          "input_id": "largest_floor_plate_area",
+          "label_th": "พื้นที่ชั้นใดชั้นหนึ่งที่มากที่สุดของอาคาร",
+          "unit": "ตารางเมตร",
+          "obtained_from_th": "แบบสถาปัตยกรรม"
+        }
+      ],
+      "predicate": {
+        "kind": "RATIO",
+        "numerator_input_id": "open_space_area",
+        "denominator_input_id": "largest_floor_plate_area",
+        "op": "gte",
+        "value": "0.30"
+      },
+      "failure_message_th": "ที่ว่างน้อยกว่า 30 ใน 100 ส่วนของพื้นที่ชั้นที่มากที่สุด"
+    },
+    {
+      "rule_id": "mr55.c33.2",
+      "version": "1.0.0",
+      "title_th": "ที่ว่างของอาคารที่ไม่ใช่ที่อยู่อาศัย",
+      "statement_th": "ห้องแถว ตึกแถว อาคารพาณิชย์ โรงงาน อาคารสาธารณะ และอาคารอื่นซึ่งไม่ได้ใช้เป็นที่อยู่อาศัย ต้องมีที่ว่างไม่น้อยกว่า 10 ใน 100 ส่วนของพื้นที่ชั้นใดชั้นหนึ่งที่มากที่สุดของอาคาร แต่ถ้าอาคารดังกล่าวใช้เป็นที่อยู่อาศัยด้วยต้องมีที่ว่างตาม (1)",
+      "family": "DEVELOPMENT_INTENSITY",
+      "effect": "REQUIREMENT",
+      "criticality": "CRITICAL",
+      "source": {
+        "issuing_authority_th": "รัฐมนตรีว่าการกระทรวงมหาดไทย โดยคำแนะนำของคณะกรรมการควบคุมอาคาร",
+        "instrument_th": "กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "citation_th": "ออกโดยอาศัยอำนาจตามมาตรา 5(3) และมาตรา 8(1) (7) และ (8) แห่งพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "source_url": "https://download.asa.or.th/03media/04law/cba/mr/mr43-55r-bm.pdf",
+        "hierarchy": "MINISTERIAL_REGULATION",
+        "promulgated_on": "2000-08-07",
+        "effective_from": "2000-08-07",
+        "repealed_on": null,
+        "amended_by_th": [
+          "กฎกระทรวง ฉบับที่ 58 (พ.ศ. 2546) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+          "กฎกระทรวง ฉบับที่ 61 (พ.ศ. 2550) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+        ],
+        "clause_th": "ข้อ 33 (2)"
+      },
+      "jurisdiction": {
+        "scope": "NATIONWIDE",
+        "area_codes": [],
+        "coverage_note_th": "ใช้บังคับในเขตที่มีการประกาศใช้พระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+      },
+      "applicability": {
+        "activity_ids": [],
+        "required_characteristics": [],
+        "any_characteristics": [
+          {
+            "key": "building_type",
+            "value": "ห้องแถว"
+          },
+          {
+            "key": "building_type",
+            "value": "ตึกแถว"
+          },
+          {
+            "key": "building_type",
+            "value": "อาคารพาณิชย์"
+          },
+          {
+            "key": "building_type",
+            "value": "โรงงาน"
+          },
+          {
+            "key": "building_type",
+            "value": "อาคารสาธารณะ"
+          }
+        ],
+        "note_th": "ใช้กับอาคารที่ไม่ได้ใช้เป็นที่อยู่อาศัย หากใช้อยู่อาศัยด้วยให้ใช้ข้อ 33 (1)"
+      },
+      "inputs": [
+        {
+          "input_id": "open_space_area",
+          "label_th": "พื้นที่ว่างปราศจากสิ่งปกคลุม",
+          "unit": "ตารางเมตร",
+          "obtained_from_th": "แบบผังบริเวณ"
+        },
+        {
+          "input_id": "largest_floor_plate_area",
+          "label_th": "พื้นที่ชั้นใดชั้นหนึ่งที่มากที่สุดของอาคาร",
+          "unit": "ตารางเมตร",
+          "obtained_from_th": "แบบสถาปัตยกรรม"
+        }
+      ],
+      "predicate": {
+        "kind": "RATIO",
+        "numerator_input_id": "open_space_area",
+        "denominator_input_id": "largest_floor_plate_area",
+        "op": "gte",
+        "value": "0.10"
+      },
+      "failure_message_th": "ที่ว่างน้อยกว่า 10 ใน 100 ส่วนของพื้นที่ชั้นที่มากที่สุด"
+    },
+    {
+      "rule_id": "mr55.c34.2",
+      "version": "1.0.0",
+      "title_th": "ที่ว่างด้านหลังห้องแถวหรือตึกแถว",
+      "statement_th": "ห้องแถวหรือตึกแถว ต้องมีที่ว่างด้านหลังอาคารกว้างไม่น้อยกว่า 3 เมตร เพื่อใช้ติดต่อถึงกัน โดยไม่ให้มีส่วนใดของอาคารยื่นล้ำเข้าไปในพื้นที่ดังกล่าว เว้นแต่การสร้างบันไดหนีไฟภายนอกอาคารที่ยื่นล้ำไม่เกิน 1.40 เมตร",
+      "family": "SETBACK_ACCESS",
+      "effect": "REQUIREMENT",
+      "criticality": "CRITICAL",
+      "source": {
+        "issuing_authority_th": "รัฐมนตรีว่าการกระทรวงมหาดไทย โดยคำแนะนำของคณะกรรมการควบคุมอาคาร",
+        "instrument_th": "กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "citation_th": "ออกโดยอาศัยอำนาจตามมาตรา 5(3) และมาตรา 8(1) (7) และ (8) แห่งพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "source_url": "https://download.asa.or.th/03media/04law/cba/mr/mr43-55r-bm.pdf",
+        "hierarchy": "MINISTERIAL_REGULATION",
+        "promulgated_on": "2000-08-07",
+        "effective_from": "2000-08-07",
+        "repealed_on": null,
+        "amended_by_th": [
+          "กฎกระทรวง ฉบับที่ 58 (พ.ศ. 2546) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+          "กฎกระทรวง ฉบับที่ 61 (พ.ศ. 2550) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+        ],
+        "clause_th": "ข้อ 34 วรรคสอง"
+      },
+      "jurisdiction": {
+        "scope": "NATIONWIDE",
+        "area_codes": [],
+        "coverage_note_th": "ใช้บังคับในเขตที่มีการประกาศใช้พระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+      },
+      "applicability": {
+        "activity_ids": [],
+        "required_characteristics": [],
+        "any_characteristics": [
+          {
+            "key": "building_type",
+            "value": "ห้องแถว"
+          },
+          {
+            "key": "building_type",
+            "value": "ตึกแถว"
+          }
+        ],
+        "note_th": "ใช้กับห้องแถวและตึกแถว"
+      },
+      "inputs": [
+        {
+          "input_id": "rear_open_space_width",
+          "label_th": "ความกว้างที่ว่างด้านหลังอาคาร",
+          "unit": "เมตร",
+          "obtained_from_th": "แบบผังบริเวณ"
+        }
+      ],
+      "predicate": {
+        "kind": "NUMERIC",
+        "input_id": "rear_open_space_width",
+        "op": "gte",
+        "value": "3",
+        "unit": "เมตร"
+      },
+      "failure_message_th": "ไม่เป็นไปตามข้อ 34 วรรคสอง"
+    },
+    {
+      "rule_id": "mr55.c36.front",
+      "version": "1.0.0",
+      "title_th": "ที่ว่างด้านหน้าบ้านแถว",
+      "statement_th": "บ้านแถวต้องมีที่ว่างด้านหน้าระหว่างรั้วหรือแนวเขตที่ดินกับแนวผนังอาคารกว้างไม่น้อยกว่า 3 เมตร",
+      "family": "SETBACK_ACCESS",
+      "effect": "REQUIREMENT",
+      "criticality": "CRITICAL",
+      "source": {
+        "issuing_authority_th": "รัฐมนตรีว่าการกระทรวงมหาดไทย โดยคำแนะนำของคณะกรรมการควบคุมอาคาร",
+        "instrument_th": "กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "citation_th": "ออกโดยอาศัยอำนาจตามมาตรา 5(3) และมาตรา 8(1) (7) และ (8) แห่งพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "source_url": "https://download.asa.or.th/03media/04law/cba/mr/mr43-55r-bm.pdf",
+        "hierarchy": "MINISTERIAL_REGULATION",
+        "promulgated_on": "2000-08-07",
+        "effective_from": "2000-08-07",
+        "repealed_on": null,
+        "amended_by_th": [
+          "กฎกระทรวง ฉบับที่ 58 (พ.ศ. 2546) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+          "กฎกระทรวง ฉบับที่ 61 (พ.ศ. 2550) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+        ],
+        "clause_th": "ข้อ 36 วรรคหนึ่ง"
+      },
+      "jurisdiction": {
+        "scope": "NATIONWIDE",
+        "area_codes": [],
+        "coverage_note_th": "ใช้บังคับในเขตที่มีการประกาศใช้พระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+      },
+      "applicability": {
+        "activity_ids": [],
+        "required_characteristics": [
+          {
+            "key": "building_type",
+            "value": "บ้านแถว"
+          }
+        ],
+        "note_th": ""
+      },
+      "inputs": [
+        {
+          "input_id": "front_open_space_width",
+          "label_th": "ความกว้างที่ว่างด้านหน้าอาคาร",
+          "unit": "เมตร",
+          "obtained_from_th": "แบบผังบริเวณ"
+        }
+      ],
+      "predicate": {
+        "kind": "NUMERIC",
+        "input_id": "front_open_space_width",
+        "op": "gte",
+        "value": "3",
+        "unit": "เมตร"
+      },
+      "failure_message_th": "ไม่เป็นไปตามข้อ 36 วรรคหนึ่ง"
+    },
+    {
+      "rule_id": "mr55.c36.rear",
+      "version": "1.0.0",
+      "title_th": "ที่ว่างด้านหลังบ้านแถว",
+      "statement_th": "บ้านแถวต้องมีที่ว่างด้านหลังอาคารระหว่างรั้วหรือแนวเขตที่ดินกับแนวผนังอาคารกว้างไม่น้อยกว่า 2 เมตร",
+      "family": "SETBACK_ACCESS",
+      "effect": "REQUIREMENT",
+      "criticality": "CRITICAL",
+      "source": {
+        "issuing_authority_th": "รัฐมนตรีว่าการกระทรวงมหาดไทย โดยคำแนะนำของคณะกรรมการควบคุมอาคาร",
+        "instrument_th": "กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "citation_th": "ออกโดยอาศัยอำนาจตามมาตรา 5(3) และมาตรา 8(1) (7) และ (8) แห่งพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "source_url": "https://download.asa.or.th/03media/04law/cba/mr/mr43-55r-bm.pdf",
+        "hierarchy": "MINISTERIAL_REGULATION",
+        "promulgated_on": "2000-08-07",
+        "effective_from": "2000-08-07",
+        "repealed_on": null,
+        "amended_by_th": [
+          "กฎกระทรวง ฉบับที่ 58 (พ.ศ. 2546) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+          "กฎกระทรวง ฉบับที่ 61 (พ.ศ. 2550) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+        ],
+        "clause_th": "ข้อ 36 วรรคหนึ่ง"
+      },
+      "jurisdiction": {
+        "scope": "NATIONWIDE",
+        "area_codes": [],
+        "coverage_note_th": "ใช้บังคับในเขตที่มีการประกาศใช้พระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+      },
+      "applicability": {
+        "activity_ids": [],
+        "required_characteristics": [
+          {
+            "key": "building_type",
+            "value": "บ้านแถว"
+          }
+        ],
+        "note_th": ""
+      },
+      "inputs": [
+        {
+          "input_id": "rear_open_space_width",
+          "label_th": "ความกว้างที่ว่างด้านหลังอาคาร",
+          "unit": "เมตร",
+          "obtained_from_th": "แบบผังบริเวณ"
+        }
+      ],
+      "predicate": {
+        "kind": "NUMERIC",
+        "input_id": "rear_open_space_width",
+        "op": "gte",
+        "value": "2",
+        "unit": "เมตร"
+      },
+      "failure_message_th": "ไม่เป็นไปตามข้อ 36 วรรคหนึ่ง"
+    },
+    {
+      "rule_id": "mr55.c37",
+      "version": "1.0.0",
+      "title_th": "ที่ว่างด้านข้างบ้านแฝด",
+      "statement_th": "บ้านแฝดต้องมีที่ว่างด้านหน้าและด้านหลังระหว่างรั้วหรือแนวเขตที่ดินกับแนวผนังอาคารกว้างไม่น้อยกว่า 3 เมตรและ 2 เมตรตามลำดับ และมีที่ว่างด้านข้างกว้างไม่น้อยกว่า 2 เมตร",
+      "family": "SETBACK_ACCESS",
+      "effect": "REQUIREMENT",
+      "criticality": "CRITICAL",
+      "source": {
+        "issuing_authority_th": "รัฐมนตรีว่าการกระทรวงมหาดไทย โดยคำแนะนำของคณะกรรมการควบคุมอาคาร",
+        "instrument_th": "กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "citation_th": "ออกโดยอาศัยอำนาจตามมาตรา 5(3) และมาตรา 8(1) (7) และ (8) แห่งพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "source_url": "https://download.asa.or.th/03media/04law/cba/mr/mr43-55r-bm.pdf",
+        "hierarchy": "MINISTERIAL_REGULATION",
+        "promulgated_on": "2000-08-07",
+        "effective_from": "2000-08-07",
+        "repealed_on": null,
+        "amended_by_th": [
+          "กฎกระทรวง ฉบับที่ 58 (พ.ศ. 2546) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+          "กฎกระทรวง ฉบับที่ 61 (พ.ศ. 2550) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+        ],
+        "clause_th": "ข้อ 37"
+      },
+      "jurisdiction": {
+        "scope": "NATIONWIDE",
+        "area_codes": [],
+        "coverage_note_th": "ใช้บังคับในเขตที่มีการประกาศใช้พระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+      },
+      "applicability": {
+        "activity_ids": [],
+        "required_characteristics": [
+          {
+            "key": "building_type",
+            "value": "บ้านแฝด"
+          }
+        ],
+        "note_th": ""
+      },
+      "inputs": [
+        {
+          "input_id": "side_open_space_width",
+          "label_th": "ความกว้างที่ว่างด้านข้างอาคาร",
+          "unit": "เมตร",
+          "obtained_from_th": "แบบผังบริเวณ"
+        }
+      ],
+      "predicate": {
+        "kind": "NUMERIC",
+        "input_id": "side_open_space_width",
+        "op": "gte",
+        "value": "2",
+        "unit": "เมตร"
+      },
+      "failure_message_th": "ไม่เป็นไปตามข้อ 37"
+    },
+    {
+      "rule_id": "mr55.c40",
+      "version": "1.0.0",
+      "title_th": "การก่อสร้างล้ำเข้าไปในที่สาธารณะ",
+      "statement_th": "การก่อสร้างหรือดัดแปลงอาคารหรือส่วนของอาคารจะต้องไม่ล้ำเข้าไปในที่สาธารณะ เว้นแต่จะได้รับอนุญาตจากเจ้าพนักงานซึ่งมีอำนาจหน้าที่ดูแลรักษาที่สาธารณะนั้น",
+      "family": "SETBACK_ACCESS",
+      "effect": "APPROVAL_REQUIRED",
+      "criticality": "CRITICAL",
+      "source": {
+        "issuing_authority_th": "รัฐมนตรีว่าการกระทรวงมหาดไทย โดยคำแนะนำของคณะกรรมการควบคุมอาคาร",
+        "instrument_th": "กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "citation_th": "ออกโดยอาศัยอำนาจตามมาตรา 5(3) และมาตรา 8(1) (7) และ (8) แห่งพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "source_url": "https://download.asa.or.th/03media/04law/cba/mr/mr43-55r-bm.pdf",
+        "hierarchy": "MINISTERIAL_REGULATION",
+        "promulgated_on": "2000-08-07",
+        "effective_from": "2000-08-07",
+        "repealed_on": null,
+        "amended_by_th": [
+          "กฎกระทรวง ฉบับที่ 58 (พ.ศ. 2546) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+          "กฎกระทรวง ฉบับที่ 61 (พ.ศ. 2550) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+        ],
+        "clause_th": "ข้อ 40"
+      },
+      "jurisdiction": {
+        "scope": "NATIONWIDE",
+        "area_codes": [],
+        "coverage_note_th": "ใช้บังคับในเขตที่มีการประกาศใช้พระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+      },
+      "applicability": {
+        "activity_ids": [],
+        "required_characteristics": [],
+        "note_th": ""
+      },
+      "inputs": [],
+      "predicate": null,
+      "failure_message_th": "ไม่เป็นไปตามข้อ 40"
+    },
+    {
+      "rule_id": "mr55.c41.1",
+      "version": "1.0.0",
+      "title_th": "ระยะร่นจากกึ่งกลางถนนกว้างน้อยกว่า 6 เมตร",
+      "statement_th": "อาคารที่ก่อสร้างหรือดัดแปลงใกล้ถนนสาธารณะที่มีความกว้างน้อยกว่า 6 เมตร ให้ร่นแนวอาคารห่างจากกึ่งกลางถนนสาธารณะอย่างน้อย 3 เมตร",
+      "family": "SETBACK_ACCESS",
+      "effect": "REQUIREMENT",
+      "criticality": "CRITICAL",
+      "source": {
+        "issuing_authority_th": "รัฐมนตรีว่าการกระทรวงมหาดไทย โดยคำแนะนำของคณะกรรมการควบคุมอาคาร",
+        "instrument_th": "กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "citation_th": "ออกโดยอาศัยอำนาจตามมาตรา 5(3) และมาตรา 8(1) (7) และ (8) แห่งพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "source_url": "https://download.asa.or.th/03media/04law/cba/mr/mr43-55r-bm.pdf",
+        "hierarchy": "MINISTERIAL_REGULATION",
+        "promulgated_on": "2000-08-07",
+        "effective_from": "2000-08-07",
+        "repealed_on": null,
+        "amended_by_th": [
+          "กฎกระทรวง ฉบับที่ 58 (พ.ศ. 2546) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+          "กฎกระทรวง ฉบับที่ 61 (พ.ศ. 2550) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+        ],
+        "clause_th": "ข้อ 41 วรรคหนึ่ง"
+      },
+      "jurisdiction": {
+        "scope": "NATIONWIDE",
+        "area_codes": [],
+        "coverage_note_th": "ใช้บังคับในเขตที่มีการประกาศใช้พระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+      },
+      "applicability": {
+        "activity_ids": [],
+        "required_characteristics": [],
+        "conditions": [
+          {
+            "kind": "NUMERIC",
+            "input_id": "road_width",
+            "op": "lt",
+            "value": "6",
+            "unit": "เมตร"
+          }
+        ],
+        "note_th": "ใช้เมื่อถนนสาธารณะกว้างน้อยกว่า 6 เมตร"
+      },
+      "inputs": [
+        {
+          "input_id": "road_width",
+          "label_th": "ความกว้างถนนสาธารณะที่ติดที่ดิน",
+          "unit": "เมตร",
+          "obtained_from_th": "วัดหน้างาน หรือข้อมูลเขตทางจากหน่วยงานท้องถิ่น"
+        },
+        {
+          "input_id": "setback_from_road_centreline",
+          "label_th": "ระยะร่นแนวอาคารจากกึ่งกลางถนนสาธารณะ",
+          "unit": "เมตร",
+          "obtained_from_th": "แบบผังบริเวณ"
+        }
+      ],
+      "predicate": {
+        "kind": "NUMERIC",
+        "input_id": "setback_from_road_centreline",
+        "op": "gte",
+        "value": "3",
+        "unit": "เมตร"
+      },
+      "failure_message_th": "ไม่เป็นไปตามข้อ 41 วรรคหนึ่ง"
+    },
+    {
+      "rule_id": "mr55.c41.2.1",
+      "version": "1.0.0",
+      "title_th": "ระยะร่นอาคารประเภทกำหนด ถนนกว้างน้อยกว่า 10 เมตร",
+      "statement_th": "อาคารที่สูงเกินสองชั้นหรือเกิน 8 เมตร ห้องแถว ตึกแถว บ้านแถว อาคารพาณิชย์ โรงงาน อาคารสาธารณะ ป้ายหรือสิ่งที่สร้างขึ้นสำหรับติดหรือตั้งป้าย หรือคลังสินค้า ที่ก่อสร้างหรือดัดแปลงใกล้ถนนสาธารณะ ถ้าถนนสาธารณะนั้นมีความกว้างน้อยกว่า 10 เมตร ให้ร่นแนวอาคารห่างจากกึ่งกลางถนนสาธารณะอย่างน้อย 6 เมตร",
+      "family": "SETBACK_ACCESS",
+      "effect": "REQUIREMENT",
+      "criticality": "CRITICAL",
+      "source": {
+        "issuing_authority_th": "รัฐมนตรีว่าการกระทรวงมหาดไทย โดยคำแนะนำของคณะกรรมการควบคุมอาคาร",
+        "instrument_th": "กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "citation_th": "ออกโดยอาศัยอำนาจตามมาตรา 5(3) และมาตรา 8(1) (7) และ (8) แห่งพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "source_url": "https://download.asa.or.th/03media/04law/cba/mr/mr43-55r-bm.pdf",
+        "hierarchy": "MINISTERIAL_REGULATION",
+        "promulgated_on": "2000-08-07",
+        "effective_from": "2000-08-07",
+        "repealed_on": null,
+        "amended_by_th": [
+          "กฎกระทรวง ฉบับที่ 58 (พ.ศ. 2546) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+          "กฎกระทรวง ฉบับที่ 61 (พ.ศ. 2550) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+        ],
+        "clause_th": "ข้อ 41 วรรคสอง (1)"
+      },
+      "jurisdiction": {
+        "scope": "NATIONWIDE",
+        "area_codes": [],
+        "coverage_note_th": "ใช้บังคับในเขตที่มีการประกาศใช้พระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+      },
+      "applicability": {
+        "activity_ids": [],
+        "required_characteristics": [],
+        "any_characteristics": [
+          {
+            "key": "building_type",
+            "value": "ห้องแถว"
+          },
+          {
+            "key": "building_type",
+            "value": "ตึกแถว"
+          },
+          {
+            "key": "building_type",
+            "value": "อาคารพาณิชย์"
+          },
+          {
+            "key": "building_type",
+            "value": "โรงงาน"
+          },
+          {
+            "key": "building_type",
+            "value": "อาคารสาธารณะ"
+          },
+          {
+            "key": "building_type",
+            "value": "บ้านแถว"
+          },
+          {
+            "key": "building_type",
+            "value": "คลังสินค้า"
+          }
+        ],
+        "conditions": [
+          {
+            "kind": "NUMERIC",
+            "input_id": "road_width",
+            "op": "lt",
+            "value": "10",
+            "unit": "เมตร"
+          }
+        ],
+        "note_th": "ใช้กับอาคารประเภทที่ข้อ 41 วรรคสองระบุ เมื่อถนนกว้างน้อยกว่า 10 เมตร"
+      },
+      "inputs": [
+        {
+          "input_id": "road_width",
+          "label_th": "ความกว้างถนนสาธารณะที่ติดที่ดิน",
+          "unit": "เมตร",
+          "obtained_from_th": "วัดหน้างาน หรือข้อมูลเขตทางจากหน่วยงานท้องถิ่น"
+        },
+        {
+          "input_id": "setback_from_road_centreline",
+          "label_th": "ระยะร่นแนวอาคารจากกึ่งกลางถนนสาธารณะ",
+          "unit": "เมตร",
+          "obtained_from_th": "แบบผังบริเวณ"
+        }
+      ],
+      "predicate": {
+        "kind": "NUMERIC",
+        "input_id": "setback_from_road_centreline",
+        "op": "gte",
+        "value": "6",
+        "unit": "เมตร"
+      },
+      "failure_message_th": "ไม่เป็นไปตามข้อ 41 วรรคสอง (1)"
+    },
+    {
+      "rule_id": "mr55.c41.2.2",
+      "version": "1.0.0",
+      "title_th": "ระยะร่นอาคารประเภทกำหนด ถนนกว้าง 10 ถึง 20 เมตร",
+      "statement_th": "ถ้าถนนสาธารณะนั้นมีความกว้างตั้งแต่ 10 เมตรขึ้นไป แต่ไม่เกิน 20 เมตร ให้ร่นแนวอาคารห่างจากเขตถนนสาธารณะอย่างน้อย 1 ใน 10 ของความกว้างของถนนสาธารณะ",
+      "family": "SETBACK_ACCESS",
+      "effect": "REQUIREMENT",
+      "criticality": "CRITICAL",
+      "source": {
+        "issuing_authority_th": "รัฐมนตรีว่าการกระทรวงมหาดไทย โดยคำแนะนำของคณะกรรมการควบคุมอาคาร",
+        "instrument_th": "กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "citation_th": "ออกโดยอาศัยอำนาจตามมาตรา 5(3) และมาตรา 8(1) (7) และ (8) แห่งพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "source_url": "https://download.asa.or.th/03media/04law/cba/mr/mr43-55r-bm.pdf",
+        "hierarchy": "MINISTERIAL_REGULATION",
+        "promulgated_on": "2000-08-07",
+        "effective_from": "2000-08-07",
+        "repealed_on": null,
+        "amended_by_th": [
+          "กฎกระทรวง ฉบับที่ 58 (พ.ศ. 2546) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+          "กฎกระทรวง ฉบับที่ 61 (พ.ศ. 2550) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+        ],
+        "clause_th": "ข้อ 41 วรรคสอง (2)"
+      },
+      "jurisdiction": {
+        "scope": "NATIONWIDE",
+        "area_codes": [],
+        "coverage_note_th": "ใช้บังคับในเขตที่มีการประกาศใช้พระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+      },
+      "applicability": {
+        "activity_ids": [],
+        "required_characteristics": [],
+        "any_characteristics": [
+          {
+            "key": "building_type",
+            "value": "ห้องแถว"
+          },
+          {
+            "key": "building_type",
+            "value": "ตึกแถว"
+          },
+          {
+            "key": "building_type",
+            "value": "อาคารพาณิชย์"
+          },
+          {
+            "key": "building_type",
+            "value": "โรงงาน"
+          },
+          {
+            "key": "building_type",
+            "value": "อาคารสาธารณะ"
+          },
+          {
+            "key": "building_type",
+            "value": "บ้านแถว"
+          },
+          {
+            "key": "building_type",
+            "value": "คลังสินค้า"
+          }
+        ],
+        "conditions": [
+          {
+            "kind": "NUMERIC",
+            "input_id": "road_width",
+            "op": "gte",
+            "value": "10",
+            "unit": "เมตร"
+          },
+          {
+            "kind": "NUMERIC",
+            "input_id": "road_width",
+            "op": "lte",
+            "value": "20",
+            "unit": "เมตร"
+          }
+        ],
+        "note_th": "ใช้เมื่อถนนกว้างตั้งแต่ 10 ถึง 20 เมตร"
+      },
+      "inputs": [
+        {
+          "input_id": "road_width",
+          "label_th": "ความกว้างถนนสาธารณะที่ติดที่ดิน",
+          "unit": "เมตร",
+          "obtained_from_th": "วัดหน้างาน หรือข้อมูลเขตทางจากหน่วยงานท้องถิ่น"
+        },
+        {
+          "input_id": "setback_from_road_boundary",
+          "label_th": "ระยะร่นแนวอาคารจากเขตถนนสาธารณะ",
+          "unit": "เมตร",
+          "obtained_from_th": "แบบผังบริเวณ"
+        }
+      ],
+      "predicate": {
+        "kind": "RATIO",
+        "numerator_input_id": "setback_from_road_boundary",
+        "denominator_input_id": "road_width",
+        "op": "gte",
+        "value": "0.10"
+      },
+      "failure_message_th": "ไม่เป็นไปตามข้อ 41 วรรคสอง (2)"
+    },
+    {
+      "rule_id": "mr55.c41.2.3",
+      "version": "1.0.0",
+      "title_th": "ระยะร่นอาคารประเภทกำหนด ถนนกว้างเกิน 20 เมตร",
+      "statement_th": "ถ้าถนนสาธารณะนั้นมีความกว้างเกิน 20 เมตรขึ้นไป ให้ร่นแนวอาคารห่างจากเขตถนนสาธารณะอย่างน้อย 2 เมตร",
+      "family": "SETBACK_ACCESS",
+      "effect": "REQUIREMENT",
+      "criticality": "CRITICAL",
+      "source": {
+        "issuing_authority_th": "รัฐมนตรีว่าการกระทรวงมหาดไทย โดยคำแนะนำของคณะกรรมการควบคุมอาคาร",
+        "instrument_th": "กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "citation_th": "ออกโดยอาศัยอำนาจตามมาตรา 5(3) และมาตรา 8(1) (7) และ (8) แห่งพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "source_url": "https://download.asa.or.th/03media/04law/cba/mr/mr43-55r-bm.pdf",
+        "hierarchy": "MINISTERIAL_REGULATION",
+        "promulgated_on": "2000-08-07",
+        "effective_from": "2000-08-07",
+        "repealed_on": null,
+        "amended_by_th": [
+          "กฎกระทรวง ฉบับที่ 58 (พ.ศ. 2546) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+          "กฎกระทรวง ฉบับที่ 61 (พ.ศ. 2550) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+        ],
+        "clause_th": "ข้อ 41 วรรคสอง (3)"
+      },
+      "jurisdiction": {
+        "scope": "NATIONWIDE",
+        "area_codes": [],
+        "coverage_note_th": "ใช้บังคับในเขตที่มีการประกาศใช้พระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+      },
+      "applicability": {
+        "activity_ids": [],
+        "required_characteristics": [],
+        "any_characteristics": [
+          {
+            "key": "building_type",
+            "value": "ห้องแถว"
+          },
+          {
+            "key": "building_type",
+            "value": "ตึกแถว"
+          },
+          {
+            "key": "building_type",
+            "value": "อาคารพาณิชย์"
+          },
+          {
+            "key": "building_type",
+            "value": "โรงงาน"
+          },
+          {
+            "key": "building_type",
+            "value": "อาคารสาธารณะ"
+          },
+          {
+            "key": "building_type",
+            "value": "บ้านแถว"
+          },
+          {
+            "key": "building_type",
+            "value": "คลังสินค้า"
+          }
+        ],
+        "conditions": [
+          {
+            "kind": "NUMERIC",
+            "input_id": "road_width",
+            "op": "gt",
+            "value": "20",
+            "unit": "เมตร"
+          }
+        ],
+        "note_th": "ใช้เมื่อถนนกว้างเกิน 20 เมตร"
+      },
+      "inputs": [
+        {
+          "input_id": "road_width",
+          "label_th": "ความกว้างถนนสาธารณะที่ติดที่ดิน",
+          "unit": "เมตร",
+          "obtained_from_th": "วัดหน้างาน หรือข้อมูลเขตทางจากหน่วยงานท้องถิ่น"
+        },
+        {
+          "input_id": "setback_from_road_boundary",
+          "label_th": "ระยะร่นแนวอาคารจากเขตถนนสาธารณะ",
+          "unit": "เมตร",
+          "obtained_from_th": "แบบผังบริเวณ"
+        }
+      ],
+      "predicate": {
+        "kind": "NUMERIC",
+        "input_id": "setback_from_road_boundary",
+        "op": "gte",
+        "value": "2",
+        "unit": "เมตร"
+      },
+      "failure_message_th": "ไม่เป็นไปตามข้อ 41 วรรคสอง (3)"
+    },
+    {
+      "rule_id": "mr55.c42.1",
+      "version": "1.0.0",
+      "title_th": "ระยะร่นจากแหล่งน้ำสาธารณะกว้างน้อยกว่า 10 เมตร",
+      "statement_th": "อาคารที่ก่อสร้างหรือดัดแปลงใกล้แหล่งน้ำสาธารณะ เช่น แม่น้ำ คู คลอง ลำราง หรือลำกระโดง ถ้าแหล่งน้ำสาธารณะนั้นมีความกว้างน้อยกว่า 10 เมตร ต้องร่นแนวอาคารให้ห่างจากเขตแหล่งน้ำสาธารณะนั้นไม่น้อยกว่า 3 เมตร",
+      "family": "ENVIRONMENTAL_OVERLAY",
+      "effect": "REQUIREMENT",
+      "criticality": "CRITICAL",
+      "source": {
+        "issuing_authority_th": "รัฐมนตรีว่าการกระทรวงมหาดไทย โดยคำแนะนำของคณะกรรมการควบคุมอาคาร",
+        "instrument_th": "กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "citation_th": "ออกโดยอาศัยอำนาจตามมาตรา 5(3) และมาตรา 8(1) (7) และ (8) แห่งพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "source_url": "https://download.asa.or.th/03media/04law/cba/mr/mr43-55r-bm.pdf",
+        "hierarchy": "MINISTERIAL_REGULATION",
+        "promulgated_on": "2000-08-07",
+        "effective_from": "2000-08-07",
+        "repealed_on": null,
+        "amended_by_th": [
+          "กฎกระทรวง ฉบับที่ 58 (พ.ศ. 2546) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+          "กฎกระทรวง ฉบับที่ 61 (พ.ศ. 2550) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+        ],
+        "clause_th": "ข้อ 42 วรรคหนึ่ง"
+      },
+      "jurisdiction": {
+        "scope": "NATIONWIDE",
+        "area_codes": [],
+        "coverage_note_th": "ใช้บังคับในเขตที่มีการประกาศใช้พระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+      },
+      "applicability": {
+        "activity_ids": [],
+        "required_characteristics": [],
+        "conditions": [
+          {
+            "kind": "NUMERIC",
+            "input_id": "water_body_width",
+            "op": "lt",
+            "value": "10",
+            "unit": "เมตร"
+          }
+        ],
+        "note_th": "ใช้เมื่อที่ดินอยู่ใกล้แหล่งน้ำสาธารณะที่กว้างน้อยกว่า 10 เมตร"
+      },
+      "inputs": [
+        {
+          "input_id": "water_body_width",
+          "label_th": "ความกว้างแหล่งน้ำสาธารณะ",
+          "unit": "เมตร",
+          "obtained_from_th": "แผนที่หรือสำรวจหน้างาน"
+        },
+        {
+          "input_id": "setback_from_water_body",
+          "label_th": "ระยะร่นแนวอาคารจากเขตแหล่งน้ำสาธารณะ",
+          "unit": "เมตร",
+          "obtained_from_th": "แบบผังบริเวณ"
+        }
+      ],
+      "predicate": {
+        "kind": "NUMERIC",
+        "input_id": "setback_from_water_body",
+        "op": "gte",
+        "value": "3",
+        "unit": "เมตร"
+      },
+      "failure_message_th": "ไม่เป็นไปตามข้อ 42 วรรคหนึ่ง"
+    },
+    {
+      "rule_id": "mr55.c42.2",
+      "version": "1.0.0",
+      "title_th": "ระยะร่นจากแหล่งน้ำสาธารณะกว้างตั้งแต่ 10 เมตร",
+      "statement_th": "ถ้าแหล่งน้ำสาธารณะนั้นมีความกว้างตั้งแต่ 10 เมตรขึ้นไป ต้องร่นแนวอาคารให้ห่างจากเขตแหล่งน้ำสาธารณะนั้นไม่น้อยกว่า 6 เมตร",
+      "family": "ENVIRONMENTAL_OVERLAY",
+      "effect": "REQUIREMENT",
+      "criticality": "CRITICAL",
+      "source": {
+        "issuing_authority_th": "รัฐมนตรีว่าการกระทรวงมหาดไทย โดยคำแนะนำของคณะกรรมการควบคุมอาคาร",
+        "instrument_th": "กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "citation_th": "ออกโดยอาศัยอำนาจตามมาตรา 5(3) และมาตรา 8(1) (7) และ (8) แห่งพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "source_url": "https://download.asa.or.th/03media/04law/cba/mr/mr43-55r-bm.pdf",
+        "hierarchy": "MINISTERIAL_REGULATION",
+        "promulgated_on": "2000-08-07",
+        "effective_from": "2000-08-07",
+        "repealed_on": null,
+        "amended_by_th": [
+          "กฎกระทรวง ฉบับที่ 58 (พ.ศ. 2546) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+          "กฎกระทรวง ฉบับที่ 61 (พ.ศ. 2550) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+        ],
+        "clause_th": "ข้อ 42 วรรคหนึ่ง"
+      },
+      "jurisdiction": {
+        "scope": "NATIONWIDE",
+        "area_codes": [],
+        "coverage_note_th": "ใช้บังคับในเขตที่มีการประกาศใช้พระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+      },
+      "applicability": {
+        "activity_ids": [],
+        "required_characteristics": [],
+        "conditions": [
+          {
+            "kind": "NUMERIC",
+            "input_id": "water_body_width",
+            "op": "gte",
+            "value": "10",
+            "unit": "เมตร"
+          }
+        ],
+        "note_th": "ใช้เมื่อที่ดินอยู่ใกล้แหล่งน้ำสาธารณะที่กว้างตั้งแต่ 10 เมตรขึ้นไป"
+      },
+      "inputs": [
+        {
+          "input_id": "water_body_width",
+          "label_th": "ความกว้างแหล่งน้ำสาธารณะ",
+          "unit": "เมตร",
+          "obtained_from_th": "แผนที่หรือสำรวจหน้างาน"
+        },
+        {
+          "input_id": "setback_from_water_body",
+          "label_th": "ระยะร่นแนวอาคารจากเขตแหล่งน้ำสาธารณะ",
+          "unit": "เมตร",
+          "obtained_from_th": "แบบผังบริเวณ"
+        }
+      ],
+      "predicate": {
+        "kind": "NUMERIC",
+        "input_id": "setback_from_water_body",
+        "op": "gte",
+        "value": "6",
+        "unit": "เมตร"
+      },
+      "failure_message_th": "ไม่เป็นไปตามข้อ 42 วรรคหนึ่ง"
+    },
+    {
+      "rule_id": "mr55.c42.3",
+      "version": "1.0.0",
+      "title_th": "ระยะร่นจากแหล่งน้ำสาธารณะขนาดใหญ่",
+      "statement_th": "สำหรับอาคารที่ก่อสร้างหรือดัดแปลงใกล้แหล่งน้ำสาธารณะขนาดใหญ่ เช่น บึง ทะเลสาบ หรือทะเล ต้องร่นแนวอาคารให้ห่างจากเขตแหล่งน้ำสาธารณะนั้นไม่น้อยกว่า 12 เมตร",
+      "family": "ENVIRONMENTAL_OVERLAY",
+      "effect": "REQUIREMENT",
+      "criticality": "CRITICAL",
+      "source": {
+        "issuing_authority_th": "รัฐมนตรีว่าการกระทรวงมหาดไทย โดยคำแนะนำของคณะกรรมการควบคุมอาคาร",
+        "instrument_th": "กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "citation_th": "ออกโดยอาศัยอำนาจตามมาตรา 5(3) และมาตรา 8(1) (7) และ (8) แห่งพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "source_url": "https://download.asa.or.th/03media/04law/cba/mr/mr43-55r-bm.pdf",
+        "hierarchy": "MINISTERIAL_REGULATION",
+        "promulgated_on": "2000-08-07",
+        "effective_from": "2000-08-07",
+        "repealed_on": null,
+        "amended_by_th": [
+          "กฎกระทรวง ฉบับที่ 58 (พ.ศ. 2546) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+          "กฎกระทรวง ฉบับที่ 61 (พ.ศ. 2550) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+        ],
+        "clause_th": "ข้อ 42 วรรคสอง"
+      },
+      "jurisdiction": {
+        "scope": "NATIONWIDE",
+        "area_codes": [],
+        "coverage_note_th": "ใช้บังคับในเขตที่มีการประกาศใช้พระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+      },
+      "applicability": {
+        "activity_ids": [],
+        "required_characteristics": [
+          {
+            "key": "near_large_water_body",
+            "value": "true"
+          }
+        ],
+        "note_th": "ใช้เมื่อที่ดินอยู่ใกล้บึง ทะเลสาบ หรือทะเล"
+      },
+      "inputs": [
+        {
+          "input_id": "setback_from_water_body",
+          "label_th": "ระยะร่นแนวอาคารจากเขตแหล่งน้ำสาธารณะ",
+          "unit": "เมตร",
+          "obtained_from_th": "แบบผังบริเวณ"
+        }
+      ],
+      "predicate": {
+        "kind": "NUMERIC",
+        "input_id": "setback_from_water_body",
+        "op": "gte",
+        "value": "12",
+        "unit": "เมตร"
+      },
+      "failure_message_th": "ไม่เป็นไปตามข้อ 42 วรรคสอง"
+    },
+    {
+      "rule_id": "mr55.c44",
+      "version": "1.0.0",
+      "title_th": "ความสูงอาคารเทียบกับระยะราบถึงถนนด้านตรงข้าม",
+      "statement_th": "ความสูงของอาคารไม่ว่าจากจุดหนึ่งจุดใด ต้องไม่เกินสองเท่าของระยะราบ วัดจากจุดนั้นไปตั้งฉากกับแนวเขตด้านตรงข้ามของถนนสาธารณะที่อยู่ใกล้อาคารนั้นที่สุด",
+      "family": "DEVELOPMENT_INTENSITY",
+      "effect": "REQUIREMENT",
+      "criticality": "CRITICAL",
+      "source": {
+        "issuing_authority_th": "รัฐมนตรีว่าการกระทรวงมหาดไทย โดยคำแนะนำของคณะกรรมการควบคุมอาคาร",
+        "instrument_th": "กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "citation_th": "ออกโดยอาศัยอำนาจตามมาตรา 5(3) และมาตรา 8(1) (7) และ (8) แห่งพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+        "source_url": "https://download.asa.or.th/03media/04law/cba/mr/mr43-55r-bm.pdf",
+        "hierarchy": "MINISTERIAL_REGULATION",
+        "promulgated_on": "2000-08-07",
+        "effective_from": "2000-08-07",
+        "repealed_on": null,
+        "amended_by_th": [
+          "กฎกระทรวง ฉบับที่ 58 (พ.ศ. 2546) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522",
+          "กฎกระทรวง ฉบับที่ 61 (พ.ศ. 2550) ออกตามความในพระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+        ],
+        "clause_th": "ข้อ 44 วรรคหนึ่ง"
+      },
+      "jurisdiction": {
+        "scope": "NATIONWIDE",
+        "area_codes": [],
+        "coverage_note_th": "ใช้บังคับในเขตที่มีการประกาศใช้พระราชบัญญัติควบคุมอาคาร พ.ศ. 2522"
+      },
+      "applicability": {
+        "activity_ids": [],
+        "required_characteristics": [],
+        "note_th": ""
+      },
+      "inputs": [
+        {
+          "input_id": "building_height",
+          "label_th": "ความสูงอาคาร",
+          "unit": "เมตร",
+          "obtained_from_th": "แบบสถาปัตยกรรม"
+        },
+        {
+          "input_id": "distance_to_opposite_road_boundary",
+          "label_th": "ระยะราบจากอาคารถึงแนวเขตถนนสาธารณะด้านตรงข้าม",
+          "unit": "เมตร",
+          "obtained_from_th": "แบบผังบริเวณ"
+        }
+      ],
+      "predicate": {
+        "kind": "RATIO",
+        "numerator_input_id": "building_height",
+        "denominator_input_id": "distance_to_opposite_road_boundary",
+        "op": "lte",
+        "value": "2"
+      },
+      "failure_message_th": "ความสูงอาคารเกินสองเท่าของระยะราบถึงแนวเขตถนนด้านตรงข้าม"
+    }
+  ]
+}

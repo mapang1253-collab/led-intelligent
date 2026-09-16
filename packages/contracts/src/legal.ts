@@ -106,6 +106,17 @@ export interface RuleApplicability {
   readonly activity_ids: readonly string[];
   /** Characteristics that must hold, e.g. building_type = ตึกแถว. */
   readonly required_characteristics: readonly { readonly key: string; readonly value: string }[];
+  /**
+   * Any characteristic in this list satisfies the rule's applicability on its own — the shape
+   * clauses use when they list several building types that the same requirement reaches.
+   */
+  readonly any_characteristics?: readonly { readonly key: string; readonly value: string }[];
+  /**
+   * Numeric conditions on measured inputs, for clauses that band by magnitude — "if the public road
+   * is less than six metres wide". An unmeasured input leaves applicability UNRESOLVED rather than
+   * dropping the requirement.
+   */
+  readonly conditions?: readonly RulePredicate[];
   readonly note_th: string;
 }
 

@@ -6,6 +6,12 @@
  * are not yet implemented (docs/adr/0001-first-increment-scope.md).
  */
 export {
+  type PackIntegrity,
+  canonicalPackContent,
+  computePackHash,
+  verifyPackIntegrity,
+} from "./pack-integrity.js";
+export {
   LEGAL_VALIDATOR_VERSION,
   type LegalValidationTarget,
   packIsExecutable,
