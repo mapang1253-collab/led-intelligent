@@ -216,16 +216,72 @@
 }
 
 /**
- * Drizzle over the whole sheet.
+ * The moon: a soft disc with a thin ring, in the same colours as everything else on the sheet.
+ *
+ * It sits in the upper right, which is the one quarter no screen here puts a heading or a column
+ * in. The halo breathes over a minute and a half — slow enough that it is never caught moving,
+ * which is the point of the one still thing in the scene.
+ */
+.terrain-moon {
+  position: absolute;
+  top: 9%;
+  right: 12%;
+  width: 132px;
+  height: 132px;
+}
+.terrain-moon-disc {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid var(--map-stroke);
+  background: radial-gradient(
+    circle at 38% 34%,
+    color-mix(in srgb, var(--map-marker) 34%, transparent) 0%,
+    color-mix(in srgb, var(--map-marker) 14%, transparent) 52%,
+    transparent 72%
+  );
+}
+.terrain-moon-halo {
+  position: absolute;
+  inset: -62%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--map-marker) 16%, transparent) 0%,
+    transparent 62%
+  );
+  animation: terrain-moon-breathe 92s ease-in-out infinite alternate;
+}
+
+@keyframes terrain-moon-breathe {
+  from {
+    opacity: 0.55;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+/**
+ * Drizzle over the city.
  *
  * A hairline with soft ends rather than a solid bar: a rain streak is the trail of something
  * falling, and a hard-edged rectangle reads as a scratch on the glass. Each streak carries its own
  * opacity inline, so the rain has depth without twenty-six separate rules.
+ *
+ * Masked to the lower half. Rain is the only thing here that crosses the whole viewport
+ * continuously, and full-height it was steady motion directly behind tables of prices — the most
+ * expensive thing on the page for someone trying to read one. Over the city it is weather; over the
+ * text it was interference.
  */
 .terrain-drizzle {
   position: absolute;
   inset: 0;
   overflow: hidden;
+  mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.35) 44%, #000 72%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.35) 44%, #000 72%);
 }
 .terrain-drop {
   position: absolute;
@@ -366,7 +422,8 @@
   .terrain-skyline-far,
   .terrain-skyline-near,
   .terrain-window,
-  .terrain-drop {
+  .terrain-drop,
+  .terrain-moon-halo {
     animation: none;
   }
   /* Stilled, the windows would all read as off; half-lit is the honest resting state. */

@@ -13,8 +13,12 @@
  * prefers-reduced-motion.
  *
  * Under the map stands a city skyline in the same line, its windows lighting one at a time, with a
- * thin drizzle falling across it. The shimmer is the windows and the rain; there are no free-
- * floating motes, which read as particles over a page rather than as anything the city is doing. The city is kept to the lower half and dimmed through the middle,
+ * moon above it and a thin drizzle falling over the city. The shimmer is the windows and the rain;
+ * there are no free-floating motes, which read as particles over a page rather than as anything the
+ * city is doing.
+ *
+ * The moon is the only still thing here, and it earns its place by explaining the rest: a night
+ * scene with nothing to say it is night is just buildings in the dark. The city is kept to the lower half and dimmed through the middle,
  * because the top of every screen carries a heading and the centre is where the reading happens.
  * Every shape here is decorative: the layer is aria-hidden and carries no meaning the screen relies
  * on.
@@ -402,6 +406,12 @@ export function TerrainBackdrop() {
             className="terrain-skyline-near"
           />
         </svg>
+      </div>
+
+      {/* Above the city, in the empty quarter of the sky, and never behind the headline. */}
+      <div className="terrain-moon" aria-hidden="true">
+        <span className="terrain-moon-halo" />
+        <span className="terrain-moon-disc" />
       </div>
 
       <div className="terrain-drizzle">
