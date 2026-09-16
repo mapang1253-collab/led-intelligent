@@ -33,6 +33,16 @@ export const propertyIntakeSchema = z.object({
   land_area_rai: z.coerce.number().nonnegative().max(100_000).optional(),
   land_area_ngan: z.coerce.number().nonnegative().max(3).optional(),
   land_area_wa: z.coerce.number().nonnegative().max(99.99).optional(),
+
+  /**
+   * Site facts, USER_ASSERTED. Deliberately limited to things someone standing on the land can
+   * know or measure — the width of the road in front of it, the watercourse beside it. Facts about
+   * a building that has not been designed are not asked for: the rules that need them report
+   * UNKNOWN and name what is missing, which is the honest answer.
+   */
+  road_width: z.coerce.number().nonnegative().max(200).optional(),
+  water_body_width: z.coerce.number().nonnegative().max(5_000).optional(),
+  near_large_water_body: z.coerce.boolean().optional(),
 });
 
 export type PropertyIntake = z.infer<typeof propertyIntakeSchema>;

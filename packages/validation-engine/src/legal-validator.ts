@@ -141,6 +141,44 @@ const OP_TEXT_TH = {
   eq: "ต้องเท่ากับ",
 } as const;
 
+/**
+ * States the rule's demand in its own unit for this particular land, where the site facts make the
+ * threshold computable. A proportional clause — "one tenth of the width of the public road" — only
+ * becomes a number a person can act on once the road has been measured.
+ */
+function requirementFor(rule: LegalRule, inputs: Readonly<Record<string, string>>): string | null {
+  const predicate = rule.predicate;
+  if (predicate === null) {
+    return null;
+  }
+  if (predicate.kind === "MEMBERSHIP") {
+    return `${rule.title_th}: ต้องเป็นหนึ่งใน ${predicate.allowed.join(", ")}`;
+  }
+  if (predicate.kind === "NUMERIC") {
+    const label =
+      rule.inputs.find((input) => input.input_id === predicate.input_id)?.label_th ?? rule.title_th;
+    return `${label} ${OP_TEXT_TH[predicate.op]} ${predicate.value} ${predicate.unit}`;
+  }
+
+  const denominator = inputs[predicate.denominator_input_id];
+  const numeratorInput = rule.inputs.find(
+    (input) => input.input_id === predicate.numerator_input_id,
+  );
+  if (denominator === undefined || numeratorInput === undefined) {
+    // The threshold is still a proportion of something unmeasured; stating a number would invent it.
+    return null;
+  }
+  const bottom = new Decimal(denominator);
+  if (bottom.isZero()) {
+    return null;
+  }
+  const bound = bottom.times(new Decimal(predicate.value));
+  return (
+    `${numeratorInput.label_th} ${OP_TEXT_TH[predicate.op]} ` +
+    `${bound.toDecimalPlaces(2).toString()} ${numeratorInput.unit}`
+  );
+}
+
 interface PredicateEvaluation {
   readonly status: Extract<ValidationStatus, "PASS" | "FAIL" | "UNKNOWN">;
   readonly explanation_th: string;
@@ -214,6 +252,7 @@ function evaluateRule(
       applicability: "NOT_APPLICABLE",
       status: "UNKNOWN",
       missing_inputs: [],
+      requirement_th: null,
       explanation_th: "กฎข้อนี้ยังไม่มีผลบังคับ หรือถูกยกเลิกแล้ว ณ วันที่ตรวจสอบ",
     };
   }
@@ -223,6 +262,7 @@ function evaluateRule(
       applicability: "NOT_APPLICABLE",
       status: "UNKNOWN",
       missing_inputs: [],
+      requirement_th: null,
       explanation_th: "กฎข้อนี้ไม่ครอบคลุมพื้นที่เป้าหมาย",
     };
   }
@@ -234,6 +274,7 @@ function evaluateRule(
       applicability,
       status: "UNKNOWN",
       missing_inputs: [],
+      requirement_th: null,
       explanation_th: "กฎข้อนี้ไม่ใช้กับแนวคิดการใช้ประโยชน์นี้",
     };
   }
@@ -244,6 +285,7 @@ function evaluateRule(
       applicability,
       status: "UNKNOWN",
       missing_inputs: [],
+      requirement_th: requirementFor(rule, concept.inputs),
       explanation_th: "ยังระบุไม่ได้ว่ากฎข้อนี้ใช้กับแนวคิดนี้หรือไม่ จึงยังตัดออกไม่ได้",
     };
   }
@@ -255,6 +297,7 @@ function evaluateRule(
       applicability,
       status: "PARTIAL",
       missing_inputs: [],
+      requirement_th: null,
       explanation_th: rule.statement_th,
     };
   }
@@ -269,6 +312,7 @@ function evaluateRule(
     applicability,
     status: evaluation.status,
     missing_inputs: missing,
+    requirement_th: requirementFor(rule, concept.inputs),
     explanation_th: evaluation.explanation_th,
   };
 }

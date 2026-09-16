@@ -240,3 +240,70 @@ describe("a concept with nothing measured", () => {
     expect(result.approval_required.map((outcome) => outcome.rule_id)).toContain("mr55.c40");
   });
 });
+
+describe("what the rules require of a particular piece of land", () => {
+  it("turns a proportional clause into a number once the road is measured", () => {
+    const result = validateLegal(
+      reviewed(),
+      concept({
+        characteristics: { building_type: "ตึกแถว" },
+        inputs: { road_width: "12" },
+      }),
+      TARGET,
+    );
+    const band = result.outcomes.find((outcome) => outcome.rule_id === "mr55.c41.2.2");
+
+    // ข้อ 41 วรรคสอง (2) is "one tenth of the width of the public road" — on a 12 m road, 1.20 m.
+    expect(band?.applicability).toBe("APPLICABLE");
+    expect(band?.status).toBe("UNKNOWN");
+    expect(band?.requirement_th).toContain("1.2");
+    expect(band?.requirement_th).toContain("เมตร");
+  });
+
+  it("states a fixed threshold even when nothing about the design is known", () => {
+    const result = validateLegal(
+      reviewed(),
+      concept({ characteristics: { building_type: "บ้านแถว" } }),
+      TARGET,
+    );
+    const front = result.outcomes.find((outcome) => outcome.rule_id === "mr55.c36.front");
+    expect(front?.requirement_th).toContain("3");
+    expect(front?.status).toBe("UNKNOWN");
+  });
+
+  it("says nothing when the threshold itself still depends on an unmeasured quantity", () => {
+    const result = validateLegal(
+      reviewed(),
+      concept({ characteristics: { building_type: "อาคารอยู่อาศัย" } }),
+      TARGET,
+    );
+    const openSpace = result.outcomes.find((outcome) => outcome.rule_id === "mr55.c33.1");
+    // 30 per cent of a floor plate nobody has drawn yet is not a number.
+    expect(openSpace?.requirement_th).toBeNull();
+  });
+
+  it("works the open-space requirement out once the floor plate is stated", () => {
+    const result = validateLegal(
+      reviewed(),
+      concept({
+        characteristics: { building_type: "อาคารอยู่อาศัย" },
+        inputs: { largest_floor_plate_area: "200" },
+      }),
+      TARGET,
+    );
+    const openSpace = result.outcomes.find((outcome) => outcome.rule_id === "mr55.c33.1");
+    expect(openSpace?.requirement_th).toContain("60");
+  });
+
+  it("gives a height ceiling from the road geometry alone", () => {
+    const result = validateLegal(
+      reviewed(),
+      concept({ inputs: { distance_to_opposite_road_boundary: "9" } }),
+      TARGET,
+    );
+    const height = result.outcomes.find((outcome) => outcome.rule_id === "mr55.c44");
+    // ข้อ 44: no higher than twice the horizontal distance — 18 m here.
+    expect(height?.requirement_th).toContain("18");
+    expect(height?.requirement_th).toContain("ไม่เกิน");
+  });
+});

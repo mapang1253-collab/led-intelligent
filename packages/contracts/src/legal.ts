@@ -178,6 +178,15 @@ export interface RuleOutcome {
   readonly status: ValidationStatus;
   /** Inputs the rule needed and did not get; the reason a status is UNKNOWN. */
   readonly missing_inputs: readonly RuleInput[];
+  /**
+   * What this rule actually demands of this land, in its own unit, once the site facts allow it to
+   * be worked out — "ต้องร่นจากเขตถนนไม่น้อยกว่า 1.20 เมตร" rather than "one tenth of the road
+   * width". Null when the threshold itself still depends on something unknown.
+   *
+   * This is not a verdict. A requirement can be stated long before anyone can say whether a design
+   * meets it, and saying it is what turns UNKNOWN from a dead end into something actionable.
+   */
+  readonly requirement_th: string | null;
   readonly explanation_th: string;
   readonly source: RuleSource;
 }

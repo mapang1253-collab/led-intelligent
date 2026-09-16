@@ -46,6 +46,12 @@ function RuleRow({ outcome }: { outcome: RuleOutcomeView }) {
         </span>
         <StatusChip status={outcome.status} />
       </div>
+      {/* What the rule demands of this land, stated whether or not a verdict is possible yet. */}
+      {outcome.requirement_th && (
+        <p className="mt-1 font-medium text-sm">
+          {th.concepts.requirementLabel}: {outcome.requirement_th}
+        </p>
+      )}
       <p className="mt-1 text-ink-muted text-xs leading-relaxed">{outcome.explanation_th}</p>
       {outcome.missing_inputs.length > 0 && (
         <p className="mt-1 text-ink-muted text-xs">

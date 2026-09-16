@@ -139,6 +139,7 @@ analysisRuns.post("/", async (c) => {
       evidence: links,
       pack: LEGAL_PACK,
       areaCodes: [],
+      intake,
       ...(aiMode(c.env) === "RECORDED_AI" ? { recorded: RECORDED_FIXTURE } : {}),
     });
     await saveConceptSet(db, run.run_id, {
@@ -298,6 +299,7 @@ analysisRuns.get("/:run_id", async (c) => {
                       clause_th: outcome.source.clause_th,
                       instrument_th: outcome.source.instrument_th,
                       explanation_th: outcome.explanation_th,
+                      requirement_th: outcome.requirement_th,
                       missing_inputs: outcome.missing_inputs,
                     })),
                 }

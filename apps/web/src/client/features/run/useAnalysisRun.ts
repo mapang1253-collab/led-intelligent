@@ -58,6 +58,7 @@ export interface RuleOutcomeView {
   clause_th: string;
   instrument_th: string;
   explanation_th: string;
+  requirement_th: string | null;
   missing_inputs: { input_id: string; label_th: string; unit: string; obtained_from_th: string }[];
 }
 

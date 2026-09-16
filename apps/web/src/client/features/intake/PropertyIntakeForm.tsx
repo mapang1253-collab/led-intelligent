@@ -14,6 +14,13 @@ import { useDistricts, useProvinces, useSubdistricts } from "./useAdministrative
  * belong to the selected district — the same invariant the server enforces independently.
  */
 
+interface SiteFields {
+  road_width: string;
+  water_body_width: string;
+}
+
+const EMPTY_SITE: SiteFields = { road_width: "", water_body_width: "" };
+
 interface OptionalFields {
   address_line: string;
   title_deed_number: string;
@@ -65,6 +72,9 @@ export function PropertyIntakeForm() {
   const [subdistrictId, setSubdistrictId] = useState("");
   const [optional, setOptional] = useState<OptionalFields>(EMPTY_OPTIONAL);
   const [showOptional, setShowOptional] = useState(false);
+  const [site, setSite] = useState<SiteFields>(EMPTY_SITE);
+  const [nearLargeWater, setNearLargeWater] = useState(false);
+  const [showSite, setShowSite] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const navigate = useNavigate();
@@ -104,6 +114,8 @@ export function PropertyIntakeForm() {
     const optionalPayload = Object.fromEntries(
       Object.entries(optional).filter(([, v]) => v.trim() !== ""),
     );
+    // Site facts follow the same rule: a measurement not taken is absent, never zero.
+    const sitePayload = Object.fromEntries(Object.entries(site).filter(([, v]) => v.trim() !== ""));
 
     createRun.mutate(
       {
@@ -111,6 +123,8 @@ export function PropertyIntakeForm() {
         district_id: districtId,
         subdistrict_id: subdistrictId,
         ...optionalPayload,
+        ...sitePayload,
+        ...(nearLargeWater ? { near_large_water_body: true } : {}),
       },
       { onSuccess: (run) => navigate(`/runs/${run.run_id}`) },
     );
@@ -161,6 +175,67 @@ export function PropertyIntakeForm() {
           onRetry={() => subdistricts.refetch()}
           errorMessage={errors.subdistrict_id}
         />
+      </div>
+
+      <div className="mt-6">
+        <button
+          type="button"
+          onClick={() => setShowSite((open) => !open)}
+          aria-expanded={showSite}
+          className="flex items-center gap-2 font-medium text-signature-text text-sm"
+        >
+          {showSite ? <ChevronDown size={16} /> : <Plus size={16} />}
+          {th.intake.siteToggle}
+        </button>
+
+        {showSite && (
+          <div className="mt-4 rounded-card bg-surface-sunken p-5">
+            <p className="mb-4 flex items-start gap-2 text-ink-muted text-sm">
+              <Info size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+              {th.intake.siteHelp}
+            </p>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="flex flex-col gap-1.5">
+                <span className="font-medium text-sm">{th.intake.roadWidthLabel}</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  step="any"
+                  value={site.road_width}
+                  onChange={(e) => setSite((s) => ({ ...s, road_width: e.target.value }))}
+                  className="rounded-card border border-border-strong bg-surface px-4 py-3 text-base text-ink"
+                />
+                <span className="text-ink-muted text-xs">{th.intake.roadWidthHelp}</span>
+              </label>
+
+              <label className="flex flex-col gap-1.5">
+                <span className="font-medium text-sm">{th.intake.waterWidthLabel}</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  step="any"
+                  value={site.water_body_width}
+                  onChange={(e) => setSite((s) => ({ ...s, water_body_width: e.target.value }))}
+                  className="rounded-card border border-border-strong bg-surface px-4 py-3 text-base text-ink"
+                />
+                <span className="text-ink-muted text-xs">{th.intake.waterWidthHelp}</span>
+              </label>
+            </div>
+
+            <label className="mt-4 flex items-center gap-2.5 text-sm">
+              <input
+                type="checkbox"
+                checked={nearLargeWater}
+                onChange={(e) => setNearLargeWater(e.target.checked)}
+                className="size-4 accent-[var(--color-signature)]"
+              />
+              {th.intake.nearLargeWaterLabel}
+            </label>
+          </div>
+        )}
       </div>
 
       <div className="mt-6">

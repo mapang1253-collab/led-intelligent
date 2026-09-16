@@ -55,16 +55,39 @@ function toEvidenceInput(link: StoredEvidenceLink): BriefEvidenceInput {
   };
 }
 
+/**
+ * Site facts the user asserted, as rule inputs. Only measurements of the land itself reach here;
+ * the model contributes no numbers at all, and a fact the user did not give stays absent rather
+ * than defaulting to zero.
+ */
+export function siteInputs(intake: Record<string, unknown>): Record<string, string> {
+  const inputs: Record<string, string> = {};
+  const numeric = (key: string) => {
+    const value = intake[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      inputs[key] = String(value);
+    }
+  };
+  numeric("road_width");
+  numeric("water_body_width");
+  return inputs;
+}
+
 /** A proposed concept, reduced to what the legal screen can act on. Nothing is invented here. */
-export function conceptUnderTest(concept: PotentialUseConcept): ConceptUnderTest {
+export function conceptUnderTest(
+  concept: PotentialUseConcept,
+  site: Record<string, string> = {},
+  characteristics: Record<string, string> = {},
+): ConceptUnderTest {
   return {
     concept_id: concept.concept_id,
     label_th: concept.label_th,
     activity_ids: [...concept.activity_ids],
-    characteristics: { building_type: concept.building_type_th },
-    // No measurements exist for a building that has not been designed, so every dimensional rule
-    // will report UNKNOWN with its missing inputs named. That is the correct answer, not a gap.
-    inputs: {},
+    characteristics: { building_type: concept.building_type_th, ...characteristics },
+    // Design measurements do not exist for a building nobody has drawn, so the rules needing them
+    // report UNKNOWN and name what is missing. Where a site fact makes a threshold computable, the
+    // outcome still states what the rule requires of this land.
+    inputs: site,
   };
 }
 
@@ -77,6 +100,8 @@ export interface ConceptStageInput {
   readonly evidence: readonly StoredEvidenceLink[];
   readonly pack: LegalRulePack;
   readonly areaCodes: readonly number[];
+  /** The run's own intake, for site facts the user asserted. */
+  readonly intake: Record<string, unknown>;
   readonly recorded?: { readonly fixture_id: string; readonly text: string };
 }
 
@@ -131,8 +156,11 @@ export async function runConceptGeneration(input: ConceptStageInput): Promise<Co
     };
   }
 
+  const site = siteInputs(input.intake);
+  const characteristics =
+    input.intake.near_large_water_body === true ? { near_large_water_body: "true" } : {};
   const validations = proposal.concepts.map((concept) =>
-    validateLegal(input.pack, conceptUnderTest(concept), {
+    validateLegal(input.pack, conceptUnderTest(concept, site, characteristics), {
       area_codes: input.areaCodes,
       effective_on: input.effectiveOn,
     }),
