@@ -159,6 +159,7 @@ export function RunPage() {
             <ConceptPanel
               concepts={envelope?.partial_artifacts?.concepts}
               stageReason={conceptStage?.reason}
+              mode={envelope?.partial_artifacts?.candidate_search?.mode}
             />
 
             {notActivated && (

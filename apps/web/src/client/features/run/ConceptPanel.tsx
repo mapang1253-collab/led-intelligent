@@ -157,9 +157,11 @@ function ConceptCardView({ concept }: { concept: ConceptCard }) {
 export function ConceptPanel({
   concepts,
   stageReason,
+  mode,
 }: {
   concepts: readonly ConceptCard[] | undefined;
   stageReason: string | undefined;
+  mode: string | undefined;
 }) {
   if (!concepts || concepts.length === 0) {
     const message = stageReason ? FAILURE_LABELS[stageReason] : undefined;
@@ -191,6 +193,13 @@ export function ConceptPanel({
         {th.concepts.heading}
       </h2>
       <p className="mt-1 text-ink-muted text-sm leading-relaxed">{th.concepts.intro}</p>
+
+      {/* Where these came from. A recorded fixture must never be mistaken for a model's output. */}
+      <p className="mt-2 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
+        <Info size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
+        {mode === "RECORDED_AI" ? th.concepts.fixtureNotice : th.concepts.liveNotice}
+      </p>
+
       {concepts.map((concept) => (
         <ConceptCardView key={concept.concept_id} concept={concept} />
       ))}

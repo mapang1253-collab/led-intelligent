@@ -310,6 +310,8 @@ analysisRuns.get("/:run_id", async (c) => {
               : null,
           };
         }),
+        // The mode travels with the concepts so the screen can say where they came from. Fixture
+        // output must never be read as a model's work (docs/ai-architecture.md §5).
         candidate_search: conceptSet.record,
       },
       errors: [],

@@ -1,10 +1,9 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // TODO(day 1): rename to your actual Cloudflare Workers project name.
   "name": "reis-web",
   "main": "./src/worker/index.ts",
-  // TODO(day 1): set to today's date once `wrangler` is installed (`npx wrangler --version` prints
-  // the latest supported value). Pin it; do not "always use latest".
+  // Pinned, never "latest": the runtime's behaviour must not change under the app without a
+  // deliberate bump. nodejs_compat requires 2024-09-23 or later.
   "compatibility_date": "2025-01-01",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
@@ -16,7 +15,11 @@
   // Hyperdrive config "reis-db", created 2026-09-15 (Cloudflare account
   // knsurattanaporn@gmail.com), pointing at the Supabase direct-connection Postgres. The ID is not a
   // secret; the underlying DB password is (lives only in apps/web/.dev.vars, never here).
-  "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "469d366a5414404c896ddbe752b18f02" }]
+  "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "469d366a5414404c896ddbe752b18f02" }],
+  // Not a secret: the mode only selects which concept source runs. LIVE_AI stays off until the
+  // provider's data-use terms are reviewed and recorded (docs/ai-architecture.md §6-7); the
+  // deployed build serves the recorded fixture, and the screen says so.
+  "vars": { "AI_MODE": "RECORDED_AI" }
   // --- R2 stays disabled until a source needs raw-object storage rights (docs/data-architecture.md §8).
   // "r2_buckets": [
   //   { "binding": "RAW_OBJECTS", "bucket_name": "<r2-bucket-name>" }

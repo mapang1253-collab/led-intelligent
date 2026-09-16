@@ -106,6 +106,14 @@ export interface RunEnvelope {
     };
     evidence?: EvidenceGroup[];
     concepts?: ConceptCard[];
+    candidate_search?: {
+      mode: string;
+      model: string;
+      calls_made: number;
+      repair_attempted: boolean;
+      stop_reason: string;
+      duplicates_merged: number;
+    } | null;
   };
   errors?: { code: string; retryable: boolean }[];
   notices?: { code: string; retryable: boolean }[];
