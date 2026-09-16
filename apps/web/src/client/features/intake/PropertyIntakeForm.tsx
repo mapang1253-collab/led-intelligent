@@ -3,6 +3,7 @@ import { ArrowRight, ChevronDown, Info, Plus } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useCreateRun } from "../run/useAnalysisRun.js";
+import { type AreaChoice, AreaPicker } from "./AreaPicker.js";
 import { AreaSelect } from "./AreaSelect.js";
 import { useDistricts, useProvinces, useSubdistricts } from "./useAdministrativeAreas.js";
 
@@ -71,6 +72,11 @@ export function PropertyIntakeForm() {
   const [provinceId, setProvinceId] = useState("");
   const [districtId, setDistrictId] = useState("");
   const [subdistrictId, setSubdistrictId] = useState("");
+  /**
+   * The place the reader picked by name, kept whole so the confirmation can show it without
+   * refetching. Browsing the cascading lists instead leaves this null and fills the three ids.
+   */
+  const [picked, setPicked] = useState<AreaChoice | null>(null);
   const [optional, setOptional] = useState<OptionalFields>(EMPTY_OPTIONAL);
   const [showOptional, setShowOptional] = useState(false);
   const [site, setSite] = useState<SiteFields>(EMPTY_SITE);
@@ -139,45 +145,66 @@ export function PropertyIntakeForm() {
       <h2 className="font-bold text-xl tracking-tight">{th.intake.heading}</h2>
       <p className="mt-2 text-ink-muted text-sm">{th.intake.description}</p>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <AreaSelect
-          label={th.intake.provinceLabel}
-          placeholder={th.intake.provincePlaceholder}
-          options={provinces.data}
-          value={provinceId}
-          onChange={selectProvince}
-          isLoading={provinces.isLoading}
-          isError={provinces.isError}
-          onRetry={() => provinces.refetch()}
-          errorMessage={errors.province_id}
-        />
+      <div className="mt-6">
+        <AreaPicker
+          selected={picked}
+          onPick={(choice) => {
+            setPicked(choice);
+            setProvinceId(choice.province_id);
+            setDistrictId(choice.district_id);
+            setSubdistrictId(choice.subdistrict_id);
+            setErrors((current) => ({ ...current, subdistrict_id: "" }));
+          }}
+          onClear={() => {
+            setPicked(null);
+            setProvinceId("");
+            setDistrictId("");
+            setSubdistrictId("");
+          }}
+          {...(errors.subdistrict_id ? { errorMessage: errors.subdistrict_id } : {})}
+          fallback={
+            <div className="grid gap-4 md:grid-cols-3">
+              <AreaSelect
+                label={th.intake.provinceLabel}
+                placeholder={th.intake.provincePlaceholder}
+                options={provinces.data}
+                value={provinceId}
+                onChange={selectProvince}
+                isLoading={provinces.isLoading}
+                isError={provinces.isError}
+                onRetry={() => provinces.refetch()}
+                errorMessage={errors.province_id}
+              />
 
-        <AreaSelect
-          label={th.intake.districtLabel}
-          placeholder={th.intake.districtPlaceholder}
-          disabledHint={th.intake.districtDisabledHint}
-          options={districts.data}
-          value={districtId}
-          onChange={selectDistrict}
-          disabled={!provinceId}
-          isLoading={districts.isLoading && Boolean(provinceId)}
-          isError={districts.isError}
-          onRetry={() => districts.refetch()}
-          errorMessage={errors.district_id}
-        />
+              <AreaSelect
+                label={th.intake.districtLabel}
+                placeholder={th.intake.districtPlaceholder}
+                disabledHint={th.intake.districtDisabledHint}
+                options={districts.data}
+                value={districtId}
+                onChange={selectDistrict}
+                disabled={!provinceId}
+                isLoading={districts.isLoading && Boolean(provinceId)}
+                isError={districts.isError}
+                onRetry={() => districts.refetch()}
+                errorMessage={errors.district_id}
+              />
 
-        <AreaSelect
-          label={th.intake.subdistrictLabel}
-          placeholder={th.intake.subdistrictPlaceholder}
-          disabledHint={th.intake.subdistrictDisabledHint}
-          options={subdistricts.data}
-          value={subdistrictId}
-          onChange={setSubdistrictId}
-          disabled={!districtId}
-          isLoading={subdistricts.isLoading && Boolean(districtId)}
-          isError={subdistricts.isError}
-          onRetry={() => subdistricts.refetch()}
-          errorMessage={errors.subdistrict_id}
+              <AreaSelect
+                label={th.intake.subdistrictLabel}
+                placeholder={th.intake.subdistrictPlaceholder}
+                disabledHint={th.intake.subdistrictDisabledHint}
+                options={subdistricts.data}
+                value={subdistrictId}
+                onChange={setSubdistrictId}
+                disabled={!districtId}
+                isLoading={subdistricts.isLoading && Boolean(districtId)}
+                isError={subdistricts.isError}
+                onRetry={() => subdistricts.refetch()}
+                errorMessage={errors.subdistrict_id}
+              />
+            </div>
+          }
         />
       </div>
 

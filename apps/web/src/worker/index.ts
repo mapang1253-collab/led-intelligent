@@ -4,6 +4,8 @@ import {
   listProvinces,
   listSubdistricts,
   purgeExpiredRuns,
+  searchAreas,
+  wellDocumentedAreas,
 } from "@reis/data-access";
 import { Hono } from "hono";
 import { analysisRuns } from "./routes/analysis-runs.js";
@@ -68,6 +70,38 @@ app.get("/api/v1/administrative-areas/subdistricts", async (c) => {
   const db = createDb(c.env.HYPERDRIVE.connectionString);
   try {
     const data = await listSubdistricts(db, districtId);
+    return c.json({ schema_version: SCHEMA_VERSION, data });
+  } finally {
+    await db.destroy();
+  }
+});
+
+/**
+ * Area lookup by name, with what is known about each result.
+ *
+ * The counts travel with the choice so a reader is not asked to pick blind and discover afterwards
+ * that the system has nothing to say about where they picked. They count published figures and
+ * nothing else — an area with more of them is better documented, not better to invest in.
+ */
+app.get("/api/v1/administrative-areas/search", async (c) => {
+  const query = (c.req.query("q") ?? "").trim();
+  if (query.length < 2) {
+    // Refused rather than answered with the whole country: a one-character search is not a search.
+    return c.json({ schema_version: SCHEMA_VERSION, data: [] });
+  }
+  const db = createDb(c.env.HYPERDRIVE.connectionString);
+  try {
+    const data = await searchAreas(db, query, 20);
+    return c.json({ schema_version: SCHEMA_VERSION, data });
+  } finally {
+    await db.destroy();
+  }
+});
+
+app.get("/api/v1/administrative-areas/well-documented", async (c) => {
+  const db = createDb(c.env.HYPERDRIVE.connectionString);
+  try {
+    const data = await wellDocumentedAreas(db, 6);
     return c.json({ schema_version: SCHEMA_VERSION, data });
   } finally {
     await db.destroy();
