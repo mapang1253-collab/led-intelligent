@@ -114,6 +114,16 @@ describe("pack integrity", () => {
     expect((await verifyPackIntegrity(pack)).ok).toBe(true);
   });
 
+  it("survives reformatting, because the signature binds content and not whitespace", async () => {
+    // A formatter reindenting the file must not invalidate a human's review; changing a number
+    // must. Re-parsing a differently-spelled but identical document proves the first half.
+    const respelled = JSON.parse(JSON.stringify(pack, null, 8)) as LegalRulePack;
+    expect(await computePackHash(respelled)).toBe(await computePackHash(pack));
+
+    const reordered = { ...pack, rules: [...pack.rules] } as LegalRulePack;
+    expect(await computePackHash(reordered)).toBe(await computePackHash(pack));
+  });
+
   it("accepts a correctly signed pack and rejects it once a threshold changes", async () => {
     const hash = await computePackHash(pack);
     const signed = {
