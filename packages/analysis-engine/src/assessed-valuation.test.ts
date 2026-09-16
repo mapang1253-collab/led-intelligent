@@ -94,7 +94,7 @@ describe("valueConstruction", () => {
     if (result.outcome !== "COMPUTED") return;
     expect(result.value).toBe("984000.00");
     expect(result.steps).toHaveLength(3);
-    expect(result.steps[2]?.expression_th).toBe("8200 × 120");
+    expect(result.steps[2]?.expression_th).toBe("8,200 × 120");
   });
 
   it("names the building type the rate belongs to", () => {
@@ -166,6 +166,8 @@ describe("valueLand", () => {
     if (result.outcome !== "COMPUTED") return;
     expect(result.value).toBe("3600000.00");
     expect(result.steps[0]?.value).toBe("600");
+    // The shown arithmetic is grouped the same way as the figures above it.
+    expect(result.steps[2]?.expression_th).toBe("6,000 × 600");
     expect(result.steps[0]?.expression_th).toContain("(1×400) + (2×100) + 0");
   });
 

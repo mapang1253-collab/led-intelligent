@@ -17,6 +17,7 @@ import { TerrainBackdrop } from "../design-system/TerrainBackdrop.js";
 import { ConceptPanel } from "./ConceptPanel.js";
 import { EvidencePanel } from "./EvidencePanel.js";
 import { FinalResultPanel } from "./FinalResultPanel.js";
+import { ValuationPanel } from "./ValuationPanel.js";
 import {
   type StageRecord,
   isTerminal,
@@ -203,6 +204,8 @@ export function RunPage() {
               groups={envelope?.partial_artifacts?.evidence}
               stageState={evidenceStage?.state}
             />
+
+            <ValuationPanel groups={envelope?.partial_artifacts?.evidence} />
 
             <ConceptPanel
               concepts={envelope?.partial_artifacts?.concepts}

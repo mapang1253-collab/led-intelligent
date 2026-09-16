@@ -100,9 +100,17 @@ function notComputed(reason: string): ValuationResult {
   return { outcome: "NOT_COMPUTED", reason };
 }
 
-/** Grouped thousands for a Thai reader; the underlying decimal is never rounded away. */
+/**
+ * Grouped thousands for a Thai reader. Applied to the shown expression as well as the shown values,
+ * so the line a reader checks by hand reads the same as the lines above it.
+ *
+ * Presentation only — `value` on the result keeps the unrounded decimal.
+ */
 function formatBaht(value: Decimal): string {
-  return value.toDecimalPlaces(2).toFixed(value.isInteger() ? 0 : 2);
+  const fixed = value.toDecimalPlaces(2).toFixed(value.isInteger() ? 0 : 2);
+  const [whole, fraction] = fixed.split(".");
+  const grouped = (whole ?? "0").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return fraction ? `${grouped}.${fraction}` : grouped;
 }
 
 export interface ConstructionValuationRequest {
