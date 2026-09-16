@@ -31,13 +31,16 @@ export interface StageRecord {
 }
 
 export interface EvidenceGroup {
+  group_id: string;
   requirement_id: string;
   measure_name_th: string;
+  area_label_th: string;
   source_title_th: string;
   attribution_th: string;
   geography_note_th: string;
   purpose_fitness: string;
   items: {
+    observation_id: string;
     population_th: string;
     value: string;
     unit_name_th: string;

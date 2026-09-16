@@ -54,8 +54,8 @@ function link(overrides: Partial<StoredEvidenceLink> = {}): StoredEvidenceLink {
 describe("groupEvidenceForDisplay", () => {
   it("keeps each figure's own disclosure when several sit in one group", () => {
     const groups = groupEvidenceForDisplay([
-      link({ disclosure_th: "คำอธิบาย ก" }),
-      link({ disclosure_th: "คำอธิบาย ข" }),
+      link({ observation_id: "a", disclosure_th: "คำอธิบาย ก" }),
+      link({ observation_id: "b", disclosure_th: "คำอธิบาย ข" }),
     ]);
     expect(groups).toHaveLength(1);
     expect(groups[0]?.items.map((item) => item.disclosure_th)).toEqual(["คำอธิบาย ก", "คำอธิบาย ข"]);
@@ -69,10 +69,11 @@ describe("groupEvidenceForDisplay", () => {
         observation: { measure_name_th: "รายได้เฉลี่ยต่อเดือนของครัวเรือน" },
       } as Partial<StoredEvidenceLink>),
     ]);
-    expect(groups.map((group) => group.requirement_id)).toEqual([
-      "demand.resident_population",
-      "demand.household_income_context",
-    ]);
+    // Two questions, two groups; their order is settled by geography, asserted separately below.
+    expect(groups).toHaveLength(2);
+    expect(new Set(groups.map((group) => group.requirement_id))).toEqual(
+      new Set(["demand.resident_population", "demand.household_income_context"]),
+    );
   });
 
   it("names the containing area when the evidence is a downgrade", () => {
@@ -94,5 +95,44 @@ describe("groupEvidenceForDisplay", () => {
 
   it("returns nothing for no links", () => {
     expect(groupEvidenceForDisplay([])).toEqual([]);
+  });
+});
+
+describe("scope separation", () => {
+  it("never puts two areas under one scope caveat", () => {
+    const groups = groupEvidenceForDisplay([
+      link({ observation_id: "sub" }),
+      link({
+        observation_id: "prov",
+        geography_match: "CONTAINING_AREA",
+        observation: { geography_level: "PROVINCE", area_name_th: "ชลบุรี" },
+      } as Partial<StoredEvidenceLink>),
+    ]);
+
+    // One requirement, two areas, two groups — each with a header true of its own rows.
+    expect(groups).toHaveLength(2);
+    expect(groups.map((group) => group.area_label_th)).toEqual(["ต.บางปลาสร้อย", "จ.ชลบุรี"]);
+    expect(groups[0]?.geography_note_th).toContain("ตรงระดับพื้นที่เป้าหมาย");
+    expect(groups[1]?.geography_note_th).toContain("ไม่ใช่ข้อมูลเฉพาะพื้นที่เป้าหมาย");
+  });
+
+  it("reads the target's own area before the area containing it", () => {
+    const groups = groupEvidenceForDisplay([
+      link({
+        observation_id: "prov",
+        observation: { geography_level: "PROVINCE", area_name_th: "ชลบุรี" },
+      } as Partial<StoredEvidenceLink>),
+      link({ observation_id: "sub" }),
+    ]);
+    expect(groups.map((group) => group.area_label_th)).toEqual(["ต.บางปลาสร้อย", "จ.ชลบุรี"]);
+  });
+
+  it("gives every row a key that is unique across areas and periods", () => {
+    const groups = groupEvidenceForDisplay([
+      link({ observation_id: "1" }),
+      link({ observation_id: "2" }),
+    ]);
+    const ids = groups.flatMap((group) => group.items.map((item) => item.observation_id));
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });

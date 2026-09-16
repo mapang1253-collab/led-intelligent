@@ -81,8 +81,16 @@ export function EvidencePanel({
         <p className="mt-1 text-ink-muted text-sm">{th.evidence.intro}</p>
 
         {groups.map((group) => (
-          <div key={group.requirement_id} className="mt-5">
-            <h3 className="font-semibold">{group.measure_name_th}</h3>
+          <div key={group.group_id} className="mt-5">
+            <h3 className="font-semibold">
+              {group.measure_name_th}
+              {/* The area is part of the heading: two groups can share a measure and describe
+                  different places. */}
+              <span className="font-medium text-ink-muted text-sm">
+                {" · "}
+                {group.area_label_th}
+              </span>
+            </h3>
 
             {/* Scope first: what this evidence is about, before any number is read. */}
             <p

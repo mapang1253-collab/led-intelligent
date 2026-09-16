@@ -102,13 +102,18 @@ const LEVEL_NAMES_TH = {
 } as const;
 
 export interface EvidenceGroup {
+  /** Stable identity for rendering: one requirement, at one geography. */
+  readonly group_id: string;
   readonly requirement_id: string;
   readonly measure_name_th: string;
+  /** The area these figures actually describe, e.g. "ต.บางปลาสร้อย" — never the run's target. */
+  readonly area_label_th: string;
   readonly source_title_th: string;
   readonly attribution_th: string;
   readonly geography_note_th: string;
   readonly purpose_fitness: string;
   readonly items: readonly {
+    readonly observation_id: string;
     readonly population_th: string;
     readonly value: string;
     readonly unit_name_th: string;
@@ -120,43 +125,69 @@ export interface EvidenceGroup {
 }
 
 /**
- * Shapes a run's stored links for presentation, grouped by requirement. The grouping is a display
- * concern only — each item keeps its own disclosure, so no caveat is lost when figures sit together.
+ * Shapes a run's stored links for presentation.
+ *
+ * Grouping is by requirement **and geography**, not by requirement alone. A group carries one
+ * scope caveat in its header, so two areas inside one group would put a caveat over figures it does
+ * not describe — a subdistrict's 11,996 residents listed under the same heading as its province's
+ * 1,645,985, with nothing on the rows to tell them apart. Splitting them is what keeps the header
+ * true of every row beneath it.
+ *
+ * Groups are ordered finest geography first, so evidence about the target itself is read before
+ * evidence about the area containing it.
  */
+const LEVEL_ORDER = { SUBDISTRICT: 0, DISTRICT: 1, PROVINCE: 2 } as const;
+
+const LEVEL_PREFIX_TH = {
+  PROVINCE: "จ.",
+  DISTRICT: "อ.",
+  SUBDISTRICT: "ต.",
+} as const;
+
 export function groupEvidenceForDisplay(links: readonly StoredEvidenceLink[]): EvidenceGroup[] {
-  const byRequirement = new Map<string, StoredEvidenceLink[]>();
+  const byGroup = new Map<string, StoredEvidenceLink[]>();
   for (const link of links) {
-    const bucket = byRequirement.get(link.requirement_id);
+    const key = `${link.requirement_id}|${link.observation.geography_level}|${link.observation.area_name_th}`;
+    const bucket = byGroup.get(key);
     if (bucket) {
       bucket.push(link);
     } else {
-      byRequirement.set(link.requirement_id, [link]);
+      byGroup.set(key, [link]);
     }
   }
 
-  return [...byRequirement.entries()].map(([requirementId, group]) => {
-    const first = group[0] as StoredEvidenceLink;
-    return {
-      requirement_id: requirementId,
-      measure_name_th: first.observation.measure_name_th,
-      source_title_th: first.observation.source_title_th,
-      attribution_th: first.observation.attribution_th,
-      geography_note_th:
-        first.geography_match === "CONTAINING_AREA"
-          ? `ข้อมูลระดับ${LEVEL_NAMES_TH[first.observation.geography_level]} (${first.observation.area_name_th}) ครอบคลุมพื้นที่เป้าหมาย ไม่ใช่ข้อมูลเฉพาะพื้นที่เป้าหมาย`
-          : `ข้อมูลตรงระดับพื้นที่เป้าหมาย (${first.observation.area_name_th})`,
-      purpose_fitness: first.purpose_fitness,
-      items: group.map((link) => ({
-        population_th: link.observation.population_th,
-        value: link.observation.value,
-        unit_name_th: link.observation.unit_name_th,
-        period_th: `พ.ศ. ${link.observation.source_vintage}`,
-        source_note_th: link.observation.source_note_th,
-        temporal_match: link.temporal_match,
-        disclosure_th: link.disclosure_th,
-      })),
-    };
-  });
+  return [...byGroup.entries()]
+    .map(([groupId, group]) => {
+      const first = group[0] as StoredEvidenceLink;
+      const level = first.observation.geography_level;
+      return {
+        group_id: groupId,
+        requirement_id: first.requirement_id,
+        measure_name_th: first.observation.measure_name_th,
+        area_label_th: `${LEVEL_PREFIX_TH[level]}${first.observation.area_name_th}`,
+        source_title_th: first.observation.source_title_th,
+        attribution_th: first.observation.attribution_th,
+        geography_note_th:
+          first.geography_match === "CONTAINING_AREA"
+            ? `ข้อมูลระดับ${LEVEL_NAMES_TH[level]} (${first.observation.area_name_th}) ครอบคลุมพื้นที่เป้าหมาย ไม่ใช่ข้อมูลเฉพาะพื้นที่เป้าหมาย`
+            : `ข้อมูลตรงระดับพื้นที่เป้าหมาย (${first.observation.area_name_th})`,
+        purpose_fitness: first.purpose_fitness,
+        items: group.map((link) => ({
+          // The observation is the only value guaranteed unique across areas and periods.
+          observation_id: link.observation_id,
+          population_th: link.observation.population_th,
+          value: link.observation.value,
+          unit_name_th: link.observation.unit_name_th,
+          period_th: `พ.ศ. ${link.observation.source_vintage}`,
+          source_note_th: link.observation.source_note_th,
+          temporal_match: link.temporal_match,
+          disclosure_th: link.disclosure_th,
+        })),
+        level_rank: LEVEL_ORDER[level],
+      };
+    })
+    .sort((a, b) => a.level_rank - b.level_rank || a.group_id.localeCompare(b.group_id))
+    .map(({ level_rank: _level_rank, ...group }) => group);
 }
 
 export { REQUIREMENTS };
