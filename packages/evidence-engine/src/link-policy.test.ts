@@ -29,6 +29,8 @@ function observation(overrides: Partial<StoredObservation> = {}): StoredObservat
     completeness: "PARTIAL",
     source_note_th: null,
     value: "45123.5",
+    value_low: null,
+    value_high: null,
     unit_code: "THB_PER_MONTH",
     unit_name_th: "บาทต่อเดือน",
     statistic: "MEAN",

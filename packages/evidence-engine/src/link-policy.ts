@@ -54,6 +54,17 @@ export const CONSTRUCTION_COST_REQUIREMENT: EvidenceRequirement = {
   subject_kind: "COHORT_WITHIN_AREA",
 };
 
+/**
+ * Treasury assessed condominium values. The subject is one named building in the area, which is the
+ * only subject in this system finer than a cohort — and the reason its geographic match matters so
+ * much more: a building in the next subdistrict is a different building, not a weaker sample.
+ */
+export const CONDOMINIUM_PRICE_REQUIREMENT: EvidenceRequirement = {
+  requirement_id: "economic.condominium_price_reference",
+  purpose_th: "ราคาประเมินห้องชุดของอาคารชุดที่มีอยู่จริงในพื้นที่ สำหรับใช้เป็นจุดอ้างอิงเชิงเปรียบเทียบ",
+  subject_kind: "COHORT_WITHIN_AREA",
+};
+
 export const POPULATION_REQUIREMENT: EvidenceRequirement = {
   requirement_id: "demand.resident_population",
   purpose_th: "ขนาดประชากรในพื้นที่ สำหรับประกอบการพิจารณาด้านดีมานด์",

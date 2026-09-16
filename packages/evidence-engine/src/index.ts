@@ -4,6 +4,7 @@
  * Takes/returns typed domain contracts only; no provider calls (that's @reis/source-adapters' job).
  */
 export {
+  CONDOMINIUM_PRICE_REQUIREMENT,
   CONSTRUCTION_COST_REQUIREMENT,
   HOUSEHOLD_INCOME_REQUIREMENT,
   POPULATION_REQUIREMENT,

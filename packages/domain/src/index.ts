@@ -10,3 +10,4 @@ export {
   formatTargetTh,
   isBangkok,
 } from "./administrative-naming.js";
+export { type PublishedFigure, figureTh, isRange } from "./observation-figure.js";

@@ -16,6 +16,7 @@ import type {
   PotentialUseConcept,
 } from "@reis/contracts";
 import type { Db, StoredEvidenceLink } from "@reis/data-access";
+import { figureTh } from "@reis/domain";
 import { validateLegal, verifyPackIntegrity } from "@reis/validation-engine";
 import { budgetedClient, readBudgetLimits } from "./budgeted-client.js";
 
@@ -50,7 +51,9 @@ function toEvidenceInput(link: StoredEvidenceLink): BriefEvidenceInput {
     observation_id: link.observation_id,
     measure_name_th: link.observation.measure_name_th,
     population_th: link.observation.population_th,
-    value: link.observation.value,
+    // A range reaches the model as "low–high": a spread stated as one number would let it reason
+    // about a price the source never published.
+    value: figureTh(link.observation) ?? "",
     unit_name_th: link.observation.unit_name_th,
     area_name_th: link.observation.area_name_th,
     geography_level: link.observation.geography_level,

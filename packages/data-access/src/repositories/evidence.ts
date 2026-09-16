@@ -51,6 +51,8 @@ export async function loadActiveObservations(
       "o.completeness",
       "o.source_note_th",
       "v.value_scalar",
+      "v.value_low",
+      "v.value_high",
       "v.unit_code",
       "u.name_th as unit_name_th",
       "v.statistic",
@@ -69,9 +71,9 @@ export async function loadActiveObservations(
     .execute();
 
   return rows.flatMap((row) => {
-    // A scalar measure with no scalar value is a parse defect, not a zero. Skip it rather than
-    // invent a number; the caller reports the requirement as unresolved.
-    if (row.value_scalar === null) {
+    // A figure with neither a scalar nor a pair of bounds is a parse defect, not a zero. Skip it
+    // rather than invent a number; the caller reports the requirement as unresolved.
+    if (row.value_scalar === null && (row.value_low === null || row.value_high === null)) {
       return [];
     }
     return [{ ...row, value: row.value_scalar } as StoredObservation];
@@ -167,6 +169,8 @@ export async function loadRunEvidence(
       "o.completeness",
       "o.source_note_th",
       "v.value_scalar",
+      "v.value_low",
+      "v.value_high",
       "v.unit_code",
       "u.name_th as unit_name_th",
       "v.statistic",
@@ -181,7 +185,7 @@ export async function loadRunEvidence(
     .execute();
 
   return rows.flatMap((row) => {
-    if (row.value_scalar === null) {
+    if (row.value_scalar === null && (row.value_low === null || row.value_high === null)) {
       return [];
     }
     const { value_scalar, ...rest } = row;

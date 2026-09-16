@@ -88,7 +88,7 @@ export interface MeasureDefinitionTable {
   definition_version: number;
   name_th: string;
   measure_type: string;
-  statistic: "MEAN" | "MEDIAN" | "TOTAL" | "RATE" | "SHARE" | "SINGLE";
+  statistic: "MEAN" | "MEDIAN" | "TOTAL" | "RATE" | "SHARE" | "SINGLE" | "RANGE";
   unit_code: string;
   note_th: string | null;
 }
@@ -136,7 +136,7 @@ export interface ObservationValueTable {
   value_structured: unknown | null;
   unit_code: string;
   currency: string | null;
-  statistic: "MEAN" | "MEDIAN" | "TOTAL" | "RATE" | "SHARE" | "SINGLE";
+  statistic: "MEAN" | "MEDIAN" | "TOTAL" | "RATE" | "SHARE" | "SINGLE" | "RANGE";
 }
 
 export interface EvidenceLinkTable {

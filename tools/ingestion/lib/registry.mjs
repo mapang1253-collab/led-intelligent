@@ -7,8 +7,17 @@
  * tool is not the place to make it — the columns are simply absent from the writes below.
  */
 
-/** Compares published figures as decimals, so 17019 and "17019.0" are one value, not two. */
+/**
+ * Compares published figures as decimals, so 17019 and "17019.0" are one value, not two.
+ *
+ * An absent bound normalises to the empty string whether it arrives as SQL NULL or as a missing
+ * property, so a scalar figure compares equal to itself across runs instead of looking changed
+ * because one side said "null" and the other "undefined".
+ */
 export function normalizeDecimal(value) {
+  if (value === null || value === undefined) {
+    return "";
+  }
   const text = String(value).trim();
   return text.includes(".") ? text.replace(/0+$/, "").replace(/\.$/, "") : text;
 }
@@ -97,7 +106,9 @@ export async function upsertObservations(client, options) {
     (
       await client.query(
         `SELECT o.id, o.observation_key, o.observation_version,
-                v.value_scalar::text AS value_scalar, v.unit_code
+                v.value_scalar::text AS value_scalar,
+                v.value_low::text AS value_low, v.value_high::text AS value_high,
+                v.unit_code
            FROM evidence.observation o
            JOIN evidence.observation_value v ON v.observation_id = o.id
           WHERE o.measure_id = $1 AND o.is_current`,
@@ -112,10 +123,15 @@ export async function upsertObservations(client, options) {
 
   for (const row of rows) {
     const current = standing.get(row.key);
+    // A figure is unchanged only if it is still the same KIND of figure. A scalar that became a
+    // range, or a range whose either bound moved, is a new version — comparing only the scalar
+    // would silently keep a stale range standing.
     const sameValue =
       current !== undefined &&
       current.unit_code === unitCode &&
-      normalizeDecimal(current.value_scalar) === normalizeDecimal(row.value);
+      normalizeDecimal(current.value_scalar) === normalizeDecimal(row.value) &&
+      normalizeDecimal(current.value_low) === normalizeDecimal(row.valueLow) &&
+      normalizeDecimal(current.value_high) === normalizeDecimal(row.valueHigh);
     if (sameValue) {
       unchangedIds.push(current.id);
       continue;
@@ -200,15 +216,23 @@ export async function upsertObservations(client, options) {
     );
 
     const idByKey = new Map(inserted.rows.map((row) => [row.observation_key, row.id]));
+    // Exactly one representation per figure, enforced by observation_value's own CHECK: a row
+    // carries either a scalar or a pair of bounds, never both and never neither.
     await client.query(
       `INSERT INTO evidence.observation_value (
-         observation_id, measure_id, value_scalar, unit_code, currency, statistic
+         observation_id, measure_id, value_scalar, value_low, value_high,
+         unit_code, currency, statistic
        )
-       SELECT * FROM unnest($1::bigint[], $2::text[], $3::numeric[], $4::text[], $5::text[], $6::text[])`,
+       SELECT * FROM unnest(
+         $1::bigint[], $2::text[], $3::numeric[], $4::numeric[], $5::numeric[],
+         $6::text[], $7::text[], $8::text[]
+       )`,
       [
         fresh.map((r) => idByKey.get(r.key)),
         fresh.map(() => measureId),
-        fresh.map((r) => r.value),
+        fresh.map((r) => r.value ?? null),
+        fresh.map((r) => r.valueLow ?? null),
+        fresh.map((r) => r.valueHigh ?? null),
         fresh.map(() => unitCode),
         fresh.map(() => currency ?? null),
         fresh.map(() => statistic),

@@ -9,6 +9,7 @@ import {
 } from "@reis/data-access";
 import { areaLabelTh, areaLevelNounTh } from "@reis/domain";
 import {
+  CONDOMINIUM_PRICE_REQUIREMENT,
   CONSTRUCTION_COST_REQUIREMENT,
   type EvidenceRequirement,
   HOUSEHOLD_INCOME_REQUIREMENT,
@@ -41,6 +42,10 @@ const REQUIREMENTS: readonly { measureId: string; requirement: EvidenceRequireme
   {
     measureId: "assessed_construction_value_per_sqm",
     requirement: CONSTRUCTION_COST_REQUIREMENT,
+  },
+  {
+    measureId: "assessed_condominium_value_per_sqm",
+    requirement: CONDOMINIUM_PRICE_REQUIREMENT,
   },
 ];
 
@@ -115,7 +120,10 @@ export interface EvidenceGroup {
   readonly items: readonly {
     readonly observation_id: string;
     readonly population_th: string;
-    readonly value: string;
+    /** Set when the source published one number; null when it published a spread. */
+    readonly value: string | null;
+    readonly value_low: string | null;
+    readonly value_high: string | null;
     readonly unit_name_th: string;
     readonly period_th: string;
     readonly source_note_th: string | null;
@@ -187,7 +195,11 @@ export function groupEvidenceForDisplay(
           // The observation is the only value guaranteed unique across areas and periods.
           observation_id: link.observation_id,
           population_th: link.observation.population_th,
+          // Both forms travel to the screen: rendering the spread is the reader's business, and
+          // collapsing it here would lose which figure the source actually set.
           value: link.observation.value,
+          value_low: link.observation.value_low,
+          value_high: link.observation.value_high,
           unit_name_th: link.observation.unit_name_th,
           period_th: `พ.ศ. ${link.observation.source_vintage}`,
           source_note_th: link.observation.source_note_th,

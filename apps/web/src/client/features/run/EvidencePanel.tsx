@@ -1,5 +1,5 @@
 import { th } from "@reis/i18n";
-import { ChevronDown, ChevronRight, Database, Info, TriangleAlert } from "lucide-react";
+import { ChevronDown, ChevronRight, Database, Info, MapPin, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import type { EvidenceGroup } from "./useAnalysisRun.js";
 
@@ -14,6 +14,25 @@ import type { EvidenceGroup } from "./useAnalysisRun.js";
 
 const TEMPORAL_LABELS = th.evidence.temporal as Record<string, string>;
 const FITNESS_LABELS = th.evidence.fitness as Record<string, string>;
+
+/**
+ * The one requirement whose cohort names a building rather than a category, and therefore the one
+ * where offering a map link makes sense.
+ */
+const CONDOMINIUM_REQUIREMENT = "economic.condominium_price_reference";
+
+/**
+ * A maps search for a named building in a named area.
+ *
+ * A search, not a pin: the source publishes no coordinates, so claiming to know where the building
+ * stands would assert more than the evidence does. Only the building name and the administrative
+ * area go into the URL — never anything the reader typed about their own property, which would send
+ * their deed number or address to a third party.
+ */
+function mapsSearchUrl(cohortTh: string, areaLabelTh: string): string {
+  const buildingName = (cohortTh.split("·")[0] ?? cohortTh).trim();
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${buildingName} ${areaLabelTh}`)}`;
+}
 
 /** Thai digit grouping, with the decimals the source actually published. */
 function formatValue(value: string): string {
@@ -35,21 +54,47 @@ function formatValue(value: string): string {
  */
 const ITEMS_BEFORE_COLLAPSE = 8;
 
-function EvidenceRow({ item }: { item: EvidenceGroup["items"][number] }) {
+function EvidenceRow({
+  item,
+  mapsHref,
+}: {
+  item: EvidenceGroup["items"][number];
+  mapsHref?: string;
+}) {
   const [open, setOpen] = useState(false);
+  // A spread keeps both bounds. Showing its middle, or either end alone, would state a price the
+  // source never published.
+  const isRange = item.value === null && item.value_low !== null && item.value_high !== null;
+  const shown =
+    item.value !== null
+      ? formatValue(item.value)
+      : isRange && item.value_low !== item.value_high
+        ? `${formatValue(item.value_low as string)}–${formatValue(item.value_high as string)}`
+        : formatValue((item.value_low ?? "") as string);
+
   return (
     <li className="border-border border-b py-3 last:border-b-0">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <span className="text-sm">{item.population_th}</span>
         <span className="font-bold tabular-nums">
-          {formatValue(item.value)}{" "}
-          <span className="font-medium text-ink-muted text-sm">{item.unit_name_th}</span>
+          {shown} <span className="font-medium text-ink-muted text-sm">{item.unit_name_th}</span>
         </span>
       </div>
 
       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-ink-muted text-xs">
         <span>{item.period_th}</span>
         <span>{TEMPORAL_LABELS[item.temporal_match] ?? item.temporal_match}</span>
+        {mapsHref && (
+          <a
+            href={mapsHref}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="inline-flex items-center gap-1 text-signature-text"
+          >
+            <MapPin size={13} aria-hidden="true" />
+            {th.evidence.openInMaps}
+          </a>
+        )}
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
@@ -65,22 +110,31 @@ function EvidenceRow({ item }: { item: EvidenceGroup["items"][number] }) {
       {open && (
         <p className="mt-2 rounded-card bg-surface-sunken p-3 text-ink-muted text-xs leading-relaxed">
           {item.disclosure_th}
+          {isRange && item.value_low !== item.value_high && ` · ${th.evidence.rangeNote}`}
         </p>
       )}
     </li>
   );
 }
 
-function EvidenceItems({ items }: { items: EvidenceGroup["items"] }) {
+function EvidenceItems({ group }: { group: EvidenceGroup }) {
   const [expanded, setExpanded] = useState(false);
+  const items = group.items;
   const collapsible = items.length > ITEMS_BEFORE_COLLAPSE;
   const shown = collapsible && !expanded ? items.slice(0, ITEMS_BEFORE_COLLAPSE) : items;
+  const mappable = group.requirement_id === CONDOMINIUM_REQUIREMENT;
 
   return (
     <>
       <ul className="mt-2">
         {shown.map((item) => (
-          <EvidenceRow key={item.observation_id} item={item} />
+          <EvidenceRow
+            key={item.observation_id}
+            item={item}
+            {...(mappable
+              ? { mapsHref: mapsSearchUrl(item.population_th, group.area_label_th) }
+              : {})}
+          />
         ))}
       </ul>
       {collapsible && (
@@ -143,7 +197,7 @@ export function EvidencePanel({
               </span>
             </p>
 
-            <EvidenceItems items={group.items} />
+            <EvidenceItems group={group} />
 
             <p className="mt-3 text-ink-muted text-xs">
               {th.evidence.sourceLabel}: {group.source_title_th} · {group.attribution_th}

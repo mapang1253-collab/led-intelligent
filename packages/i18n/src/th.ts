@@ -166,6 +166,8 @@ export const th = {
     sourceLabel: "แหล่งข้อมูล",
     limitLabel: "ข้อจำกัด",
     showDetail: "ดูรายละเอียดและข้อจำกัด",
+    rangeNote: "ช่วงราคาระหว่างชั้นต่ำสุดถึงชั้นสูงสุด ไม่ได้ระบุว่าชั้นใดมีราคาเท่าใด",
+    openInMaps: "ดูตำแหน่งในแผนที่",
     showAllItems: "ดูทั้งหมด",
     showFewerItems: "ย่อรายการ",
     moreItems: "รายการ",

@@ -32,8 +32,14 @@ export interface StoredObservation {
   readonly reliability: string;
   readonly completeness: string;
   readonly source_note_th: string | null;
-  /** Decimal string, never a float (docs/technology-stack.md §9). */
-  readonly value: string;
+  /**
+   * Decimal string, never a float (docs/technology-stack.md §9). Null when the source published a
+   * spread rather than one number, in which case the bounds below carry it — a range is not a
+   * scalar and must never be flattened into one.
+   */
+  readonly value: string | null;
+  readonly value_low: string | null;
+  readonly value_high: string | null;
   readonly unit_code: string;
   readonly unit_name_th: string;
   readonly statistic: string;

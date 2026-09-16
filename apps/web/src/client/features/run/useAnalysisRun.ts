@@ -44,7 +44,10 @@ export interface EvidenceGroup {
   items: {
     observation_id: string;
     population_th: string;
-    value: string;
+    /** Set when the source published one number; null when it published a spread. */
+    value: string | null;
+    value_low: string | null;
+    value_high: string | null;
     unit_name_th: string;
     period_th: string;
     source_note_th: string | null;
