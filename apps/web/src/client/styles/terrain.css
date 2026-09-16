@@ -307,45 +307,6 @@
   }
 }
 
-/**
- * Stars: points of light that stay where they are and change only in brightness.
- *
- * The night sky supplies its own sparkle, so nothing has to be added over the top. Each star
- * carries its own resting opacity inline,
- * which gives the field depth without fifty-four separate rules, and its own cycle length, so the
- * sky never pulses as one.
- *
- * Masked away toward the rooftops: a star behind the skyline would read as a window.
- */
-.terrain-stars {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.6) 46%, transparent 68%);
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.6) 46%, transparent 68%);
-}
-.terrain-star {
-  position: absolute;
-  border-radius: 50%;
-  background: var(--map-marker);
-  box-shadow: 0 0 5px var(--map-marker);
-  animation-name: terrain-star-twinkle;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-}
-
-@keyframes terrain-star-twinkle {
-  0%,
-  100% {
-    filter: brightness(0.35);
-    transform: scale(0.82);
-  }
-  50% {
-    filter: brightness(2.1);
-    transform: scale(1.12);
-  }
-}
-
 @keyframes terrain-window-light {
   0%,
   46%,
@@ -435,7 +396,6 @@
   .terrain-skyline-far,
   .terrain-skyline-near,
   .terrain-window,
-  .terrain-star,
   .terrain-mote,
   .terrain-mote-dot {
     animation: none;

@@ -1,28 +1,22 @@
 /**
- * Backdrop motif: the map this product actually works on. All 77 province outlines of Thailand,
- * drawn from public-domain boundary data, with coordinate markers pulsing on a spread of provinces
- * and a scan line travelling down the country.
+ * Backdrop motif: the map this product works on, over the city it prices.
  *
- * Replaces the earlier abstract contour/parcel sheet. The authors asked for a map with moving
- * coordinate points, and a real national outline is also more honest about what the system covers:
- * every province, not a region.
+ * All 77 province outlines of Thailand, drawn from public-domain boundary data, with coordinate
+ * markers pinging across them and a scan line travelling down the country. Under the map stands a
+ * skyline in the same hairline, its windows lighting one at a time, with a few lights wandering
+ * over the rooftops and a faint street plan beneath it.
  *
- * Geometry is pre-simplified at build time (Douglas–Peucker, ~43KB of path data) and animated with
- * CSS keyframes only — no requestAnimationFrame loop, so the latency gates in
- * docs/performance-and-reliability.md §7 are unaffected. All motion stops under
- * prefers-reduced-motion.
+ * Each moving layer has one gesture and no two share it: the windows blink where they are, the
+ * lights travel, the markers ping. A star field was cut for doing exactly what the windows already
+ * do — two systems making the same small twinkle read as noise of one kind rather than as two
+ * things — and the sky it left empty is the only part of the sheet where the eye can rest.
  *
- * Under the map stands a city skyline in the same line, its windows lighting one at a time, with a
- * field of stars above it and a few lights wandering over the rooftops. Beneath the city runs a
- * faint street network — the plan it is laid out on. Everything that shimmers belongs to the
- * scene: stars twinkle where they hang, windows come on where they are, and the drifting lights
- * stay over the city rather than crossing the page.
- *
- * The moon is the only still thing here, and it earns its place by explaining the rest: a night
- * scene with nothing to say it is night is just buildings in the dark. The city is kept to the lower half and dimmed through the middle,
- * because the top of every screen carries a heading and the centre is where the reading happens.
- * Every shape here is decorative: the layer is aria-hidden and carries no meaning the screen relies
- * on.
+ * Everything sits low and fades through the middle, because the top of every screen carries a
+ * heading and the centre is where the reading happens. Geometry is pre-simplified at build time
+ * (Douglas–Peucker, ~43KB of path data) and animated with CSS keyframes only — no
+ * requestAnimationFrame loop, so the latency gates in docs/performance-and-reliability.md §7 are
+ * unaffected. All motion stops under prefers-reduced-motion, and every shape is decorative: the
+ * layer is aria-hidden and carries no meaning the screen relies on.
  */
 
 const PROVINCES = [
@@ -404,26 +398,6 @@ const MOTES = Array.from({ length: 9 }, (_, i) => ({
   sway: 12 + noise(i, 353) * 22,
 }));
 
-/**
- * Stars. Fixed where they hang and twinkling in place — the sparkle a sky with a moon in it already
- * implies, rather than particles added over the top.
- *
- * Their heights are squared, so they gather high and thin out toward the rooftops: a star behind
- * the skyline would be a light inside a building.
- */
-const STARS = Array.from({ length: 54 }, (_, i) => {
-  const depth = noise(i, 211);
-  return {
-    id: i,
-    left: (noise(i, 181) * 100).toFixed(2),
-    top: (depth * depth * 58).toFixed(2),
-    size: 1 + noise(i, 193) * 1.9,
-    delay: noise(i, 197) * 6,
-    duration: 2.6 + noise(i, 199) * 4.4,
-    opacity: 0.3 + noise(i, 223) * 0.6,
-  };
-});
-
 export function TerrainBackdrop() {
   return (
     <div className="terrain" aria-hidden="true">
@@ -529,24 +503,6 @@ export function TerrainBackdrop() {
               }
             />
           </span>
-        ))}
-      </div>
-
-      <div className="terrain-stars">
-        {STARS.map((star) => (
-          <span
-            key={star.id}
-            className="terrain-star"
-            style={{
-              left: `${star.left}%`,
-              top: `${star.top}%`,
-              width: `${star.size}px`,
-              height: `${star.size}px`,
-              animationDelay: `${star.delay}s`,
-              animationDuration: `${star.duration}s`,
-              opacity: star.opacity,
-            }}
-          />
         ))}
       </div>
     </div>
