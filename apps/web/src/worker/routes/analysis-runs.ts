@@ -5,6 +5,7 @@ import {
   createDb,
   findRunForCapability,
   loadRunAreaNames,
+  loadRunEvidence,
   setRunState,
 } from "@reis/data-access";
 import { Hono } from "hono";
@@ -17,15 +18,23 @@ import {
   isSameOrigin,
   readCapabilityCookie,
 } from "../run-capability.js";
+import {
+  type EvidenceStageResult,
+  groupEvidenceForDisplay,
+  runEvidenceAcquisition,
+} from "../stages/evidence-acquisition.js";
 
 /**
  * Analysis-run operations (docs/api-contracts.md §3).
  *
- * What this does NOT do yet: run an analysis. The evidence, validation, scenario and AI stages are
- * not built, and docs/adr/0001 keeps them inactive. Rather than fake a recommendation, a run
- * resolves its target and then reports PARTIAL with the resolved target as a partial artifact and
- * no `final_analysis` — which is exactly what docs/api-contracts.md §2 prescribes for a run that
- * produced usable artifacts but no analytical decision.
+ * A run resolves its target and acquires the evidence its activated sources can supply. The
+ * validation, scenario, comparison and AI stages are not built (docs/adr/0001), so no run can
+ * produce a recommendation: the envelope reports PARTIAL with real partial artifacts and
+ * `final_analysis: null`, which is what docs/api-contracts.md §2 prescribes for a run that produced
+ * usable artifacts but no analytical decision.
+ *
+ * Stage records are derived from what is actually persisted — links written, sources activated —
+ * never from a hard-coded list, so the screen cannot claim a stage ran when it did not.
  */
 
 const SCHEMA_VERSION = "1.0.0";
@@ -86,6 +95,10 @@ analysisRuns.post("/", async (c) => {
       subdistrictId: intake.subdistrict_id,
     });
 
+    // Acquisition is a database read plus run-scoped writes; bulk source fetching happens off the
+    // interactive path (tools/ingestion/), so this stays inside a request budget.
+    const evidence = await runEvidenceAcquisition(db, run);
+
     c.header(
       "Set-Cookie",
       buildCapabilityCookie(capability, new URL(c.req.url).protocol === "https:"),
@@ -99,6 +112,10 @@ analysisRuns.post("/", async (c) => {
         run_state: run.run_state,
         created_at: run.created_at,
         expires_at: run.expires_at,
+        evidence_stage: {
+          state: evidence.state,
+          ...(evidence.reason ? { reason: evidence.reason } : {}),
+        },
       },
       201,
     );
@@ -129,6 +146,14 @@ analysisRuns.get("/:run_id", async (c) => {
     }
 
     const areas = await loadRunAreaNames(db, run);
+    // Stage state is read back from the corpus, not remembered: if the links are there, the stage
+    // succeeded; if they are not, the envelope says which reason applies.
+    const evidenceLinks = await loadRunEvidence(db, run.run_id);
+    const evidence: EvidenceStageResult =
+      evidenceLinks.length > 0
+        ? { state: "SUCCEEDED", linkCount: evidenceLinks.length }
+        : { state: "SKIPPED", reason: "SOURCE_NOT_ACTIVATED", linkCount: 0 };
+    const evidenceGroups = groupEvidenceForDisplay(evidenceLinks);
 
     return c.json({
       schema_version: SCHEMA_VERSION,
@@ -145,8 +170,8 @@ analysisRuns.get("/:run_id", async (c) => {
         {
           stage: "EVIDENCE_ACQUISITION",
           version: "1.0.0",
-          state: "SKIPPED",
-          reason: "SOURCE_NOT_ACTIVATED",
+          state: evidence.state,
+          ...(evidence.reason ? { reason: evidence.reason } : {}),
         },
         { stage: "VALIDATION", version: "1.0.0", state: "SKIPPED", reason: "PACK_NOT_ACTIVATED" },
         {
@@ -167,6 +192,8 @@ analysisRuns.get("/:run_id", async (c) => {
           subdistrict_name_th: areas.subdistrict,
           output_scope_ceiling: "AREA",
         },
+        // Evidence gathered for this run, each figure still carrying its own disclosure.
+        evidence: evidenceGroups,
       },
       errors: [],
       notices: [{ code: "ANALYTICAL_STAGES_NOT_ACTIVATED", retryable: false }],

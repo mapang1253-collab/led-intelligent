@@ -12,6 +12,7 @@ import {
 import { useRef } from "react";
 import { Link, useParams } from "react-router";
 import { TerrainBackdrop } from "../design-system/TerrainBackdrop.js";
+import { EvidencePanel } from "./EvidencePanel.js";
 import { type StageRecord, isTerminal, useCancelRun, useRun } from "./useAnalysisRun.js";
 
 /**
@@ -27,21 +28,26 @@ function StageRow({ record }: { record: StageRecord }) {
   const label = STAGE_LABELS[record.stage] ?? record.stage;
   const done = record.state === "SUCCEEDED";
   const skipped = record.state === "SKIPPED";
+  const degraded = record.state === "DEGRADED";
   const running = record.state === "RUNNING";
 
   const statusText = done
     ? th.progress.stageSucceeded
-    : skipped
-      ? th.progress.stageSkipped
-      : running
-        ? th.progress.stageRunning
-        : th.progress.stagePending;
+    : degraded
+      ? th.progress.stageDegraded
+      : skipped
+        ? th.progress.stageSkipped
+        : running
+          ? th.progress.stageRunning
+          : th.progress.stagePending;
 
   const color = done
     ? "var(--color-pass)"
-    : skipped
-      ? "var(--color-unknown)"
-      : "var(--color-ink-muted)";
+    : degraded
+      ? "var(--color-partial)"
+      : skipped
+        ? "var(--color-unknown)"
+        : "var(--color-ink-muted)";
 
   return (
     <li className="flex items-center justify-between gap-4 border-border border-b py-3 last:border-b-0">
@@ -75,6 +81,7 @@ export function RunPage() {
   const state = envelope?.run_state;
   const target = envelope?.partial_artifacts?.resolved_target;
   const notActivated = envelope?.notices?.some((n) => n.code === "ANALYTICAL_STAGES_NOT_ACTIVATED");
+  const evidenceStage = envelope?.stage_records?.find((s) => s.stage === "EVIDENCE_ACQUISITION");
   const unavailable = envelope?.errors?.some((e) => e.code === "RUN_NOT_AVAILABLE");
 
   return (
@@ -141,6 +148,11 @@ export function RunPage() {
                 ))}
               </ul>
             </section>
+
+            <EvidencePanel
+              groups={envelope?.partial_artifacts?.evidence}
+              stageState={evidenceStage?.state}
+            />
 
             {notActivated && (
               <section

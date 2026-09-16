@@ -38,3 +38,16 @@ export type {
   GeographyLevel,
   Observation,
 } from "./evidence.js";
+
+export type {
+  DecisionImpact,
+  EvidenceLinkDraft,
+  EvidenceRole,
+  GeographyMatch,
+  OutputScope,
+  PropertySimilarity,
+  PurposeFitness,
+  StoredObservation,
+  SubjectMatch,
+  TemporalMatch,
+} from "./evidence-link.js";

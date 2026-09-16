@@ -30,6 +30,24 @@ export interface StageRecord {
   reason?: string;
 }
 
+export interface EvidenceGroup {
+  requirement_id: string;
+  measure_name_th: string;
+  source_title_th: string;
+  attribution_th: string;
+  geography_note_th: string;
+  purpose_fitness: string;
+  items: {
+    population_th: string;
+    value: string;
+    unit_name_th: string;
+    period_th: string;
+    source_note_th: string | null;
+    temporal_match: string;
+    disclosure_th: string;
+  }[];
+}
+
 export interface RunEnvelope {
   run_id: string;
   run_state: RunState;
@@ -47,6 +65,7 @@ export interface RunEnvelope {
       subdistrict_name_th: string;
       output_scope_ceiling: string;
     };
+    evidence?: EvidenceGroup[];
   };
   errors?: { code: string; retryable: boolean }[];
   notices?: { code: string; retryable: boolean }[];

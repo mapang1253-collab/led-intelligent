@@ -20,10 +20,14 @@
     "deploy": "pnpm --filter @reis/web deploy",
     "db:migrate": "pnpm --filter @reis/data-access run db:migrate",
     "db:seed:reference": "pnpm --filter @reis/data-access run db:seed:reference",
-    "db:seed:academic": "pnpm --filter @reis/data-access run db:seed:academic"
+    "db:seed:academic": "pnpm --filter @reis/data-access run db:seed:academic",
+    "build:adapters": "pnpm --filter @reis/source-adapters run build",
+    "ingest:nso-ses-income": "pnpm run build:adapters && node --env-file=apps/web/.env.migration tools/ingestion/ingest-nso-ses-income.mjs",
+    "source:activate": "node --env-file=apps/web/.env.migration tools/ingestion/activate-source.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "pg": "^8.13.1",
     "typescript": "^5.7.2"
   },
   "pnpm": {

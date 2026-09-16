@@ -3,7 +3,7 @@
  * (docs/technology-stack.md §4). SQL migrations under database/migrations/ are the schema
  * authority, not this file.
  */
-export { createDb } from "./connection.js";
+export { type Db, createDb } from "./connection.js";
 export type { Database } from "./schema.js";
 export {
   type AnalysisRunRow,
@@ -21,3 +21,12 @@ export {
   listProvinces,
   listSubdistricts,
 } from "./repositories/administrative-areas.js";
+export {
+  type ActiveSourceSummary,
+  type EvidenceRequest,
+  type StoredEvidenceLink,
+  listActiveSources,
+  loadActiveObservations,
+  loadRunEvidence,
+  saveEvidenceLinks,
+} from "./repositories/evidence.js";

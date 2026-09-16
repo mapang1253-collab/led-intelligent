@@ -1,9 +1,22 @@
 import type { AcquisitionResult } from "@reis/contracts";
-import { type FetchJsonOptions, fetchJson } from "../http.js";
+import { type FetchJsonOptions, type FetchJsonResult, fetchJson } from "../http.js";
 import { type SesIncomeTarget, parseSesIncomeRows } from "./ses-income.js";
 
 /** Operator-configured endpoint. Adapters never accept a user-supplied URL. */
-const SES_INCOME_URL = "https://catalogapi.nso.go.th/api/index?table=SFD_SPB0802_66&format=json";
+export const SES_INCOME_URL =
+  "https://catalogapi.nso.go.th/api/index?table=SFD_SPB0802_66&format=json";
+
+/**
+ * Acquires the whole published table once.
+ *
+ * The table is nationwide and ~10MB, so bulk ingestion fetches it a single time and parses each
+ * province from that one payload; fetching per province would re-download the same 10MB 77 times
+ * for no extra information (docs/technology-stack.md §15: bulk ingestion stays off the interactive
+ * path). Callers must raise `timeoutMs` above the default — the live table takes ~18s to transfer.
+ */
+export function fetchSesIncomeTable(options: FetchJsonOptions = {}): Promise<FetchJsonResult> {
+  return fetchJson(SES_INCOME_URL, options);
+}
 
 /**
  * Acquires NSO household-income observations for one province.
@@ -17,7 +30,7 @@ export async function fetchSesIncome(
   target: SesIncomeTarget,
   options: FetchJsonOptions = {},
 ): Promise<AcquisitionResult> {
-  const response = await fetchJson(SES_INCOME_URL, options);
+  const response = await fetchSesIncomeTable(options);
   if (response.outcome !== "SUCCESS") {
     // Retry classification travels with the outcome; the orchestrator, not the adapter, decides
     // whether to try again (docs/performance-and-reliability.md §3).

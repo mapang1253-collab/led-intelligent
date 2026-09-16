@@ -16,7 +16,9 @@ export type { FetchJsonOptions, FetchJsonResult } from "./http.js";
 export {
   SES_INCOME_MEASURE_ID,
   SES_INCOME_SOURCE_PRODUCT_ID,
+  SES_INCOME_URL,
   type SesIncomeTarget,
   fetchSesIncome,
+  fetchSesIncomeTable,
   parseSesIncomeRows,
 } from "./nso/index.js";
