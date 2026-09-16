@@ -41,6 +41,8 @@
   --map-stroke: color-mix(in srgb, var(--grad-deep-via) 32%, transparent);
   --map-marker: color-mix(in srgb, var(--grad-deep-via) 90%, transparent);
   --terrain-sweep: rgba(255, 255, 255, 0.5);
+  /* Haze, not cotton wool: on a light canvas a cloud is a slightly cooler patch of the same sky. */
+  --cloud: rgba(148, 178, 214, 0.28);
   --glass-bg: rgba(255, 255, 255, 0.74);
   --glass-border: rgba(30, 70, 120, 0.1);
 
@@ -170,6 +172,7 @@
   --map-stroke: color-mix(in srgb, var(--grad-vivid-from) 42%, transparent);
   --map-marker: color-mix(in srgb, var(--grad-vivid-from) 95%, transparent);
   --terrain-sweep: rgba(130, 195, 255, 0.1);
+  --cloud: rgba(140, 180, 235, 0.17);
   --glass-bg: rgba(255, 255, 255, 0.06);
   --glass-border: rgba(255, 255, 255, 0.1);
 

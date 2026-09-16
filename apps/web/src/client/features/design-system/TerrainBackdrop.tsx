@@ -4,7 +4,7 @@
  * All 77 province outlines of Thailand, drawn from public-domain boundary data, with coordinate
  * markers pinging across them and a scan line travelling down the country. Under the map stands a
  * skyline in the same hairline, its windows lighting one at a time, with a few lights wandering
- * over the rooftops and a faint street plan beneath it.
+ * over the rooftops, a faint street plan beneath it and slow haze across the sky.
  *
  * Each moving layer has one gesture and no two share it: the windows blink where they are, the
  * lights travel, the markers ping. A star field was cut for doing exactly what the windows already
@@ -335,6 +335,14 @@ function SkylineRow({
   );
 }
 
+/** Clouds: wide, soft and slow, to fill the sky the star field left empty. */
+const CLOUDS = [
+  { id: 0, left: 4, top: 6, width: 300, height: 92, travel: 46, duration: 160, opacity: 0.85 },
+  { id: 1, left: 52, top: 2, width: 380, height: 108, travel: 62, duration: 210, opacity: 0.7 },
+  { id: 2, left: 24, top: 20, width: 260, height: 78, travel: 38, duration: 185, opacity: 0.55 },
+  { id: 3, left: 68, top: 26, width: 320, height: 86, travel: 54, duration: 235, opacity: 0.5 },
+] as const;
+
 /**
  * A street network under everything: the plan a city is laid out on.
  *
@@ -473,6 +481,26 @@ export function TerrainBackdrop() {
             className="terrain-skyline-near"
           />
         </svg>
+      </div>
+
+      <div className="terrain-clouds">
+        {CLOUDS.map((cloud) => (
+          <span
+            key={cloud.id}
+            className="terrain-cloud"
+            style={
+              {
+                left: `${cloud.left}%`,
+                top: `${cloud.top}%`,
+                width: `${cloud.width}px`,
+                height: `${cloud.height}px`,
+                opacity: cloud.opacity,
+                animationDuration: `${cloud.duration}s`,
+                "--cloud-travel": `${cloud.travel}px`,
+              } as React.CSSProperties
+            }
+          />
+        ))}
       </div>
 
       <div className="terrain-motes">

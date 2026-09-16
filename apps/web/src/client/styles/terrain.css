@@ -64,6 +64,10 @@
   animation: terrain-breathe 12s ease-in-out infinite alternate;
 }
 .terrain-map {
+  /* Anchored at the top edge, so growing the map can only ever push the south off screen, never
+     the north. Thailand's north is the narrow tip readers notice losing; the south tapers into
+     sea and is behind the card stack anyway. */
+  transform-origin: 50% 0;
   animation: terrain-drift 46s ease-in-out infinite alternate;
 }
 
@@ -216,6 +220,51 @@
 }
 
 /**
+ * Clouds: soft haze to fill the sky the star field left empty.
+ *
+ * Each is one element carrying five overlapping radial gradients — four lobes of different heights
+ * all sitting on the bottom edge, plus a wide flat one along that edge. The flat base is what makes
+ * a shape read as a cloud rather than as a blur: cumulus are lumpy on top and level underneath.
+ * Where the lobes overlap the alpha accumulates, so the body comes out denser than the edges
+ * without anything being drawn twice.
+ *
+ * They drift for minutes at a time — far slower than anything else here, because a cloud that
+ * visibly moves is weather, and weather competes.
+ */
+.terrain-clouds {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  /* Sky only: a cloud behind the skyline would read as smog, and one behind text as a smudge. */
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.75) 40%, transparent 66%);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.75) 40%, transparent 66%);
+}
+.terrain-cloud {
+  position: absolute;
+  background:
+    radial-gradient(closest-side, var(--cloud) 0%, transparent 100%) 2% 100% / 42% 56% no-repeat,
+    radial-gradient(closest-side, var(--cloud) 0%, transparent 100%) 32% 100% / 48% 94% no-repeat,
+    radial-gradient(closest-side, var(--cloud) 0%, transparent 100%) 64% 100% / 40% 72% no-repeat,
+    radial-gradient(closest-side, var(--cloud) 0%, transparent 100%) 98% 100% / 36% 48% no-repeat,
+    radial-gradient(closest-side, var(--cloud) 0%, transparent 100%) 50% 100% / 98% 34% no-repeat;
+  /* Enough to lose the gradient edges, not enough to lose the lobes. */
+  filter: blur(11px);
+  animation-name: terrain-cloud-drift;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+@keyframes terrain-cloud-drift {
+  from {
+    transform: translate3d(calc(var(--cloud-travel, 40px) * -1), 0, 0);
+  }
+  to {
+    transform: translate3d(var(--cloud-travel, 40px), 0, 0);
+  }
+}
+
+/**
  * The street network: the faintest thing on the sheet, by design.
  *
  * A plan is what a city is laid out on, not what anyone is looking at, so it runs at a fifth of the
@@ -338,16 +387,25 @@
 }
 
 /**
- * The map's drift also sets its size. Cutting the star field left the upper sky empty, and the
- * country is the right thing to fill it with — the scale here is what does that, so it lives with
- * the motion rather than in a separate transform that the animation would overwrite.
+ * The map's drift also sets its size, because the animation sets transform and would overwrite a
+ * separate one.
+ *
+ * The SVG is fitted by height, so it already fills the viewport top to bottom at 1.0 and every per
+ * cent above that has to come off one end. With the origin at the top edge (see `.terrain-map`) it
+ * comes off the bottom, and the vertical travel only ever moves down, so the north tip stays whole
+ * at every point in the cycle — at 1.18 it was taking the top off the country.
+ *
+ * The lower bound is set by coverage, not by taste: the sheet must never show its own edge, so the
+ * scale at each keyframe has to be at least 1 + that keyframe's downward travel.
+ *
+ * Filling the empty sky is the clouds' job instead; the map only has to be whole.
  */
 @keyframes terrain-drift {
   from {
-    transform: translate3d(-2%, 1.5%, 0) scale(1.18);
+    transform: translate3d(-2%, 0, 0) scale(1.03);
   }
   to {
-    transform: translate3d(2%, -1.5%, 0) scale(1.24);
+    transform: translate3d(2%, 1.2%, 0) scale(1.05);
   }
 }
 
@@ -402,7 +460,8 @@
   .terrain-skyline-near,
   .terrain-window,
   .terrain-mote,
-  .terrain-mote-dot {
+  .terrain-mote-dot,
+  .terrain-cloud {
     animation: none;
   }
   /* Stilled, the windows would all read as off; half-lit is the honest resting state. */
