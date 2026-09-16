@@ -11,7 +11,8 @@ import { useDistricts, useProvinces, useSubdistricts } from "./useAdministrative
  * subdistrict; everything else is optional and only narrows the output scope.
  *
  * Choosing a parent clears its children, so an intake can never carry a subdistrict that does not
- * belong to the selected district — the same invariant the server enforces independently.
+ * belong to the selected district. The server re-checks the chain against the reference table
+ * regardless, because this form is not the only way to reach the API.
  */
 
 interface SiteFields {

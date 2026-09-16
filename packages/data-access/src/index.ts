@@ -17,6 +17,7 @@ export {
 } from "./repositories/analysis-runs.js";
 export {
   type AdministrativeAreaSummary,
+  administrativeChainIsValid,
   listDistricts,
   listProvinces,
   listSubdistricts,

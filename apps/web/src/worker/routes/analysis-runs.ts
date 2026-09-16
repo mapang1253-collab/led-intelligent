@@ -3,6 +3,7 @@ import { propertyIntakeSchema } from "@reis/contracts";
 import type { LegalRulePack } from "@reis/contracts";
 import {
   type AnalysisRunRow,
+  administrativeChainIsValid,
   createAnalysisRun,
   createDb,
   findRunForCapability,
@@ -111,6 +112,18 @@ analysisRuns.post("/", async (c) => {
 
   const db = createDb(c.env.HYPERDRIVE.connectionString);
   try {
+    // The form can only offer consistent choices, but the form is not the only way in. A target
+    // whose parts do not belong together would be resolved and displayed as a real place.
+    const chainIsValid = await administrativeChainIsValid(
+      db,
+      intake.province_id,
+      intake.district_id,
+      intake.subdistrict_id,
+    );
+    if (!chainIsValid) {
+      return c.json({ error: "INVALID_AREA_CHAIN" }, 400);
+    }
+
     const run = await createAnalysisRun(db, {
       runId,
       capabilityDigest,
