@@ -143,14 +143,7 @@ export function EvidencePanel({
               </span>
             </p>
 
-            <ul className="mt-2">
-              {group.items.map((item) => (
-                <EvidenceRow
-                  key={`${group.requirement_id}:${item.population_th}:${item.period_th}`}
-                  item={item}
-                />
-              ))}
-            </ul>
+            <EvidenceItems items={group.items} />
 
             <p className="mt-3 text-ink-muted text-xs">
               {th.evidence.sourceLabel}: {group.source_title_th} · {group.attribution_th}

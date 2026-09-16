@@ -36,7 +36,6 @@ export type ConceptValidation =
   | { readonly ok: false; readonly issues: readonly ValidationIssue[] };
 
 const THAI = /[฀-๿]/;
-const LATIN_WORD = /[A-Za-z]{2,}/g;
 
 /**
  * A visible field must actually be Thai. Official names and abbreviations may appear inside Thai
