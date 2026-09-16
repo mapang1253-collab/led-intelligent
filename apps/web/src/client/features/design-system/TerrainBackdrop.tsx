@@ -15,7 +15,7 @@ import { useId } from "react";
  * prefers-reduced-motion.
  *
  * Under the map stands a city skyline in the same line, its windows lighting one at a time, with a
- * crescent moon and a field of stars above it, with a few lights drifting up over the rooftops.
+ * crescent moon and a field of stars above it, with a few lights wandering over the rooftops.
  * Everything that shimmers here belongs to the scene: stars twinkle where they hang, windows come
  * on where they are, and the drifting lights stay over the city rather than crossing the page.
  *
@@ -343,20 +343,27 @@ function SkylineRow({
 }
 
 /**
- * A few lights drifting up over the city.
+ * A few lights wandering over the city.
  *
- * These came out once already for floating across the page like particles laid over it. Eight,
- * slow, and masked to the band above the rooftops, they read instead as something the city is
- * giving off — which is the difference between atmosphere and confetti.
+ * Two motions, on two elements. The outer one carries the light slowly upward; the inner one sways
+ * it side to side and bobs it a little, on a much shorter cycle. One animation doing both gives a
+ * dot travelling along a fixed line, which at this speed is indistinguishable from a dot that is
+ * not moving at all — the first version rose 11px a second and read as stationary.
+ *
+ * Masked to the band above the rooftops, so they stay something the city gives off rather than
+ * particles crossing the page.
  */
-const MOTES = Array.from({ length: 8 }, (_, i) => ({
+const MOTES = Array.from({ length: 9 }, (_, i) => ({
   id: i,
   left: (6 + noise(i, 307) * 88).toFixed(2),
-  size: 2 + noise(i, 311) * 2.4,
-  delay: noise(i, 313) * 22,
-  duration: 30 + noise(i, 317) * 22,
-  drift: (noise(i, 331) - 0.5) * 90,
-  opacity: 0.28 + noise(i, 337) * 0.34,
+  size: 3 + noise(i, 311) * 3,
+  delay: noise(i, 313) * 14,
+  duration: 17 + noise(i, 317) * 13,
+  drift: (noise(i, 331) - 0.5) * 120,
+  opacity: 0.5 + noise(i, 337) * 0.4,
+  // The wander: its own period and reach, so no two lights trace the same path.
+  swayDuration: 5 + noise(i, 347) * 5,
+  sway: 12 + noise(i, 353) * 22,
 }));
 
 /**
@@ -474,15 +481,26 @@ export function TerrainBackdrop() {
             style={
               {
                 left: `${mote.left}%`,
-                width: `${mote.size}px`,
-                height: `${mote.size}px`,
                 animationDelay: `${mote.delay}s`,
                 animationDuration: `${mote.duration}s`,
                 "--mote-peak": mote.opacity,
                 "--mote-drift": `${mote.drift}px`,
               } as React.CSSProperties
             }
-          />
+          >
+            <span
+              className="terrain-mote-dot"
+              style={
+                {
+                  width: `${mote.size}px`,
+                  height: `${mote.size}px`,
+                  animationDuration: `${mote.swayDuration}s`,
+                  animationDelay: `${mote.delay * 0.4}s`,
+                  "--mote-sway": `${mote.sway}px`,
+                } as React.CSSProperties
+              }
+            />
+          </span>
         ))}
       </div>
 

@@ -261,29 +261,39 @@
 }
 
 /**
- * Lights drifting up over the city.
+ * Lights wandering over the city.
  *
- * Masked to the lower band. Loose over the whole viewport these were particles crossing a page;
- * held above the rooftops they belong to the thing underneath them. Eight of them, each rising over
- * half a minute or more, which is slow enough to notice only if you are looking for it.
+ * The rise and the wander are separate animations on nested elements. Combined into one they
+ * describe a straight line, and a dot creeping up a straight line slowly enough not to distract is
+ * also slow enough to look stationary — which is exactly how the first version read.
+ *
+ * Masked to the lower band: loose over the whole viewport these are particles crossing a page,
+ * held above the rooftops they belong to the thing underneath them.
  */
 .terrain-motes {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.45) 46%, #000 74%);
-  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.45) 46%, #000 74%);
+  mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.55) 44%, #000 70%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.55) 44%, #000 70%);
 }
 .terrain-mote {
   position: absolute;
-  bottom: -3%;
-  border-radius: 50%;
-  background: var(--map-marker);
-  box-shadow: 0 0 7px var(--map-marker);
+  bottom: -4%;
   opacity: 0;
   animation-name: terrain-mote-rise;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
+}
+.terrain-mote-dot {
+  display: block;
+  border-radius: 50%;
+  background: var(--map-marker);
+  box-shadow: 0 0 9px var(--map-marker);
+  animation-name: terrain-mote-wander;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
 }
 
 @keyframes terrain-mote-rise {
@@ -291,13 +301,23 @@
     transform: translate3d(0, 0, 0) scale(0.7);
     opacity: 0;
   }
-  18%,
-  74% {
-    opacity: var(--mote-peak, 0.4);
+  14%,
+  80% {
+    opacity: var(--mote-peak, 0.6);
   }
   100% {
-    transform: translate3d(var(--mote-drift, 0), -72vh, 0) scale(1);
+    transform: translate3d(var(--mote-drift, 0), -78vh, 0) scale(1);
     opacity: 0;
+  }
+}
+
+/* The wander: sideways, with a small lift, so the path is never a straight climb. */
+@keyframes terrain-mote-wander {
+  from {
+    transform: translate3d(calc(var(--mote-sway, 16px) * -1), 6px, 0);
+  }
+  to {
+    transform: translate3d(var(--mote-sway, 16px), -6px, 0);
   }
 }
 
@@ -431,6 +451,7 @@
   .terrain-window,
   .terrain-star,
   .terrain-mote,
+  .terrain-mote-dot,
   .terrain-moon-halo {
     animation: none;
   }
