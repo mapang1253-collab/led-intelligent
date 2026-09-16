@@ -1,3 +1,4 @@
+import { formatTargetTh } from "@reis/domain";
 import { th } from "@reis/i18n";
 import {
   ArrowLeft,
@@ -143,8 +144,7 @@ export function RunPage() {
                 </h2>
                 <p className="flex items-center gap-2 font-bold text-lg">
                   <MapPin size={18} aria-hidden="true" />
-                  ต.{target.subdistrict_name_th} อ.{target.district_name_th} จ.
-                  {target.province_name_th}
+                  {formatTargetTh(target)}
                 </p>
               </section>
             )}

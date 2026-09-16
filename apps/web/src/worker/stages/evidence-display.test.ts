@@ -53,22 +53,28 @@ function link(overrides: Partial<StoredEvidenceLink> = {}): StoredEvidenceLink {
 
 describe("groupEvidenceForDisplay", () => {
   it("keeps each figure's own disclosure when several sit in one group", () => {
-    const groups = groupEvidenceForDisplay([
-      link({ observation_id: "a", disclosure_th: "คำอธิบาย ก" }),
-      link({ observation_id: "b", disclosure_th: "คำอธิบาย ข" }),
-    ]);
+    const groups = groupEvidenceForDisplay(
+      [
+        link({ observation_id: "a", disclosure_th: "คำอธิบาย ก" }),
+        link({ observation_id: "b", disclosure_th: "คำอธิบาย ข" }),
+      ],
+      "ชลบุรี",
+    );
     expect(groups).toHaveLength(1);
     expect(groups[0]?.items.map((item) => item.disclosure_th)).toEqual(["คำอธิบาย ก", "คำอธิบาย ข"]);
   });
 
   it("separates requirements rather than mixing measures into one list", () => {
-    const groups = groupEvidenceForDisplay([
-      link(),
-      link({
-        requirement_id: "demand.household_income_context",
-        observation: { measure_name_th: "รายได้เฉลี่ยต่อเดือนของครัวเรือน" },
-      } as Partial<StoredEvidenceLink>),
-    ]);
+    const groups = groupEvidenceForDisplay(
+      [
+        link(),
+        link({
+          requirement_id: "demand.household_income_context",
+          observation: { measure_name_th: "รายได้เฉลี่ยต่อเดือนของครัวเรือน" },
+        } as Partial<StoredEvidenceLink>),
+      ],
+      "ชลบุรี",
+    );
     // Two questions, two groups; their order is settled by geography, asserted separately below.
     expect(groups).toHaveLength(2);
     expect(new Set(groups.map((group) => group.requirement_id))).toEqual(
@@ -77,37 +83,43 @@ describe("groupEvidenceForDisplay", () => {
   });
 
   it("names the containing area when the evidence is a downgrade", () => {
-    const [group] = groupEvidenceForDisplay([
-      link({
-        geography_match: "CONTAINING_AREA",
-        observation: { geography_level: "PROVINCE", area_name_th: "ชลบุรี" },
-      } as Partial<StoredEvidenceLink>),
-    ]);
+    const [group] = groupEvidenceForDisplay(
+      [
+        link({
+          geography_match: "CONTAINING_AREA",
+          observation: { geography_level: "PROVINCE", area_name_th: "ชลบุรี" },
+        } as Partial<StoredEvidenceLink>),
+      ],
+      "ชลบุรี",
+    );
     expect(group?.geography_note_th).toContain("จังหวัด");
     expect(group?.geography_note_th).toContain("ชลบุรี");
     expect(group?.geography_note_th).toContain("ไม่ใช่ข้อมูลเฉพาะพื้นที่เป้าหมาย");
   });
 
   it("says plainly when the evidence is at the target's own level", () => {
-    const [group] = groupEvidenceForDisplay([link()]);
+    const [group] = groupEvidenceForDisplay([link()], "ชลบุรี");
     expect(group?.geography_note_th).toContain("ตรงระดับพื้นที่เป้าหมาย");
   });
 
   it("returns nothing for no links", () => {
-    expect(groupEvidenceForDisplay([])).toEqual([]);
+    expect(groupEvidenceForDisplay([], "ชลบุรี")).toEqual([]);
   });
 });
 
 describe("scope separation", () => {
   it("never puts two areas under one scope caveat", () => {
-    const groups = groupEvidenceForDisplay([
-      link({ observation_id: "sub" }),
-      link({
-        observation_id: "prov",
-        geography_match: "CONTAINING_AREA",
-        observation: { geography_level: "PROVINCE", area_name_th: "ชลบุรี" },
-      } as Partial<StoredEvidenceLink>),
-    ]);
+    const groups = groupEvidenceForDisplay(
+      [
+        link({ observation_id: "sub" }),
+        link({
+          observation_id: "prov",
+          geography_match: "CONTAINING_AREA",
+          observation: { geography_level: "PROVINCE", area_name_th: "ชลบุรี" },
+        } as Partial<StoredEvidenceLink>),
+      ],
+      "ชลบุรี",
+    );
 
     // One requirement, two areas, two groups — each with a header true of its own rows.
     expect(groups).toHaveLength(2);
@@ -117,22 +129,82 @@ describe("scope separation", () => {
   });
 
   it("reads the target's own area before the area containing it", () => {
-    const groups = groupEvidenceForDisplay([
-      link({
-        observation_id: "prov",
-        observation: { geography_level: "PROVINCE", area_name_th: "ชลบุรี" },
-      } as Partial<StoredEvidenceLink>),
-      link({ observation_id: "sub" }),
-    ]);
+    const groups = groupEvidenceForDisplay(
+      [
+        link({
+          observation_id: "prov",
+          observation: { geography_level: "PROVINCE", area_name_th: "ชลบุรี" },
+        } as Partial<StoredEvidenceLink>),
+        link({ observation_id: "sub" }),
+      ],
+      "ชลบุรี",
+    );
     expect(groups.map((group) => group.area_label_th)).toEqual(["ต.บางปลาสร้อย", "จ.ชลบุรี"]);
   });
 
   it("gives every row a key that is unique across areas and periods", () => {
-    const groups = groupEvidenceForDisplay([
-      link({ observation_id: "1" }),
-      link({ observation_id: "2" }),
-    ]);
+    const groups = groupEvidenceForDisplay(
+      [link({ observation_id: "1" }), link({ observation_id: "2" })],
+      "ชลบุรี",
+    );
     const ids = groups.flatMap((group) => group.items.map((item) => item.observation_id));
     expect(new Set(ids).size).toBe(ids.length);
+  });
+});
+
+describe("Bangkok naming", () => {
+  it("labels a Bangkok group with แขวง and เขต, never ต. or อ.", () => {
+    const [group] = groupEvidenceForDisplay(
+      [
+        link({
+          observation: { geography_level: "SUBDISTRICT", area_name_th: "พระบรมมหาราชวัง" },
+        } as Partial<StoredEvidenceLink>),
+      ],
+      "กรุงเทพมหานคร",
+    );
+    expect(group?.area_label_th).toBe("แขวงพระบรมมหาราชวัง");
+  });
+
+  it("calls the containing area a เขต, not an อำเภอ", () => {
+    const [group] = groupEvidenceForDisplay(
+      [
+        link({
+          geography_match: "CONTAINING_AREA",
+          observation: { geography_level: "DISTRICT", area_name_th: "พระนคร" },
+        } as Partial<StoredEvidenceLink>),
+      ],
+      "กรุงเทพมหานคร",
+    );
+    expect(group?.geography_note_th).toContain("ข้อมูลระดับเขต");
+    expect(group?.geography_note_th).not.toContain("อำเภอ");
+  });
+});
+
+describe("no redundant naming", () => {
+  it("does not repeat the name when the level and the area are the same", () => {
+    const [group] = groupEvidenceForDisplay(
+      [
+        link({
+          geography_match: "CONTAINING_AREA",
+          observation: { geography_level: "PROVINCE", area_name_th: "กรุงเทพมหานคร" },
+        } as Partial<StoredEvidenceLink>),
+      ],
+      "กรุงเทพมหานคร",
+    );
+    expect(group?.geography_note_th).toContain("ข้อมูลระดับกรุงเทพมหานคร ครอบคลุม");
+    expect(group?.geography_note_th).not.toContain("(กรุงเทพมหานคร)");
+  });
+
+  it("keeps the parenthetical where it distinguishes one area from another", () => {
+    const [group] = groupEvidenceForDisplay(
+      [
+        link({
+          geography_match: "CONTAINING_AREA",
+          observation: { geography_level: "PROVINCE", area_name_th: "ชลบุรี" },
+        } as Partial<StoredEvidenceLink>),
+      ],
+      "ชลบุรี",
+    );
+    expect(group?.geography_note_th).toContain("ข้อมูลระดับจังหวัด (ชลบุรี)");
   });
 });

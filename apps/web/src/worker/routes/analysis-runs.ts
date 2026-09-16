@@ -13,6 +13,7 @@ import {
   saveConceptSet,
   setRunState,
 } from "@reis/data-access";
+import { formatTargetTh } from "@reis/domain";
 import { Hono } from "hono";
 import mr55Pack from "../../../../../database/reviewed-packs/th-cba-mr55-v1.json" with {
   type: "json",
@@ -148,7 +149,11 @@ analysisRuns.post("/", async (c) => {
       apiKey: c.env.GEMINI_API_KEY,
       db,
       budgetEnv: c.env,
-      targetTh: `ต.${areas.subdistrict} อ.${areas.district} จ.${areas.province}`,
+      targetTh: formatTargetTh({
+        province_name_th: areas.province,
+        district_name_th: areas.district,
+        subdistrict_name_th: areas.subdistrict,
+      }),
       effectiveOn: new Date().toISOString().slice(0, 10),
       outputScope: run.permitted_scope,
       evidence: links,
@@ -223,7 +228,7 @@ analysisRuns.get("/:run_id", async (c) => {
       evidenceLinks.length > 0
         ? { state: "SUCCEEDED", linkCount: evidenceLinks.length }
         : { state: "SKIPPED", reason: "SOURCE_NOT_ACTIVATED", linkCount: 0 };
-    const evidenceGroups = groupEvidenceForDisplay(evidenceLinks);
+    const evidenceGroups = groupEvidenceForDisplay(evidenceLinks, areas.province);
     const conceptSet = await loadConceptSet(db, run.run_id);
     const validationByConcept = new Map(
       conceptSet.validations.map((validation) => [validation.concept_id, validation]),

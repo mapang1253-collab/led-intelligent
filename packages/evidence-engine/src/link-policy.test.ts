@@ -200,3 +200,29 @@ describe("subject identity by requirement", () => {
     expect(link?.substitution_reason).toContain("จำนวนประชากรตามทะเบียนราษฎร");
   });
 });
+
+describe("Bangkok in the disclosure", () => {
+  it("names a Bangkok target with แขวง and เขต, and never as a จังหวัด", () => {
+    const bangkokTarget: LinkTarget = {
+      province_name_th: "กรุงเทพมหานคร",
+      district_name_th: "พระนคร",
+      subdistrict_name_th: "พระบรมมหาราชวัง",
+      level: "SUBDISTRICT",
+      requested_scope: "AREA",
+    };
+    const [link] = buildHouseholdIncomeLinks(
+      [observation({ area_name_th: "กรุงเทพมหานคร", geography_level: "PROVINCE" })],
+      bangkokTarget,
+      2026,
+    );
+    const disclosure = link?.disclosure_th ?? "";
+
+    expect(disclosure).toContain("แขวงพระบรมมหาราชวัง");
+    expect(disclosure).toContain("เขตพระนคร");
+    expect(disclosure).not.toContain("จ.กรุงเทพ");
+    expect(disclosure).not.toContain("ต.พระบรม");
+    expect(disclosure).not.toContain("อ.พระนคร");
+    // The evidence is province-level, which in Bangkok is the city itself.
+    expect(disclosure).toContain("ระดับกรุงเทพมหานคร");
+  });
+});

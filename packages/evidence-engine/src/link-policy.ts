@@ -7,6 +7,7 @@ import type {
   SubjectMatch,
   TemporalMatch,
 } from "@reis/contracts";
+import { areaLabelTh, areaLevelNounTh } from "@reis/domain";
 
 /**
  * Deterministic evidence-fitness policy (docs/data-architecture.md §5-6).
@@ -110,23 +111,23 @@ function purposeFitnessFor(geography: GeographyMatch): PurposeFitness {
 }
 
 function targetNameFor(target: LinkTarget): string {
+  const province = target.province_name_th;
   if (target.level === "PROVINCE") {
-    return `จ.${target.province_name_th}`;
+    return areaLabelTh("PROVINCE", province, province);
   }
+  const district = areaLabelTh("DISTRICT", target.district_name_th, province);
   if (target.level === "DISTRICT") {
-    return `อ.${target.district_name_th} จ.${target.province_name_th}`;
+    return `${district} ${areaLabelTh("PROVINCE", province, province)}`;
   }
-  return `ต.${target.subdistrict_name_th} อ.${target.district_name_th} จ.${target.province_name_th}`;
+  return [
+    areaLabelTh("SUBDISTRICT", target.subdistrict_name_th, province),
+    district,
+    areaLabelTh("PROVINCE", province, province),
+  ].join(" ");
 }
 
 /** Thai Buddhist Era is 543 years ahead of the Common Era. */
 const BE_CE_OFFSET = 543;
-
-const LEVEL_NAMES_TH = {
-  PROVINCE: "จังหวัด",
-  DISTRICT: "อำเภอ",
-  SUBDISTRICT: "ตำบล",
-} as const;
 
 function disclosureFor(
   observation: StoredObservation,
@@ -137,7 +138,7 @@ function disclosureFor(
   const parts: string[] = [];
   parts.push(
     `${observation.measure_name_th} ของกลุ่ม "${observation.population_th}" ` +
-      `ระดับ${LEVEL_NAMES_TH[observation.geography_level]}` +
+      `ระดับ${areaLevelNounTh(observation.geography_level, target.province_name_th)}` +
       ` (${observation.area_name_th}) ปี ${observation.source_vintage}`,
   );
 

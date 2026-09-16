@@ -7,6 +7,7 @@ import {
   loadRunAreaNames,
   saveEvidenceLinks,
 } from "@reis/data-access";
+import { areaLabelTh, areaLevelNounTh } from "@reis/domain";
 import {
   type EvidenceRequirement,
   HOUSEHOLD_INCOME_REQUIREMENT,
@@ -95,12 +96,6 @@ export async function runEvidenceAcquisition(
   return { state: "SUCCEEDED", linkCount: written };
 }
 
-const LEVEL_NAMES_TH = {
-  PROVINCE: "จังหวัด",
-  DISTRICT: "อำเภอ",
-  SUBDISTRICT: "ตำบล",
-} as const;
-
 export interface EvidenceGroup {
   /** Stable identity for rendering: one requirement, at one geography. */
   readonly group_id: string;
@@ -138,13 +133,23 @@ export interface EvidenceGroup {
  */
 const LEVEL_ORDER = { SUBDISTRICT: 0, DISTRICT: 1, PROVINCE: 2 } as const;
 
-const LEVEL_PREFIX_TH = {
-  PROVINCE: "จ.",
-  DISTRICT: "อ.",
-  SUBDISTRICT: "ต.",
-} as const;
+/**
+ * In Bangkok the level and the area share a name, so "ข้อมูลระดับกรุงเทพมหานคร (กรุงเทพมหานคร)"
+ * says it twice. The parenthetical exists to name *which* area of that level, and adds nothing
+ * when there is only one.
+ */
+function geographyNote(match: string, levelNoun: string, areaName: string): string {
+  if (match !== "CONTAINING_AREA") {
+    return `ข้อมูลตรงระดับพื้นที่เป้าหมาย (${areaName})`;
+  }
+  const where = levelNoun === areaName ? levelNoun : `${levelNoun} (${areaName})`;
+  return `ข้อมูลระดับ${where} ครอบคลุมพื้นที่เป้าหมาย ไม่ใช่ข้อมูลเฉพาะพื้นที่เป้าหมาย`;
+}
 
-export function groupEvidenceForDisplay(links: readonly StoredEvidenceLink[]): EvidenceGroup[] {
+export function groupEvidenceForDisplay(
+  links: readonly StoredEvidenceLink[],
+  provinceNameTh: string,
+): EvidenceGroup[] {
   const byGroup = new Map<string, StoredEvidenceLink[]>();
   for (const link of links) {
     const key = `${link.requirement_id}|${link.observation.geography_level}|${link.observation.area_name_th}`;
@@ -164,13 +169,14 @@ export function groupEvidenceForDisplay(links: readonly StoredEvidenceLink[]): E
         group_id: groupId,
         requirement_id: first.requirement_id,
         measure_name_th: first.observation.measure_name_th,
-        area_label_th: `${LEVEL_PREFIX_TH[level]}${first.observation.area_name_th}`,
+        area_label_th: areaLabelTh(level, first.observation.area_name_th, provinceNameTh),
         source_title_th: first.observation.source_title_th,
         attribution_th: first.observation.attribution_th,
-        geography_note_th:
-          first.geography_match === "CONTAINING_AREA"
-            ? `ข้อมูลระดับ${LEVEL_NAMES_TH[level]} (${first.observation.area_name_th}) ครอบคลุมพื้นที่เป้าหมาย ไม่ใช่ข้อมูลเฉพาะพื้นที่เป้าหมาย`
-            : `ข้อมูลตรงระดับพื้นที่เป้าหมาย (${first.observation.area_name_th})`,
+        geography_note_th: geographyNote(
+          first.geography_match,
+          areaLevelNounTh(level, provinceNameTh),
+          first.observation.area_name_th,
+        ),
         purpose_fitness: first.purpose_fitness,
         items: group.map((link) => ({
           // The observation is the only value guaranteed unique across areas and periods.
