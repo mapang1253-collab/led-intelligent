@@ -158,35 +158,30 @@
   animation-delay: -8s;
 }
 
-.terrain-trunk {
-  fill: var(--flora-trunk);
+/**
+ * The trees use the map's own values, not values of their own: same faint fill, same hairline
+ * stroke, same colour. That is what keeps one sheet reading as one drawing.
+ */
+.terrain-tree-shape {
+  fill: var(--map-fill);
+  stroke: var(--map-stroke);
+  stroke-width: 1;
+  stroke-linejoin: round;
 }
 
-.terrain-frond {
-  fill: var(--flora-frond);
-}
-.terrain-frond-low {
-  animation: terrain-frond-breathe 17s ease-in-out infinite alternate;
-}
-
-/* A hanging strand, lit from the tip: the one detail that reads as bioluminescence rather than
-   as a plant drawn in the dark. */
-.terrain-tendril-line {
+.terrain-tree-branch {
   fill: none;
-  stroke: var(--flora-glow);
-  stroke-width: 1.2;
+  stroke: var(--map-stroke);
+  stroke-width: 1;
   stroke-linecap: round;
-  opacity: 0.35;
-}
-.terrain-tendril-tip {
-  fill: var(--flora-glow);
-  filter: drop-shadow(0 0 6px var(--flora-glow));
-}
-.terrain-tendril {
-  animation: terrain-tendril-glow 9s ease-in-out infinite alternate;
 }
 
-/* Motes rising between the trunks. Ten of them, each on its own clock. */
+/* One tree in each stand breathes, the way the province outlines do. */
+.terrain-canopy-side > g:nth-child(odd) {
+  animation: terrain-breathe 15s ease-in-out infinite alternate;
+}
+
+/* Motes rising between the trees, in the marker colour so they belong to the same drawing. */
 .terrain-spores {
   position: absolute;
   inset: 0;
@@ -196,8 +191,8 @@
   position: absolute;
   bottom: -4%;
   border-radius: 50%;
-  background: var(--flora-spore);
-  box-shadow: 0 0 10px var(--flora-spore);
+  background: var(--map-marker);
+  box-shadow: 0 0 8px var(--map-marker);
   opacity: 0;
   animation-name: terrain-spore-rise;
   animation-timing-function: linear;
@@ -210,25 +205,6 @@
   }
   to {
     transform: rotate(0.7deg) translate3d(0, -1.2%, 0);
-  }
-}
-
-@keyframes terrain-frond-breathe {
-  from {
-    opacity: 0.55;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes terrain-tendril-glow {
-  0%,
-  100% {
-    opacity: 0.4;
-  }
-  50% {
-    opacity: 1;
   }
 }
 
@@ -306,8 +282,7 @@
   .terrain-marker-halo,
   .terrain-sweep,
   .terrain-canopy-side,
-  .terrain-frond-low,
-  .terrain-tendril,
+  .terrain-canopy-side > g,
   .terrain-spore {
     animation: none;
   }

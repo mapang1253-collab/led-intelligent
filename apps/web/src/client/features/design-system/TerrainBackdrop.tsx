@@ -12,11 +12,11 @@
  * docs/performance-and-reliability.md §7 are unaffected. All motion stops under
  * prefers-reduced-motion.
  *
- * In front of the map sits a bioluminescent canopy: a band of trunks, foliage and drooping tendrils
- * across the bottom of the viewport, with glowing motes drifting up through it. The authors asked
- * for the look of Pandora. It is kept to the lower half and dimmed through the middle, because the
- * top of every screen carries a heading and the centre is where the reading happens. Every shape
- * here is decorative: the layer is aria-hidden and carries no meaning the screen relies on.
+ * In front of the map stands a stand of trees, drawn in the same line as the province outlines, and
+ * motes drifting up through them. It is kept to the lower half and dimmed through the middle,
+ * because the top of every screen carries a heading and the centre is where the reading happens.
+ * Every shape here is decorative: the layer is aria-hidden and carries no meaning the screen
+ * relies on.
  */
 
 const PROVINCES = [
@@ -116,54 +116,71 @@ const MARKERS = [
 ];
 
 /**
- * The canopy is drawn on its own 1000x600 canvas and stretched across a band at the bottom of the
- * viewport. A first attempt shared the map's 1000x1400 canvas, where `slice` showed only its lower
- * half: every frond sat above the visible region and the trees rendered as bare poles. Sizing the
- * canvas to the band it occupies is what makes the drawing appear at all.
+ * Trees, drawn in the map's own line: the same faint fill and hairline stroke as the province
+ * outlines, so the backdrop reads as one drawing rather than as a map with a picture in front of
+ * it. An earlier version used filled silhouettes, which was a second visual language on the same
+ * sheet.
+ *
+ * One tree is defined once in a 100x140 box and placed by transform. The stroke is
+ * non-scaling, so a tree drawn at half size keeps the map's line weight instead of a thinner one.
  */
-const TRUNKS = [
-  { x: 40, top: 150, lean: 22, width: 20 },
-  { x: 120, top: 260, lean: -14, width: 12 },
-  { x: 196, top: 200, lean: 16, width: 15 },
-  { x: 288, top: 330, lean: -10, width: 9 },
-  { x: 372, top: 285, lean: 13, width: 11 },
-  { x: 470, top: 355, lean: -9, width: 8 },
-] as const;
+const TREE_TRUNK = "M 45 160 C 45 132, 43 112, 42 88 L 58 88 C 57 112, 55 132, 55 160 Z";
 
-/** Foliage massed over the boughs, so the trunks read as a canopy rather than as poles. */
-const FRONDS = [
-  "M -60 176 C 54 82, 196 96, 286 182 C 232 152, 154 150, 108 174 C 174 190, 220 226, 240 270 C 176 208, 86 192, 8 214 C 62 236, 94 264, 106 298 C 48 246, -20 228, -60 232 Z",
-  "M 150 300 C 236 224, 340 244, 404 318 C 358 296, 300 298, 264 316 C 316 330, 348 358, 362 392 C 312 344, 240 334, 174 354 Z",
-  "M 330 386 C 398 330, 476 346, 522 402 C 488 386, 444 388, 418 402 C 456 412, 480 434, 490 458 C 452 422, 398 414, 348 428 Z",
-] as const;
+const TREE_BRANCHES = [
+  "M 48 104 C 42 94, 36 86, 31 78",
+  "M 53 100 C 60 91, 66 84, 71 77",
+  "M 50 96 C 50 86, 50 78, 50 68",
+];
 
-/** Hanging strands, each a curve down from a bough with a lit tip. */
-const TENDRILS = [
-  { x: 36, y: 200, drop: 150, sway: 22 },
-  { x: 86, y: 168, drop: 210, sway: -18 },
-  { x: 140, y: 236, drop: 130, sway: 24 },
-  { x: 202, y: 214, drop: 190, sway: -16 },
-  { x: 262, y: 292, drop: 140, sway: 20 },
-  { x: 318, y: 330, drop: 170, sway: -14 },
-  { x: 386, y: 300, drop: 120, sway: 18 },
-  { x: 452, y: 398, drop: 130, sway: -12 },
+const TREE_CANOPY =
+  "M 50 10 C 72 10, 88 22, 92 40 C 104 48, 100 68, 86 74 C 80 90, 66 100, 50 98 " +
+  "C 34 100, 20 90, 14 74 C 0 68, -4 48, 8 40 C 12 22, 28 10, 50 10 Z";
+
+/**
+ * Where each tree stands. They share a ground line rather than floating at their own heights, and
+ * each leans a little, so a stand of six does not read as one shape stamped six times.
+ */
+const GROUND_Y = 604;
+const TREE_HEIGHT = 160;
+
+const TREES = [
+  { x: 6, scale: 1.55, tilt: -2.5 },
+  { x: 116, scale: 1.05, tilt: 1.8 },
+  { x: 188, scale: 1.8, tilt: 1.2 },
+  { x: 318, scale: 0.9, tilt: -2 },
+  { x: 386, scale: 1.3, tilt: 2.4 },
+  { x: 492, scale: 0.8, tilt: -1.4 },
 ] as const;
 
 /** Drifting motes. Fixed values rather than random, so every render is the same picture. */
 const SPORES = [
-  { left: 5, size: 5, delay: 0, duration: 26, drift: 40 },
+  { left: 5, size: 4, delay: 0, duration: 26, drift: 40 },
   { left: 12, size: 3, delay: 6, duration: 34, drift: -28 },
-  { left: 19, size: 6, delay: 12, duration: 30, drift: 22 },
+  { left: 19, size: 5, delay: 12, duration: 30, drift: 22 },
   { left: 27, size: 3, delay: 3, duration: 38, drift: -34 },
   { left: 35, size: 4, delay: 17, duration: 28, drift: 30 },
   { left: 44, size: 3, delay: 23, duration: 35, drift: 24 },
   { left: 56, size: 4, delay: 8, duration: 31, drift: -30 },
-  { left: 65, size: 4, delay: 19, duration: 32, drift: -26 },
-  { left: 73, size: 6, delay: 21, duration: 27, drift: 36 },
+  { left: 65, size: 3, delay: 19, duration: 32, drift: -26 },
+  { left: 73, size: 5, delay: 21, duration: 27, drift: 36 },
   { left: 81, size: 3, delay: 2, duration: 36, drift: -20 },
-  { left: 89, size: 5, delay: 14, duration: 30, drift: 26 },
-  { left: 95, size: 4, delay: 28, duration: 33, drift: -32 },
+  { left: 89, size: 4, delay: 14, duration: 30, drift: 26 },
+  { left: 95, size: 3, delay: 28, duration: 33, drift: -32 },
 ] as const;
+
+function Tree({ x, scale, tilt }: { x: number; scale: number; tilt: number }) {
+  // Placed by its base, so every trunk meets the same ground line whatever its size.
+  const top = GROUND_Y - TREE_HEIGHT * scale;
+  return (
+    <g transform={`translate(${x} ${top}) scale(${scale}) rotate(${tilt} 50 160)`}>
+      <path className="terrain-tree-shape" d={TREE_CANOPY} vectorEffect="non-scaling-stroke" />
+      <path className="terrain-tree-shape" d={TREE_TRUNK} vectorEffect="non-scaling-stroke" />
+      {TREE_BRANCHES.map((d) => (
+        <path key={d} className="terrain-tree-branch" d={d} vectorEffect="non-scaling-stroke" />
+      ))}
+    </g>
+  );
+}
 
 function CanopySide({ mirrored }: { mirrored?: boolean }) {
   return (
@@ -174,44 +191,8 @@ function CanopySide({ mirrored }: { mirrored?: boolean }) {
      */
     <g transform={mirrored ? "translate(1000 0) scale(-1 1)" : undefined}>
       <g className={`terrain-canopy-side${mirrored ? " terrain-canopy-mirrored" : ""}`}>
-        {TRUNKS.map((trunk) => (
-          <path
-            key={trunk.x}
-            className="terrain-trunk"
-            d={`M ${trunk.x} 600
-              C ${trunk.x + trunk.lean} 470, ${trunk.x - trunk.lean * 0.6} 320, ${trunk.x + trunk.lean} ${trunk.top}
-              L ${trunk.x + trunk.lean + trunk.width} ${trunk.top}
-              C ${trunk.x - trunk.lean * 0.6 + trunk.width} 320, ${trunk.x + trunk.lean + trunk.width} 470, ${trunk.x + trunk.width * 1.7} 600 Z`}
-          />
-        ))}
-
-        {FRONDS.map((d, index) => (
-          <path
-            key={d.slice(0, 24)}
-            className={index === 1 ? "terrain-frond terrain-frond-low" : "terrain-frond"}
-            d={d}
-          />
-        ))}
-
-        {TENDRILS.map((tendril, index) => (
-          <g
-            key={`${tendril.x}-${tendril.y}`}
-            className="terrain-tendril"
-            style={{ animationDelay: `${index * 1.4}s` }}
-          >
-            <path
-              className="terrain-tendril-line"
-              d={`M ${tendril.x} ${tendril.y}
-                Q ${tendril.x + tendril.sway} ${tendril.y + tendril.drop * 0.6},
-                  ${tendril.x + tendril.sway * 0.4} ${tendril.y + tendril.drop}`}
-            />
-            <circle
-              className="terrain-tendril-tip"
-              cx={tendril.x + tendril.sway * 0.4}
-              cy={tendril.y + tendril.drop}
-              r="3"
-            />
-          </g>
+        {TREES.map((tree) => (
+          <Tree key={tree.x} x={tree.x} scale={tree.scale} tilt={tree.tilt} />
         ))}
       </g>
     </g>
@@ -257,7 +238,7 @@ export function TerrainBackdrop() {
           viewBox="0 0 1000 600"
           preserveAspectRatio="none"
         >
-          <title>ป่าเรืองแสงประกอบการตกแต่ง</title>
+          <title>ต้นไม้ประกอบการตกแต่ง</title>
           <CanopySide />
           <CanopySide mirrored />
         </svg>
