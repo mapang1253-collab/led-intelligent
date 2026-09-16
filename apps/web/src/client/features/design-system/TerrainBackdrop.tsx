@@ -146,6 +146,12 @@ interface Tower {
   readonly mast: boolean;
   /** A setback near the top, which is what makes a tower read as a tower and not a bar. */
   readonly setback: boolean;
+  /** How much narrower the top is than the base, as a fraction of the width. */
+  readonly taper: number;
+  /** How far the sides bow out on the way up. Small: a lean, not a curve. */
+  readonly bow: number;
+  /** Flat, domed or slanted crown. */
+  readonly roof: "flat" | "dome" | "slant";
 }
 
 /**
@@ -171,12 +177,16 @@ function row(spec: RowSpec): Tower[] {
   for (let i = 0; i < 40 && x < BAND_W + 40; i += 1) {
     const w = spec.minW + noise(i, spec.seed) * (spec.maxW - spec.minW);
     const h = spec.minH + noise(i, spec.seed + 7) * (spec.maxH - spec.minH);
+    const roofPick = noise(i, spec.seed + 31);
     towers.push({
       x,
       w,
       h,
       mast: h > spec.maxH * 0.78,
       setback: noise(i, spec.seed + 13) > 0.5,
+      taper: 0.06 + noise(i, spec.seed + 41) * 0.12,
+      bow: 1.5 + noise(i, spec.seed + 53) * 4,
+      roof: roofPick > 0.66 ? "dome" : roofPick > 0.33 ? "slant" : "flat",
     });
     x += w + spec.minGap + noise(i, spec.seed + 21) * (spec.maxGap - spec.minGap);
   }
@@ -237,18 +247,49 @@ function windowsFor(towers: readonly Tower[], seed: number, density: number) {
 const FAR_WINDOWS = windowsFor(FAR_TOWERS, 5, 0.34);
 const NEAR_WINDOWS = windowsFor(NEAR_TOWERS, 9, 0.42);
 
+/**
+ * A tower as a drawn shape rather than a rectangle.
+ *
+ * Three things do the softening, all of them small. The sides taper, so the top is narrower than
+ * the base. They bow outward on the way up by a couple of pixels, so the edge is a line someone
+ * drew rather than one a compiler emitted. And the crown is flat, domed or slanted rather than
+ * always square. None of it is enough to notice on its own; together they are the difference
+ * between a skyline and a bar chart.
+ */
 function towerPath(tower: Tower): string {
   const top = GROUND_Y - tower.h;
+  const inset = tower.w * tower.taper;
+  const lx = tower.x;
+  const rx = tower.x + tower.w;
+  const ltx = lx + inset;
+  const rtx = rx - inset;
+
+  // Control points sit at a third and two thirds of the height, pushed out by the bow.
+  const c1 = GROUND_Y - tower.h * 0.34;
+  const c2 = GROUND_Y - tower.h * 0.7;
+  const leftSide = `C ${lx - tower.bow} ${c1}, ${ltx - tower.bow} ${c2}, ${ltx} ${top}`;
+  const rightSide = `C ${rtx + tower.bow} ${c2}, ${rx + tower.bow} ${c1}, ${rx} ${GROUND_Y}`;
+
+  const crown =
+    tower.roof === "dome"
+      ? `Q ${(ltx + rtx) / 2} ${top - tower.h * 0.045}, ${rtx} ${top}`
+      : tower.roof === "slant"
+        ? `L ${rtx} ${top + tower.h * 0.035}`
+        : `L ${rtx} ${top}`;
+
   if (!tower.setback) {
-    return `M ${tower.x} ${GROUND_Y} L ${tower.x} ${top} L ${tower.x + tower.w} ${top} L ${tower.x + tower.w} ${GROUND_Y} Z`;
+    return `M ${lx} ${GROUND_Y} ${leftSide} ${crown} ${rightSide} Z`;
   }
-  const inset = tower.w * 0.16;
+
+  // With a setback the shaft stops at the shoulder and a narrower crown continues above it.
   const shoulder = top + tower.h * 0.16;
+  const step = tower.w * 0.15;
   return (
-    `M ${tower.x} ${GROUND_Y} L ${tower.x} ${shoulder} L ${tower.x + inset} ${shoulder} ` +
-    `L ${tower.x + inset} ${top} L ${tower.x + tower.w - inset} ${top} ` +
-    `L ${tower.x + tower.w - inset} ${shoulder} L ${tower.x + tower.w} ${shoulder} ` +
-    `L ${tower.x + tower.w} ${GROUND_Y} Z`
+    `M ${lx} ${GROUND_Y} C ${lx - tower.bow} ${c1}, ${ltx - tower.bow} ${c2}, ${ltx} ${shoulder} ` +
+    `L ${ltx + step} ${shoulder} L ${ltx + step} ${top} ` +
+    `${tower.roof === "dome" ? `Q ${(ltx + rtx) / 2} ${top - tower.h * 0.04}, ${rtx - step} ${top}` : `L ${rtx - step} ${top}`} ` +
+    `L ${rtx - step} ${shoulder} L ${rtx} ${shoulder} ` +
+    `C ${rtx + tower.bow} ${c2}, ${rx + tower.bow} ${c1}, ${rx} ${GROUND_Y} Z`
   );
 }
 
@@ -269,7 +310,7 @@ function SkylineRow({
           {tower.mast && (
             <path
               className="terrain-mast"
-              d={`M ${tower.x + tower.w / 2} ${GROUND_Y - tower.h} L ${tower.x + tower.w / 2} ${GROUND_Y - tower.h - 26}`}
+              d={`M ${tower.x + tower.w / 2} ${GROUND_Y - tower.h - (tower.roof === "dome" ? tower.h * 0.045 : 0)} L ${tower.x + tower.w / 2} ${GROUND_Y - tower.h - 28}`}
               vectorEffect="non-scaling-stroke"
             />
           )}
