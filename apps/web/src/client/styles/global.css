@@ -41,6 +41,12 @@
   --map-stroke: color-mix(in srgb, var(--grad-deep-via) 32%, transparent);
   --map-marker: color-mix(in srgb, var(--grad-deep-via) 90%, transparent);
   --terrain-sweep: rgba(255, 255, 255, 0.5);
+  /* Bioluminescent canopy. On a light canvas it is barely there on purpose: a forest drawn at
+     dark-mode strength here would drop body-text contrast below the measured floor. */
+  --flora-trunk: rgba(24, 68, 82, 0.1);
+  --flora-frond: rgba(24, 88, 104, 0.09);
+  --flora-glow: rgba(10, 132, 160, 0.5);
+  --flora-spore: rgba(14, 128, 158, 0.55);
   --glass-bg: rgba(255, 255, 255, 0.74);
   --glass-border: rgba(30, 70, 120, 0.1);
 
@@ -170,6 +176,10 @@
   --map-stroke: color-mix(in srgb, var(--grad-vivid-from) 42%, transparent);
   --map-marker: color-mix(in srgb, var(--grad-vivid-from) 95%, transparent);
   --terrain-sweep: rgba(130, 195, 255, 0.1);
+  --flora-trunk: rgba(17, 58, 73, 0.92);
+  --flora-frond: rgba(22, 74, 92, 0.8);
+  --flora-glow: rgba(94, 240, 232, 0.85);
+  --flora-spore: rgba(130, 245, 236, 0.9);
   --glass-bg: rgba(255, 255, 255, 0.06);
   --glass-border: rgba(255, 255, 255, 0.1);
 

@@ -95,6 +95,160 @@
   animation: terrain-scan 14s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/**
+ * Bioluminescent canopy.
+ *
+ * It sits in front of the map and outside the pattern mask, because it belongs at the margins by
+ * construction rather than by fading.
+ *
+ * Two masks on two elements rather than one element with `mask-composite`: the standard keyword
+ * (`intersect`) and the WebKit one (`source-in`) are not the same vocabulary, and declaring both
+ * left every browser applying `source-in` to the first layer, which erased the layer outright.
+ * Nesting costs one div and works everywhere.
+ *
+ * The outer mask keeps the canopy to the lower half. Trees grow from the bottom, and the top of
+ * every screen here carries a headline or a heading — foliage behind those would be the one place
+ * this layer could do harm.
+ *
+ * The inner mask dims the middle rather than clearing it. An earlier version cut a hole there, but
+ * a navigation rail plus a centred column leaves no margin to draw in at ordinary widths, so the
+ * forest had nowhere to be. Across the bottom it reads as a canopy at any width, and the content
+ * that sits over it sits on frosted panels, which is a background's job rather than a fight with it.
+ */
+.terrain-canopy-wrap {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  /* The band the canopy occupies. Its canvas is sized to this, so the whole drawing is on screen. */
+  height: 62%;
+  mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.55) 26%, #000 58%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.55) 26%, #000 58%);
+}
+
+.terrain-canopy {
+  mask-image: linear-gradient(
+    90deg,
+    #000 0%,
+    rgba(0, 0, 0, 0.95) 22%,
+    rgba(0, 0, 0, 0.4) 44%,
+    rgba(0, 0, 0, 0.4) 56%,
+    rgba(0, 0, 0, 0.95) 78%,
+    #000 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    #000 0%,
+    rgba(0, 0, 0, 0.95) 22%,
+    rgba(0, 0, 0, 0.4) 44%,
+    rgba(0, 0, 0, 0.4) 56%,
+    rgba(0, 0, 0, 0.95) 78%,
+    #000 100%
+  );
+}
+
+/* Each side breathes on its own timing, so the two margins never move as one wall. */
+.terrain-canopy-side {
+  transform-box: view-box;
+  transform-origin: center bottom;
+  animation: terrain-canopy-sway 24s ease-in-out infinite alternate;
+}
+.terrain-canopy-mirrored {
+  animation-duration: 31s;
+  animation-delay: -8s;
+}
+
+.terrain-trunk {
+  fill: var(--flora-trunk);
+}
+
+.terrain-frond {
+  fill: var(--flora-frond);
+}
+.terrain-frond-low {
+  animation: terrain-frond-breathe 17s ease-in-out infinite alternate;
+}
+
+/* A hanging strand, lit from the tip: the one detail that reads as bioluminescence rather than
+   as a plant drawn in the dark. */
+.terrain-tendril-line {
+  fill: none;
+  stroke: var(--flora-glow);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  opacity: 0.35;
+}
+.terrain-tendril-tip {
+  fill: var(--flora-glow);
+  filter: drop-shadow(0 0 6px var(--flora-glow));
+}
+.terrain-tendril {
+  animation: terrain-tendril-glow 9s ease-in-out infinite alternate;
+}
+
+/* Motes rising between the trunks. Ten of them, each on its own clock. */
+.terrain-spores {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.terrain-spore {
+  position: absolute;
+  bottom: -4%;
+  border-radius: 50%;
+  background: var(--flora-spore);
+  box-shadow: 0 0 10px var(--flora-spore);
+  opacity: 0;
+  animation-name: terrain-spore-rise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes terrain-canopy-sway {
+  from {
+    transform: rotate(-0.5deg) translate3d(0, 0, 0);
+  }
+  to {
+    transform: rotate(0.7deg) translate3d(0, -1.2%, 0);
+  }
+}
+
+@keyframes terrain-frond-breathe {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes terrain-tendril-glow {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes terrain-spore-rise {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.6);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.9;
+  }
+  80% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate3d(var(--spore-drift, 0), -108vh, 0) scale(1);
+    opacity: 0;
+  }
+}
+
 @keyframes terrain-drift {
   from {
     transform: translate3d(-2%, 1.5%, 0) scale(1.01);
@@ -150,11 +304,19 @@
   .terrain-map-shapes path,
   .terrain-markers g,
   .terrain-marker-halo,
-  .terrain-sweep {
+  .terrain-sweep,
+  .terrain-canopy-side,
+  .terrain-frond-low,
+  .terrain-tendril,
+  .terrain-spore {
     animation: none;
   }
   .terrain-sweep {
     opacity: 0;
+  }
+  /* The canopy stays as a still silhouette; the motes are motion and nothing else, so they go. */
+  .terrain-spores {
+    display: none;
   }
 }
 
