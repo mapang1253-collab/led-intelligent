@@ -148,30 +148,60 @@ interface Tower {
   readonly setback: boolean;
 }
 
-/** Far row: a low, dense backdrop of blocks. Near row: fewer, taller, further apart. */
-function row(count: number, seed: number, minH: number, maxH: number): Tower[] {
+/**
+ * One row of towers, laid out left to right until the band is crossed.
+ *
+ * The gaps do as much work as the buildings. A row packed edge to edge is a wall with notches in
+ * it; leaving sky between the towers is what lets each one read as a building, so the count falls
+ * out of the spacing rather than being set directly.
+ */
+interface RowSpec {
+  readonly seed: number;
+  readonly minH: number;
+  readonly maxH: number;
+  readonly minW: number;
+  readonly maxW: number;
+  readonly minGap: number;
+  readonly maxGap: number;
+}
+
+function row(spec: RowSpec): Tower[] {
   const towers: Tower[] = [];
-  let x = -30;
-  for (let i = 0; i < count; i += 1) {
-    const w = 30 + noise(i, seed) * 52;
-    const h = minH + noise(i, seed + 7) * (maxH - minH);
+  let x = -40;
+  for (let i = 0; i < 40 && x < BAND_W + 40; i += 1) {
+    const w = spec.minW + noise(i, spec.seed) * (spec.maxW - spec.minW);
+    const h = spec.minH + noise(i, spec.seed + 7) * (spec.maxH - spec.minH);
     towers.push({
       x,
       w,
       h,
-      mast: h > maxH * 0.8,
-      setback: noise(i, seed + 13) > 0.55,
+      mast: h > spec.maxH * 0.78,
+      setback: noise(i, spec.seed + 13) > 0.5,
     });
-    x += w + 6 + noise(i, seed + 21) * 26;
-    if (x > BAND_W + 40) {
-      break;
-    }
+    x += w + spec.minGap + noise(i, spec.seed + 21) * (spec.maxGap - spec.minGap);
   }
   return towers;
 }
 
-const FAR_TOWERS = row(22, 3, 90, 230);
-const NEAR_TOWERS = row(14, 11, 170, 430);
+const FAR_TOWERS = row({
+  seed: 3,
+  minH: 90,
+  maxH: 230,
+  minW: 48,
+  maxW: 100,
+  minGap: 34,
+  maxGap: 104,
+});
+
+const NEAR_TOWERS = row({
+  seed: 11,
+  minH: 190,
+  maxH: 450,
+  minW: 62,
+  maxW: 122,
+  minGap: 86,
+  maxGap: 190,
+});
 
 /**
  * Lit windows, scattered rather than gridded. A full grid of unlit panes would be hundreds of
@@ -179,7 +209,7 @@ const NEAR_TOWERS = row(14, 11, 170, 430);
  * what a city at night actually shows.
  */
 function windowsFor(towers: readonly Tower[], seed: number, density: number) {
-  const lights: { id: string; x: number; y: number; delay: number }[] = [];
+  const lights: { id: string; x: number; y: number; delay: number; duration: number }[] = [];
   towers.forEach((tower, index) => {
     const columns = Math.max(2, Math.floor(tower.w / 13));
     const rows = Math.max(3, Math.floor(tower.h / 20));
@@ -192,7 +222,10 @@ function windowsFor(towers: readonly Tower[], seed: number, density: number) {
           id: `${seed}-${index}-${c}-${r}`,
           x: tower.x + 7 + (c * (tower.w - 12)) / Math.max(1, columns - 1 || 1),
           y: GROUND_Y - tower.h + 16 + r * ((tower.h - 24) / Math.max(1, rows - 1 || 1)),
-          delay: noise(index + c, r + seed) * 9,
+          // Spread across the cycle, and each window keeps its own rate, so the city never blinks
+          // in unison — which is the one thing that would read as a screensaver.
+          delay: noise(index + c, r + seed) * 7,
+          duration: 6 + noise(r + seed, index + c) * 7,
         });
       }
     }
@@ -200,8 +233,9 @@ function windowsFor(towers: readonly Tower[], seed: number, density: number) {
   return lights;
 }
 
-const FAR_WINDOWS = windowsFor(FAR_TOWERS, 5, 0.1);
-const NEAR_WINDOWS = windowsFor(NEAR_TOWERS, 9, 0.14);
+// Fewer towers, so each carries far more lit windows: the shimmer stays where the eye expects it.
+const FAR_WINDOWS = windowsFor(FAR_TOWERS, 5, 0.34);
+const NEAR_WINDOWS = windowsFor(NEAR_TOWERS, 9, 0.42);
 
 function towerPath(tower: Tower): string {
   const top = GROUND_Y - tower.h;
@@ -224,7 +258,7 @@ function SkylineRow({
   className,
 }: {
   towers: readonly Tower[];
-  windows: readonly { id: string; x: number; y: number; delay: number }[];
+  windows: readonly { id: string; x: number; y: number; delay: number; duration: number }[];
   className: string;
 }) {
   return (
@@ -249,7 +283,10 @@ function SkylineRow({
           y={light.y}
           width="3"
           height="4"
-          style={{ animationDelay: `${light.delay}s` }}
+          style={{
+            animationDelay: `${light.delay}s`,
+            animationDuration: `${light.duration}s`,
+          }}
         />
       ))}
     </g>
