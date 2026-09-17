@@ -333,6 +333,18 @@ export const th = {
       "แนวคิดชุดนี้มาจากตัวอย่างที่บันทึกไว้ล่วงหน้า ไม่ได้สร้างใหม่จากโมเดลภาษา ใช้เพื่อสาธิตการทำงานของระบบ",
     liveNotice: "แนวคิดชุดนี้สร้างโดยโมเดลภาษาจากหลักฐานข้างต้น และผ่านการตรวจสอบรูปแบบและการอ้างอิงแล้ว",
     buildingTypeLabel: "ประเภทอาคารตามกฎกระทรวง",
+
+    /* Section headings for one concept card. The card used to be nine paragraphs of equal weight
+       with the labels buried inline; a reader deciding anything needs to see where "what" ends and
+       "what could go wrong" begins. */
+    whyHeading: "ทำไมถึงเสนอแนวคิดนี้",
+    riskHeading: "ข้อควรระวังของแนวคิดนี้",
+    demandGroupLabel: "กลุ่มเป้าหมาย",
+    demandMechanismLabel: "เหตุผลที่คาดว่าจะมีดีมานด์",
+    legalDetailsToggle: "ดูข้อกำหนดที่ตรวจทีละข้อ",
+    /* The model cites its evidence by id inside its own sentences. Left exactly as written — the
+       citation is the audit trail — but a reader meeting "ev9" deserves to be told what it is. */
+    citationNote: "รหัส ev… ในข้อความคือหมายเลขอ้างอิงหลักฐานที่ระบบใช้ตรวจย้อนกลับได้",
   },
 
   validationStatus: {

@@ -1,5 +1,5 @@
 import { th } from "@reis/i18n";
-import { Check, CircleHelp, Info, Lightbulb, X } from "lucide-react";
+import { Check, ChevronDown, CircleHelp, Info, Lightbulb, X } from "lucide-react";
 import { useState } from "react";
 import { Caveat } from "./Caveat.js";
 import type { ConceptCard, RuleOutcomeView } from "./useAnalysisRun.js";
@@ -71,80 +71,114 @@ function RuleRow({ outcome }: { outcome: RuleOutcomeView }) {
   );
 }
 
+/** A small muted heading, so a reader can see where one part of a card ends and the next begins. */
+function CardSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="mt-4 border-border border-t pt-3">
+      <h4 className="font-semibold text-ink-muted text-xs">{title}</h4>
+      <div className="mt-1.5">{children}</div>
+    </section>
+  );
+}
+
+/**
+ * One concept, ordered the way someone deciding anything reads it.
+ *
+ * What you would build comes first and in the largest type, because "อาคารอยู่อาศัยรวม" is the one
+ * concrete thing on the card; it used to be a grey line three paragraphs down. Then why it was
+ * proposed, then who is supposed to want it and what would show they do not, then what could go
+ * wrong, then the law. Nine paragraphs of identical weight became five labelled parts.
+ *
+ * Nothing was dropped and nothing was softened: every sentence the model wrote is still here, in
+ * its own words, and the counter-evidence still sits in the same breath as the claim it defeats.
+ * The order changed, not the content — and no order is implied between concepts, which remain
+ * unranked for the reason the panel's own comment gives.
+ */
 function ConceptCardView({ concept }: { concept: ConceptCard }) {
   const [open, setOpen] = useState(false);
   return (
     <article className="mt-4 rounded-card bg-surface-sunken p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <h3 className="font-bold text-lg">{concept.label_th}</h3>
+        <div className="min-w-0">
+          {/* The building type is the eyebrow: it is what this concept actually is. */}
+          <p className="font-semibold text-signature-text text-xs">{concept.building_type_th}</p>
+          <h3 className="mt-0.5 font-bold text-lg leading-snug">{concept.label_th}</h3>
+        </div>
         {concept.legal && <StatusChip status={concept.legal.status} />}
       </div>
+
       <p className="mt-2 text-sm leading-relaxed">{concept.description_th}</p>
-      <p className="mt-2 text-ink-muted text-sm leading-relaxed">{concept.supporting_reason_th}</p>
 
-      <p className="mt-3 text-ink-muted text-xs">
-        {th.concepts.buildingTypeLabel}: {concept.building_type_th}
-      </p>
+      <CardSection title={th.concepts.whyHeading}>
+        <p className="text-sm leading-relaxed">{concept.supporting_reason_th}</p>
+      </CardSection>
 
-      {/* The proposal's own stated uncertainty sits with the proposal, not in a footnote — and one
-          of these rides on every concept, so it reads as a note rather than as an alarm. */}
-      <Caveat>
-        {th.concepts.uncertaintyLabel}: {concept.uncertainty_th}
-      </Caveat>
-
-      {concept.unmapped_activities_th.length > 0 && (
-        <p className="mt-2 text-ink-muted text-xs">
-          {th.concepts.unmappedLabel}: {concept.unmapped_activities_th.join(", ")}
-        </p>
-      )}
-
-      <section className="mt-4">
-        <h4 className="font-semibold text-sm">{th.concepts.demandLabel}</h4>
+      <CardSection title={th.concepts.demandLabel}>
         {concept.demand_hypotheses.map((hypothesis) => (
-          <div key={hypothesis.mechanism_th} className="mt-2 text-sm">
+          <div key={hypothesis.mechanism_th} className="mt-2 first:mt-0 text-sm leading-relaxed">
             <p>
-              {hypothesis.population_th} — {hypothesis.mechanism_th}
+              <span className="text-ink-muted text-xs">{th.concepts.demandGroupLabel}: </span>
+              <span className="font-medium">{hypothesis.population_th}</span>
+            </p>
+            <p className="mt-0.5">
+              <span className="text-ink-muted text-xs">{th.concepts.demandMechanismLabel}: </span>
+              {hypothesis.mechanism_th}
             </p>
             {/* Every hypothesis shows what would defeat it, in the same breath as the claim. */}
-            <p className="mt-0.5 text-ink-muted text-xs">
+            <Caveat>
               {th.concepts.counterLabel}: {hypothesis.counter_evidence_th}
-            </p>
+            </Caveat>
           </div>
         ))}
-      </section>
+      </CardSection>
+
+      <CardSection title={th.concepts.riskHeading}>
+        <p className="text-sm leading-relaxed">{concept.uncertainty_th}</p>
+        {concept.unmapped_activities_th.length > 0 && (
+          <p className="mt-2 text-ink-muted text-xs">
+            {th.concepts.unmappedLabel}: {concept.unmapped_activities_th.join(", ")}
+          </p>
+        )}
+      </CardSection>
 
       {concept.legal && (
-        <section className="mt-4">
+        <CardSection title={th.concepts.legalHeading}>
+          {/* The verdict as a verdict, on its own line, rather than tacked onto a link. */}
+          <p className="text-sm leading-relaxed">{concept.legal.status_reason_th}</p>
+
+          {concept.legal.approval_required.length > 0 && (
+            <p className="mt-2 text-sm">
+              <span className="text-ink-muted text-xs">{th.concepts.approvalLabel}: </span>
+              {concept.legal.approval_required
+                .map((item) => `${item.title_th} (${item.clause_th})`)
+                .join(", ")}
+            </p>
+          )}
+
+          <Caveat>{th.concepts.legalDisclaimer}</Caveat>
+
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
             aria-expanded={open}
-            className="font-medium text-signature-text text-sm"
+            className="mt-2 flex items-center gap-1.5 font-medium text-signature-text text-sm"
           >
-            {th.concepts.legalHeading} — {concept.legal.status_reason_th}
+            <ChevronDown
+              size={15}
+              aria-hidden="true"
+              className={open ? "" : "-rotate-90 transition-transform"}
+            />
+            {th.concepts.legalDetailsToggle} ({concept.legal.outcomes.length})
           </button>
 
           {open && (
-            <div className="mt-3">
-              <p className="text-ink-muted text-xs leading-relaxed">
-                {th.concepts.legalDisclaimer}
-              </p>
-              {concept.legal.approval_required.length > 0 && (
-                <p className="mt-2 text-sm">
-                  {th.concepts.approvalLabel}:{" "}
-                  {concept.legal.approval_required
-                    .map((item) => `${item.title_th} (${item.clause_th})`)
-                    .join(", ")}
-                </p>
-              )}
-              <ul className="mt-2">
-                {concept.legal.outcomes.map((outcome) => (
-                  <RuleRow key={outcome.rule_id} outcome={outcome} />
-                ))}
-              </ul>
-            </div>
+            <ul className="mt-2">
+              {concept.legal.outcomes.map((outcome) => (
+                <RuleRow key={outcome.rule_id} outcome={outcome} />
+              ))}
+            </ul>
           )}
-        </section>
+        </CardSection>
       )}
     </article>
   );
@@ -194,6 +228,14 @@ export function ConceptPanel({
       <p className="mt-2 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
         <Info size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
         {mode === "RECORDED_AI" ? th.concepts.fixtureNotice : th.concepts.liveNotice}
+      </p>
+
+      {/* The model cites evidence by id inside its own prose. The sentence is left exactly as it
+          wrote it — the citation is the audit trail — but a reader meeting "ev9" for the first time
+          should be told what it is rather than left to guess. */}
+      <p className="mt-1 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
+        <Info size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
+        {th.concepts.citationNote}
       </p>
 
       {concepts.map((concept) => (
