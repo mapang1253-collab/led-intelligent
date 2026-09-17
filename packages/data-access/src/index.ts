@@ -13,6 +13,7 @@ export {
   createAnalysisRun,
   findRunForCapability,
   loadRunAreaNames,
+  setRunProgress,
   setRunState,
 } from "./repositories/analysis-runs.js";
 export {

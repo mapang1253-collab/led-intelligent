@@ -22,6 +22,16 @@ import { th } from "@reis/i18n";
  */
 const RESULT_HEADING = new RegExp(`${th.finalResult.heading}|${th.notActivated.heading}`);
 
+/**
+ * How long a finished result is allowed to take.
+ *
+ * The analysis now runs after the acknowledgement, so the result screen opens on a progress state
+ * and becomes a result a few seconds later. docs/performance-and-reliability.md §7 gives a warm
+ * analysis p95 <= 30 seconds, so that plus a margin is the honest ceiling to wait — not the
+ * default 15, which was only ever long enough because the work used to happen inside the POST.
+ */
+const RESULT_TIMEOUT = 35_000;
+
 /** Enough of the sentence to be this sentence and nothing else, short enough to survive an edit. */
 const DISCLAIMER_FRAGMENT = BASE_DISCLAIMER_TH.slice(0, 40);
 
@@ -41,7 +51,9 @@ async function startRun(page: Page) {
     .click();
   await page.getByRole("button", { name: th.intake.submit }).click();
   await expect(page).toHaveURL(/\/runs\/[^/?#]+/);
-  await expect(page.getByRole("heading", { level: 1, name: RESULT_HEADING })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: RESULT_HEADING })).toBeVisible({
+    timeout: RESULT_TIMEOUT,
+  });
 }
 
 function disclaimerOn(page: Page) {

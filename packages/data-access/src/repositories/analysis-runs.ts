@@ -83,6 +83,28 @@ export async function findRunForCapability(
   return row as unknown as AnalysisRunRow | undefined;
 }
 
+/**
+ * Moves a run between non-terminal states without touching `completed_at`.
+ *
+ * `setRunState` stamps a completion time, which is correct for CANCELLED and for the states a run
+ * finishes in, and wrong for a run that has only just started working. A run that reports itself
+ * complete while its evidence is still being gathered would stop the progress screen polling and
+ * show an empty result as if it were the answer.
+ */
+export async function setRunProgress(
+  db: Kysely<Database>,
+  runId: string,
+  capabilityDigest: string,
+  state: RunState,
+): Promise<void> {
+  await db
+    .updateTable("analysis.analysis_run")
+    .set({ run_state: state })
+    .where("run_id", "=", runId)
+    .where("capability_digest", "=", capabilityDigest)
+    .execute();
+}
+
 export async function setRunState(
   db: Kysely<Database>,
   runId: string,

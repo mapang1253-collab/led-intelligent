@@ -54,7 +54,12 @@ const REQUIREMENTS: readonly { measureId: string; requirement: EvidenceRequireme
   },
 ];
 
-export type EvidenceStageState = "SUCCEEDED" | "DEGRADED" | "SKIPPED";
+/**
+ * RUNNING is not something `runEvidenceAcquisition` ever returns — it finishes or it does not. It
+ * exists because the read path has to describe a run whose acquisition has not started yet, now
+ * that the analysis happens after the acknowledgement rather than inside it.
+ */
+export type EvidenceStageState = "SUCCEEDED" | "DEGRADED" | "SKIPPED" | "RUNNING";
 
 export interface EvidenceStageResult {
   readonly state: EvidenceStageState;

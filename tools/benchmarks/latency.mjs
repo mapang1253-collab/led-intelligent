@@ -127,7 +127,15 @@ async function readRun(runId, cookie) {
   return response.json();
 }
 
-const TERMINAL = new Set(["SUCCEEDED", "PARTIAL", "FAILED", "EXPIRED", "CANCELLED"]);
+/** The real RunState union (packages/data-access). Earlier this held two states that do not exist. */
+const TERMINAL = new Set([
+  "COMPLETE",
+  "PARTIAL",
+  "FAILED_RETRYABLE",
+  "FAILED_FINAL",
+  "EXPIRED",
+  "CANCELLED",
+]);
 
 /**
  * Shell delivery: the document plus every script and stylesheet it references, fetched together

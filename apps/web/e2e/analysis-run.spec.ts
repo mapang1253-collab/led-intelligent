@@ -15,6 +15,16 @@ import { th } from "@reis/i18n";
  */
 const RESULT_HEADING = new RegExp(`${th.finalResult.heading}|${th.notActivated.heading}`);
 
+/**
+ * How long a finished result is allowed to take.
+ *
+ * The analysis now runs after the acknowledgement, so the result screen opens on a progress state
+ * and becomes a result a few seconds later. docs/performance-and-reliability.md §7 gives a warm
+ * analysis p95 <= 30 seconds, so that plus a margin is the honest ceiling to wait — not the
+ * default 15, which was only ever long enough because the work used to happen inside the POST.
+ */
+const RESULT_TIMEOUT = 35_000;
+
 test("choosing a suggested area and starting a run reaches a result", async ({ page }) => {
   await page.goto("/");
 
@@ -38,7 +48,9 @@ test("choosing a suggested area and starting a run reaches a result", async ({ p
   // back to this page even by reload.
   await expect(page).toHaveURL(/\/runs\/[^/?#]+/);
 
-  await expect(page.getByRole("heading", { level: 1, name: RESULT_HEADING })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: RESULT_HEADING })).toBeVisible({
+    timeout: RESULT_TIMEOUT,
+  });
 
   // Whatever the analysis concluded, the area it was asked about has to be on the screen: a result
   // that does not name its subject cannot be checked by the person reading it.
@@ -61,5 +73,7 @@ test("a result URL survives being typed into the address bar", async ({ page }) 
   const response = await page.goto(resultUrl);
 
   expect(response?.status()).toBe(200);
-  await expect(page.getByRole("heading", { level: 1, name: RESULT_HEADING })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: RESULT_HEADING })).toBeVisible({
+    timeout: RESULT_TIMEOUT,
+  });
 });

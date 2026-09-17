@@ -11,6 +11,7 @@ import {
   loadRunAreaNames,
   loadRunEvidence,
   saveConceptSet,
+  setRunProgress,
   setRunState,
 } from "@reis/data-access";
 import { formatTargetTh } from "@reis/domain";
@@ -142,6 +143,78 @@ function opaqueNotFound() {
   };
 }
 
+/**
+ * The analysis, run after the acknowledgement has already gone out.
+ *
+ * It opens its own database handle: the request handler closes its one in a `finally` that has
+ * long since run by the time this starts, and sharing a destroyed connection would fail every
+ * query here for reasons that would look nothing like the cause.
+ *
+ * A failure here has to land in the run's state. Nothing is watching this call — no client is
+ * waiting on its promise and no error of its own reaches anyone — so a run whose work threw would
+ * otherwise sit at RUNNING until it expired, and the progress screen would poll it for 24 hours.
+ */
+async function completeRun(
+  env: Env,
+  runId: string,
+  capabilityDigest: string,
+  context: { permittedScope: string; intake: Record<string, unknown> },
+): Promise<void> {
+  const db = createDb(env.HYPERDRIVE.connectionString);
+  try {
+    const run = await findRunForCapability(db, runId, capabilityDigest);
+    if (!run) {
+      return;
+    }
+
+    // Acquisition is a database read plus run-scoped writes; bulk source fetching happens off the
+    // interactive path (tools/ingestion/).
+    await runEvidenceAcquisition(db, run);
+
+    // Concepts are proposed once and persisted. Polling the progress screen re-reads them and
+    // never re-invokes the model.
+    const areas = await loadRunAreaNames(db, run);
+    const links = await loadRunEvidence(db, run.run_id);
+    const concepts = await runConceptGeneration({
+      mode: aiMode(env),
+      apiKey: env.GEMINI_API_KEY,
+      db,
+      budgetEnv: env,
+      targetTh: formatTargetTh({
+        province_name_th: areas.province,
+        district_name_th: areas.district,
+        subdistrict_name_th: areas.subdistrict,
+      }),
+      effectiveOn: new Date().toISOString().slice(0, 10),
+      outputScope: run.permitted_scope,
+      evidence: links,
+      pack: LEGAL_PACK,
+      areaCodes: [],
+      intake: context.intake as never,
+      ...(aiMode(env) === "RECORDED_AI" ? { recorded: RECORDED_FIXTURE } : {}),
+    });
+    await saveConceptSet(db, run.run_id, {
+      record: concepts.record,
+      failureCode: concepts.reason ?? null,
+      concepts: concepts.concepts,
+      validations: concepts.validations,
+      final: concepts.final,
+    });
+
+    // Back to QUEUED, which the read path reports as PARTIAL. The stage states themselves are
+    // derived from what is in the corpus, so this only has to say "no longer working".
+    await setRunProgress(db, runId, capabilityDigest, "QUEUED");
+  } catch (error) {
+    console.error(`[run ${runId}] analysis failed`, error);
+    // FAILED_FINAL, not FAILED_RETRYABLE: the client's poll treats only FAILED_FINAL as an end,
+    // and there is nothing here for it to retry — the work that threw is gone with the request
+    // that started it, so the way forward is a new run, which the screen already offers.
+    await setRunProgress(db, runId, capabilityDigest, "FAILED_FINAL").catch(() => {});
+  } finally {
+    await db.destroy();
+  }
+}
+
 analysisRuns.post("/", async (c) => {
   if (!isSameOrigin(c.req.raw)) {
     return c.json({ error: "CROSS_ORIGIN_REJECTED" }, 403);
@@ -194,62 +267,34 @@ analysisRuns.post("/", async (c) => {
       districtId: intake.district_id,
       subdistrictId: intake.subdistrict_id,
     });
-
-    // Acquisition is a database read plus run-scoped writes; bulk source fetching happens off the
-    // interactive path (tools/ingestion/), so this stays inside a request budget.
-    const evidence = await runEvidenceAcquisition(db, run);
-
-    // Concepts are proposed once, at creation, and persisted. Polling the progress screen re-reads
-    // them and never re-invokes the model.
-    const areas = await loadRunAreaNames(db, run);
-    const links = await loadRunEvidence(db, run.run_id);
-    const concepts = await runConceptGeneration({
-      mode: aiMode(c.env),
-      apiKey: c.env.GEMINI_API_KEY,
-      db,
-      budgetEnv: c.env,
-      targetTh: formatTargetTh({
-        province_name_th: areas.province,
-        district_name_th: areas.district,
-        subdistrict_name_th: areas.subdistrict,
-      }),
-      effectiveOn: new Date().toISOString().slice(0, 10),
-      outputScope: run.permitted_scope,
-      evidence: links,
-      pack: LEGAL_PACK,
-      areaCodes: [],
-      intake,
-      ...(aiMode(c.env) === "RECORDED_AI" ? { recorded: RECORDED_FIXTURE } : {}),
-    });
-    await saveConceptSet(db, run.run_id, {
-      record: concepts.record,
-      failureCode: concepts.reason ?? null,
-      concepts: concepts.concepts,
-      validations: concepts.validations,
-      final: concepts.final,
-    });
+    await setRunProgress(db, runId, capabilityDigest, "RUNNING");
 
     c.header(
       "Set-Cookie",
       buildCapabilityCookie(capability, new URL(c.req.url).protocol === "https:"),
     );
 
-    // RunAccepted: opaque id, state, and the fixed expiry. No capability in the body.
+    // The analysis itself runs after the response. Acknowledgement is a gate of its own
+    // (docs/performance-and-reliability.md §7: p95 <= 1 second) and it cannot be met by a request
+    // that also does the work — measured at 9 seconds when it did, and refused outright on
+    // Cloudflare's free plan, which allows 10 ms of CPU per invocation against the 265-338 ms this
+    // path was using.
+    c.executionCtx.waitUntil(
+      completeRun(c.env, runId, capabilityDigest, {
+        permittedScope: run.permitted_scope,
+        intake,
+      }),
+    );
+
+    // RunAccepted: opaque id, state, and the fixed expiry. No capability in the body, and no
+    // stage results — there are none yet, and docs/api-contracts.md §3 asks for none.
     return c.json(
       {
         schema_version: SCHEMA_VERSION,
         run_id: run.run_id,
-        run_state: run.run_state,
+        run_state: "RUNNING",
         created_at: run.created_at,
         expires_at: run.expires_at,
-        evidence_stage: {
-          state: evidence.state,
-          ...(evidence.reason ? { reason: evidence.reason } : {}),
-        },
-        concept_stage: {
-          state: concepts.state,
-          ...(concepts.reason ? { reason: concepts.reason } : {}),
-        },
       },
       201,
     );
@@ -282,11 +327,19 @@ analysisRuns.get("/:run_id", async (c) => {
     const areas = await loadRunAreaNames(db, run);
     // Stage state is read back from the corpus, not remembered: if the links are there, the stage
     // succeeded; if they are not, the envelope says which reason applies.
+    //
+    // Except while the run is still working. The analysis now finishes after the acknowledgement,
+    // so an empty corpus means "not yet" as often as it means "nothing to find", and the two must
+    // not be reported alike: telling a reader a source is not activated, when it is and is being
+    // read from at that moment, is a false statement about the system.
+    const working = run.run_state === "RUNNING";
     const evidenceLinks = await loadRunEvidence(db, run.run_id);
     const evidence: EvidenceStageResult =
       evidenceLinks.length > 0
         ? { state: "SUCCEEDED", linkCount: evidenceLinks.length }
-        : { state: "SKIPPED", reason: "SOURCE_NOT_ACTIVATED", linkCount: 0 };
+        : working
+          ? { state: "RUNNING", linkCount: 0 }
+          : { state: "SKIPPED", reason: "SOURCE_NOT_ACTIVATED", linkCount: 0 };
     const evidenceGroups = groupEvidenceForDisplay(evidenceLinks, areas.province);
     const conceptSet = await loadConceptSet(db, run.run_id);
     const validationByConcept = new Map(
@@ -317,7 +370,9 @@ analysisRuns.get("/:run_id", async (c) => {
           // A stage that tried and failed is not a stage that was never switched on. Reporting a
           // provider outage as "not activated" tells the reader to wait for a feature, when what
           // they should do is press the button again.
-          ...conceptStageRecord(conceptSet),
+          ...(working && conceptSet.concepts.length === 0
+            ? { state: "RUNNING" }
+            : conceptStageRecord(conceptSet)),
         },
         {
           stage: "VALIDATION",
