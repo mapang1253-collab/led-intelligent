@@ -163,6 +163,21 @@
   stroke-linejoin: round;
 }
 
+/**
+ * Landmark trim, drawn over the shaft it belongs to.
+ *
+ * Filled like a tower so it reads as part of the same solid, but with the fill lifted a little:
+ * these pieces sit proud of the facade, and on a hairline drawing the only way to say "in front"
+ * is to be slightly denser than what is behind.
+ */
+.terrain-landmark {
+  fill: var(--map-fill);
+  stroke: var(--map-stroke);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  opacity: 0.88;
+}
+
 .terrain-mast {
   fill: none;
   stroke: var(--map-stroke);
@@ -216,6 +231,78 @@
   }
   to {
     transform: translate3d(-1.4%, 0, 0);
+  }
+}
+
+/**
+ * Drizzle.
+ *
+ * Two elements per streak, because one cannot carry two motions: CSS gives an element a single
+ * `transform`, so the fall and the waver would overwrite each other. The outer span falls and
+ * leans; the inner one is the streak itself, wavering across that fall on a slower period of its
+ * own. The sum is a curved path — which is the whole point, since a streak on a ruled diagonal
+ * reads as a line drawn on the glass rather than as rain.
+ *
+ * Kept off the reading. Rain is the only thing here that crosses the viewport continuously, and at
+ * full strength behind a table of prices it is steady motion under the most expensive thing on the
+ * page for someone trying to read one. The mask holds it to a third of its weight through the
+ * middle and lets it fall properly only over the city — where it is weather rather than
+ * interference — and it starts under the cloud band, so it appears to come out of the cloud.
+ */
+.terrain-drizzle {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  mask-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.42) 30%,
+    rgba(0, 0, 0, 0.42) 56%,
+    #000 82%
+  );
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.42) 30%,
+    rgba(0, 0, 0, 0.42) 56%,
+    #000 82%
+  );
+}
+.terrain-drop {
+  position: absolute;
+  top: -8%;
+  animation-name: terrain-drop-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.terrain-drop-line {
+  display: block;
+  width: 1px;
+  /* Soft at both ends: the bright part of a streak is its middle, never its tips. */
+  background: linear-gradient(to bottom, transparent, var(--map-marker), transparent);
+  transform-origin: 50% 0;
+  animation-name: terrain-drop-waver;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+@keyframes terrain-drop-fall {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(var(--drop-drift, 0), 116vh, 0);
+  }
+}
+
+@keyframes terrain-drop-waver {
+  from {
+    transform: translate3d(calc(var(--drop-sway, 6px) * -0.5), 0, 0)
+      rotate(calc(var(--drop-tilt, 4deg) * -1));
+  }
+  to {
+    transform: translate3d(calc(var(--drop-sway, 6px) * 0.5), 0, 0) rotate(var(--drop-tilt, 4deg));
   }
 }
 
@@ -470,6 +557,10 @@
   }
   /* A drifting light that has stopped drifting is a dot in the sky, so it goes. */
   .terrain-motes {
+    display: none;
+  }
+  /* Same for rain: stopped, it is a scatter of tick marks over the page. */
+  .terrain-drizzle {
     display: none;
   }
   .terrain-sweep {

@@ -7,9 +7,9 @@
  * over the rooftops, a faint street plan beneath it and slow haze across the sky.
  *
  * Each moving layer has one gesture and no two share it: the windows blink where they are, the
- * lights travel, the markers ping. A star field was cut for doing exactly what the windows already
- * do — two systems making the same small twinkle read as noise of one kind rather than as two
- * things — and the sky it left empty is the only part of the sheet where the eye can rest.
+ * lights travel, the markers ping, the drizzle falls. A star field was cut for doing exactly what
+ * the windows already do — two systems making the same small twinkle read as noise of one kind
+ * rather than as two things.
  *
  * Everything sits low and fades through the middle, because the top of every screen carries a
  * heading and the centre is where the reading happens. Geometry is pre-simplified at build time
@@ -153,7 +153,12 @@ interface Tower {
   readonly bow: number;
   /** Flat, domed or slanted crown. */
   readonly roof: "flat" | "dome" | "slant";
+  /** A named building this tower is drawn as, or null for one of the anonymous many. */
+  readonly landmark: Landmark | null;
 }
+
+/** The two Bangkok towers a Thai reader can name on sight. */
+type Landmark = "mahanakhon" | "baiyoke";
 
 /**
  * One row of towers, laid out left to right until the band is crossed.
@@ -197,6 +202,7 @@ function row(spec: RowSpec): Tower[] {
       taper: 0.06 + noise(i, spec.seed + 41) * 0.12,
       bow: 1.5 + noise(i, spec.seed + 53) * 4,
       roof: roofPick > 0.66 ? "dome" : roofPick > 0.33 ? "slant" : "flat",
+      landmark: null,
     });
     x += w + spec.minGap + noise(i, spec.seed + 21) * (spec.maxGap - spec.minGap);
   }
@@ -215,19 +221,70 @@ const FAR_TOWERS = row({
   lead: 20,
 });
 
-const NEAR_TOWERS = row({
-  seed: 11,
-  minH: 190,
-  maxH: 450,
-  minW: 62,
-  maxW: 122,
-  minGap: 86,
-  maxGap: 190,
-  /* This row drifts ±1.4% of the band, which at the far swing left only 19 of the lead tower's 73
-     units on screen. Pulled in this far it keeps between 43 and 71 of them at every point in the
-     cycle, and is still cut by the edge throughout, so the city never looks like it stops here. */
-  lead: 24,
-});
+/**
+ * Two of the near row are named buildings rather than anonymous ones.
+ *
+ * A generic skyline says "a city"; Baiyoke and MahaNakhon say "Bangkok", which is the city this
+ * product's condominium prices actually come from. They are the two towers a Thai reader picks out
+ * without being told, and drawn in the same hairline as everything else they cost nothing in
+ * attention — the silhouette does the work.
+ *
+ * They replace towers 1 and 4, which sit left and right of the reading column rather than behind
+ * it, and they keep the row's own spacing: only the width and height of those two entries change,
+ * never their x, so nothing downstream shifts.
+ *
+ * Proportions are the real ones in spirit, not measured: Baiyoke is the slender one, MahaNakhon the
+ * broad one. This is a decorative silhouette, not an elevation drawing.
+ */
+function nameTwo(towers: Tower[]): Tower[] {
+  const next = [...towers];
+  const mahanakhon = next[1];
+  const baiyoke = next[4];
+  if (mahanakhon) {
+    next[1] = {
+      ...mahanakhon,
+      w: 92,
+      h: 372,
+      taper: 0.07,
+      bow: 2.5,
+      roof: "flat",
+      setback: false,
+      mast: false,
+      landmark: "mahanakhon",
+    };
+  }
+  if (baiyoke) {
+    next[4] = {
+      ...baiyoke,
+      w: 58,
+      h: 470,
+      taper: 0.1,
+      bow: 2,
+      roof: "flat",
+      setback: false,
+      // The antenna. Baiyoke's is the reason it held the height record as long as it did.
+      mast: true,
+      landmark: "baiyoke",
+    };
+  }
+  return next;
+}
+
+const NEAR_TOWERS = nameTwo(
+  row({
+    seed: 11,
+    minH: 190,
+    maxH: 450,
+    minW: 62,
+    maxW: 122,
+    minGap: 86,
+    maxGap: 190,
+    /* This row drifts ±1.4% of the band, which at the far swing left only 19 of the lead tower's 73
+       units on screen. Pulled in this far it keeps between 43 and 71 of them at every point in the
+       cycle, and is still cut by the edge throughout, so the city never looks like it stops here. */
+    lead: 24,
+  }),
+);
 
 /**
  * Lit windows, scattered rather than gridded. A full grid of unlit panes would be hundreds of
@@ -309,6 +366,66 @@ function towerPath(tower: Tower): string {
   );
 }
 
+/**
+ * A horizontal block with both long edges bowed a hair outward.
+ *
+ * Every piece of landmark trim is built from this rather than from a rectangle, for the same
+ * reason the towers bow: a ruled box among hand-drawn towers reads as a different pen. One pixel
+ * of curve is all it takes, and at this scale that is all it should be.
+ */
+function slab(x: number, y: number, w: number, h: number, bow = 1.2): string {
+  return (
+    `M ${x} ${y} Q ${x + w / 2} ${y - bow}, ${x + w} ${y} ` +
+    `L ${x + w} ${y + h} Q ${x + w / 2} ${y + h + bow}, ${x} ${y + h} Z`
+  );
+}
+
+/**
+ * What makes each named tower recognisable, over the plain shaft underneath.
+ *
+ * Baiyoke is read from its two cantilevered decks — the observation floor and the revolving roof
+ * deck above it — sitting proud of a very slender shaft, on a wider podium. MahaNakhon is read from
+ * one thing only: the ribbon of cut cubes winding up the facade. Both are drawn as the outline of
+ * the feature, never as a labelled diagram; if the silhouette does not carry it, nothing will.
+ *
+ * The voxel run wobbles off its diagonal by a few per cent, from the same hash as everything else
+ * here, so it looks wound around a building rather than ruled across a drawing.
+ */
+function landmarkParts(tower: Tower): string[] {
+  if (tower.landmark === null) {
+    return [];
+  }
+  const { x, w, h } = tower;
+  const top = GROUND_Y - h;
+
+  if (tower.landmark === "baiyoke") {
+    const deckY = top + h * 0.2;
+    const roofY = top + h * 0.075;
+    const podiumH = h * 0.09;
+    return [
+      slab(x - w * 0.3, deckY, w * 1.6, w * 0.3),
+      slab(x - w * 0.14, roofY, w * 1.28, w * 0.19),
+      slab(x - w * 0.26, GROUND_Y - podiumH, w * 1.52, podiumH, 1.6),
+    ];
+  }
+
+  // MahaNakhon: the cubes climb from low on the right to high on the left, thinning as they go.
+  const parts: string[] = [];
+  const cubes = 11;
+  for (let k = 0; k < cubes; k += 1) {
+    const t = k / (cubes - 1);
+    const size = w * (0.2 - t * 0.05);
+    const cx = x + w * (0.66 - 0.5 * t) + (noise(k, 401) - 0.5) * w * 0.07;
+    const cy = GROUND_Y - h * (0.16 + 0.68 * t);
+    parts.push(slab(cx, cy, size, size * 0.72, 0.7));
+  }
+  // The crown steps rather than ends: the top of this one never looks finished, and that is the
+  // building, not an unfinished drawing of it.
+  parts.push(slab(x + w * 0.08, top - w * 0.1, w * 0.36, w * 0.1, 0.7));
+  parts.push(slab(x + w * 0.52, top - w * 0.19, w * 0.28, w * 0.19, 0.7));
+  return parts;
+}
+
 function SkylineRow({
   towers,
   windows,
@@ -323,6 +440,9 @@ function SkylineRow({
       {towers.map((tower) => (
         <g key={tower.x}>
           <path className="terrain-tower" d={towerPath(tower)} vectorEffect="non-scaling-stroke" />
+          {landmarkParts(tower).map((d) => (
+            <path key={d} className="terrain-landmark" d={d} vectorEffect="non-scaling-stroke" />
+          ))}
           {tower.mast && (
             <path
               className="terrain-mast"
@@ -421,6 +541,35 @@ const MOTES = Array.from({ length: 9 }, (_, i) => ({
   sway: 12 + noise(i, 353) * 22,
 }));
 
+/**
+ * Drizzle — ฝนปรอย, not a downpour.
+ *
+ * Twenty-two streaks over the whole viewport, each a hairline that fades out at both ends: a rain
+ * streak is the trail of something falling, and a hard-edged bar reads as a scratch on the glass.
+ *
+ * Two nested motions, the same shape as the drifting lights above. The outer element falls at a
+ * constant rate and leans as it goes; the inner one wavers across it on its own slower period, so
+ * the path is a soft curve rather than a ruled diagonal, and no two streaks trace the same one.
+ * A single straight translate is what made the earlier rain look like lines drawn on the screen.
+ *
+ * Slower and fainter than real rain on purpose. Drizzle is what a city looks like under cloud, and
+ * this is a backdrop to read over.
+ */
+const DRIZZLE = Array.from({ length: 22 }, (_, i) => ({
+  id: i,
+  left: (noise(i, 71) * 104 - 2).toFixed(2),
+  length: 18 + noise(i, 83) * 26,
+  delay: noise(i, 97) * 9,
+  duration: 3.4 + noise(i, 109) * 3.2,
+  /** How far the fall leans off vertical over its whole descent. */
+  drift: 10 + noise(i, 127) * 22,
+  opacity: 0.45 + noise(i, 139) * 0.4,
+  /** The waver: reach, period and lean, each its own. */
+  sway: 5 + noise(i, 149) * 9,
+  swayDuration: 1.6 + noise(i, 157) * 1.6,
+  tilt: 3 + noise(i, 163) * 5,
+}));
+
 export function TerrainBackdrop() {
   return (
     <div className="terrain" aria-hidden="true">
@@ -515,6 +664,37 @@ export function TerrainBackdrop() {
               } as React.CSSProperties
             }
           />
+        ))}
+      </div>
+
+      <div className="terrain-drizzle">
+        {DRIZZLE.map((drop) => (
+          <span
+            key={drop.id}
+            className="terrain-drop"
+            style={
+              {
+                left: `${drop.left}%`,
+                animationDelay: `${drop.delay}s`,
+                animationDuration: `${drop.duration}s`,
+                "--drop-drift": `${drop.drift}px`,
+              } as React.CSSProperties
+            }
+          >
+            <span
+              className="terrain-drop-line"
+              style={
+                {
+                  height: `${drop.length}px`,
+                  opacity: drop.opacity,
+                  animationDuration: `${drop.swayDuration}s`,
+                  animationDelay: `${drop.delay * 0.3}s`,
+                  "--drop-sway": `${drop.sway}px`,
+                  "--drop-tilt": `${drop.tilt}deg`,
+                } as React.CSSProperties
+              }
+            />
+          </span>
         ))}
       </div>
 
