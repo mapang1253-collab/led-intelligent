@@ -235,13 +235,7 @@
 }
 
 /**
- * Drizzle.
- *
- * Two elements per streak, because one cannot carry two motions: CSS gives an element a single
- * `transform`, so the fall and the waver would overwrite each other. The outer span falls and
- * leans; the inner one is the streak itself, wavering across that fall on a slower period of its
- * own. The sum is a curved path — which is the whole point, since a streak on a ruled diagonal
- * reads as a line drawn on the glass rather than as rain.
+ * Drizzle. Straight down, one element per streak, one motion each.
  *
  * Kept off the reading. Rain is the only thing here that crosses the viewport continuously, and at
  * full strength behind a table of prices it is steady motion under the most expensive thing on the
@@ -271,20 +265,13 @@
 .terrain-drop {
   position: absolute;
   top: -8%;
-  animation-name: terrain-drop-fall;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-}
-.terrain-drop-line {
-  display: block;
   width: 1px;
   /* Soft at both ends: the bright part of a streak is its middle, never its tips. */
   background: linear-gradient(to bottom, transparent, var(--map-marker), transparent);
-  transform-origin: 50% 0;
-  animation-name: terrain-drop-waver;
-  animation-timing-function: ease-in-out;
+  animation-name: terrain-drop-fall;
+  /* Linear, and only linear: rain that eases is rain that hesitates. */
+  animation-timing-function: linear;
   animation-iteration-count: infinite;
-  animation-direction: alternate;
 }
 
 @keyframes terrain-drop-fall {
@@ -292,17 +279,7 @@
     transform: translate3d(0, 0, 0);
   }
   to {
-    transform: translate3d(var(--drop-drift, 0), 116vh, 0);
-  }
-}
-
-@keyframes terrain-drop-waver {
-  from {
-    transform: translate3d(calc(var(--drop-sway, 6px) * -0.5), 0, 0)
-      rotate(calc(var(--drop-tilt, 4deg) * -1));
-  }
-  to {
-    transform: translate3d(calc(var(--drop-sway, 6px) * 0.5), 0, 0) rotate(var(--drop-tilt, 4deg));
+    transform: translate3d(0, 116vh, 0);
   }
 }
 

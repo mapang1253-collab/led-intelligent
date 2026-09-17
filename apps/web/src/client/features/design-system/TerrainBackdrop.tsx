@@ -519,10 +519,11 @@ const MOTES = Array.from({ length: 9 }, (_, i) => ({
  * Twenty-two streaks over the whole viewport, each a hairline that fades out at both ends: a rain
  * streak is the trail of something falling, and a hard-edged bar reads as a scratch on the glass.
  *
- * Two nested motions, the same shape as the drifting lights above. The outer element falls at a
- * constant rate and leans as it goes; the inner one wavers across it on its own slower period, so
- * the path is a soft curve rather than a ruled diagonal, and no two streaks trace the same one.
- * A single straight translate is what made the earlier rain look like lines drawn on the screen.
+ * Straight down, one element, one motion. An earlier version leaned each streak and wavered it
+ * across the fall on a second nested animation; the curve was there but the rain stopped looking
+ * like rain, which is what falling straight is for. What keeps it from reading as a barcode is
+ * that no two streaks share a length, a speed, a starting moment or a weight — the variety is in
+ * the drops, not in the path.
  *
  * Slower and fainter than real rain on purpose. Drizzle is what a city looks like under cloud, and
  * this is a backdrop to read over.
@@ -533,13 +534,7 @@ const DRIZZLE = Array.from({ length: 22 }, (_, i) => ({
   length: 18 + noise(i, 83) * 26,
   delay: noise(i, 97) * 9,
   duration: 3.4 + noise(i, 109) * 3.2,
-  /** How far the fall leans off vertical over its whole descent. */
-  drift: 10 + noise(i, 127) * 22,
   opacity: 0.45 + noise(i, 139) * 0.4,
-  /** The waver: reach, period and lean, each its own. */
-  sway: 5 + noise(i, 149) * 9,
-  swayDuration: 1.6 + noise(i, 157) * 1.6,
-  tilt: 3 + noise(i, 163) * 5,
 }));
 
 export function TerrainBackdrop() {
@@ -644,29 +639,14 @@ export function TerrainBackdrop() {
           <span
             key={drop.id}
             className="terrain-drop"
-            style={
-              {
-                left: `${drop.left}%`,
-                animationDelay: `${drop.delay}s`,
-                animationDuration: `${drop.duration}s`,
-                "--drop-drift": `${drop.drift}px`,
-              } as React.CSSProperties
-            }
-          >
-            <span
-              className="terrain-drop-line"
-              style={
-                {
-                  height: `${drop.length}px`,
-                  opacity: drop.opacity,
-                  animationDuration: `${drop.swayDuration}s`,
-                  animationDelay: `${drop.delay * 0.3}s`,
-                  "--drop-sway": `${drop.sway}px`,
-                  "--drop-tilt": `${drop.tilt}deg`,
-                } as React.CSSProperties
-              }
-            />
-          </span>
+            style={{
+              left: `${drop.left}%`,
+              height: `${drop.length}px`,
+              opacity: drop.opacity,
+              animationDelay: `${drop.delay}s`,
+              animationDuration: `${drop.duration}s`,
+            }}
+          />
         ))}
       </div>
 
