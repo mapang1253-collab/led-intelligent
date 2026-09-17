@@ -148,7 +148,7 @@ async function measureShellDelivery() {
   return performance.now() - started;
 }
 
-console.log(`เกณฑ์จาก docs/performance-and-reliability.md §7`);
+console.log("เกณฑ์จาก docs/performance-and-reliability.md §7");
 console.log(`เป้าหมายที่วัด  ${baseUrl}`);
 if (!baseUrl.startsWith("http://localhost")) {
   console.log("หมายเหตุ  นี่คือระบบที่ให้บริการจริง การวัดจะสร้าง run จริงที่หมดอายุใน 24 ชม.");
@@ -235,7 +235,7 @@ const measured = [
 ];
 
 console.log("เป้าหมายที่วัดได้จริง");
-console.log("  " + "รายการ".padEnd(34) + "p50     p95     p99     เกณฑ์ p95   ผล");
+console.log(`  ${"รายการ".padEnd(34)}p50     p95     p99     เกณฑ์ p95   ผล`);
 let failed = 0;
 for (const [key, stats] of measured) {
   const gate = GATES[key];
@@ -245,10 +245,7 @@ for (const [key, stats] of measured) {
   }
   const verdict = pass ? (gate.full ? "ผ่าน" : "ผ่านเงื่อนไขจำเป็น") : "ไม่ผ่าน";
   console.log(
-    "  " +
-      gate.label.padEnd(32) +
-      `${ms(stats.p50).padStart(6)}  ${ms(stats.p95).padStart(6)}  ${ms(stats.p99).padStart(6)}` +
-      `  ${String(gate.p95).padStart(8)}   ${verdict}`,
+    `  ${gate.label.padEnd(32)}${ms(stats.p50).padStart(6)}  ${ms(stats.p95).padStart(6)}  ${ms(stats.p99).padStart(6)}  ${String(gate.p95).padStart(8)}   ${verdict}`,
   );
 }
 console.log(`  (หน่วยเป็นมิลลิวินาที · จำนวนตัวอย่าง ${ackTimes.length}/${endToEnd.length}/5)`);
