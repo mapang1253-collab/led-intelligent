@@ -131,6 +131,9 @@ async function readRun(runId, cookie) {
 }
 
 /** The real RunState union (packages/data-access). Earlier this held two states that do not exist. */
+/** How long the end-to-end measurement will wait before calling a run unfinished. */
+const POLL_CEILING_MS = 240_000;
+
 const TERMINAL = new Set([
   "COMPLETE",
   "PARTIAL",
@@ -223,7 +226,10 @@ for (let i = 0; i < runCount; i += 1) {
   }
   let state = created.state;
   while (!TERMINAL.has(state)) {
-    if (performance.now() - started > GATES.deadline.p95) {
+    // Stops well past §7's 60-second deadline rather than at it. A measurement that gives up on
+    // the threshold it is testing cannot tell "missed the gate by two seconds" from "never
+    // finished at all", and on the deployed site the honest answer is the first of those.
+    if (performance.now() - started > POLL_CEILING_MS) {
       break;
     }
     await new Promise((resolve) => setTimeout(resolve, 250));
