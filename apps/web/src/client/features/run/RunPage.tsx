@@ -129,6 +129,11 @@ export function RunPage() {
   const state = envelope?.run_state;
   const target = envelope?.partial_artifacts?.resolved_target;
   const final = envelope?.final_analysis;
+  const headingText = final
+    ? th.finalResult.heading
+    : isTerminal(state)
+      ? th.notActivated.heading
+      : th.progress.heading;
   // Once a final analysis exists the "nothing to show" notice contradicts it: the run did reach a
   // determination, and that determination is INSUFFICIENT_EVIDENCE with its reasons stated.
   const notActivated =
@@ -248,14 +253,12 @@ export function RunPage() {
         ) : (
           <>
             <header className="mt-6">
-              <h1 className="font-bold text-3xl tracking-tight">
-                {final
-                  ? th.finalResult.heading
-                  : isTerminal(state)
-                    ? th.notActivated.heading
-                    : th.progress.heading}
-              </h1>
-              {state && (
+              <h1 className="font-bold text-3xl tracking-tight">{headingText}</h1>
+              {/* The state line is dropped when it would only repeat the heading word for word —
+                  while a run is working both say "กำลังวิเคราะห์", and printing it twice, one line
+                  apart, says nothing the first line did not. It stays for every state that adds
+                  something, and takes the spinner with it. */}
+              {state && (th.runState[state] ?? state) !== headingText && (
                 <p className="mt-2 text-ink-muted text-sm">
                   {th.runState[state] ?? state}
                   {!isTerminal(state) && (

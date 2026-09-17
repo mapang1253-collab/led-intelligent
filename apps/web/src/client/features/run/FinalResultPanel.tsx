@@ -1,5 +1,5 @@
 import { th } from "@reis/i18n";
-import { ClipboardCheck, ShieldAlert, TriangleAlert } from "lucide-react";
+import { ClipboardCheck, TriangleAlert } from "lucide-react";
 import type { FinalAnalysisView } from "./useAnalysisRun.js";
 
 /**
@@ -24,6 +24,21 @@ const DOMAIN_ORDER = [
   "SOURCE_CURRENCY",
 ] as const;
 
+/**
+ * A date a Thai reader can read.
+ *
+ * The envelope carries ISO, which is right for a wire format and wrong on screen: "2026-09-17" is
+ * not how anyone here writes a date, and this interface is Thai throughout. Falls back to the raw
+ * string rather than throwing, since a date that cannot be formatted is still worth showing.
+ */
+function thaiDate(iso: string): string {
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) {
+    return iso;
+  }
+  return parsed.toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" });
+}
+
 export function FinalResultPanel({ final }: { final: FinalAnalysisView | undefined | null }) {
   if (!final) {
     return null;
@@ -42,22 +57,14 @@ export function FinalResultPanel({ final }: { final: FinalAnalysisView | undefin
         {STATUS_LABELS[final.status] ?? final.status}
       </p>
       <p className="mt-1 text-ink-muted text-sm">
-        {th.finalResult.analysedOn} {final.analysed_on}
+        {th.finalResult.analysedOn} {thaiDate(final.analysed_on)}
       </p>
 
-      {/* §3: immediately after scope/date/status, above anything quotable, never collapsed. */}
-      <p
-        className="mt-4 flex items-start gap-2.5 rounded-card p-4 text-sm leading-relaxed"
-        style={{
-          backgroundColor: "var(--color-partial-soft)",
-          color: "var(--color-partial)",
-          border: "1px solid color-mix(in srgb, var(--color-partial) 35%, transparent)",
-        }}
-      >
-        <ShieldAlert size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
-        {final.disclaimer_th}
-      </p>
-
+      {/* The academic disclaimer is NOT repeated here. §3 requires it above anything quotable and
+          never only in a collapsed area, and the page prints it above the topic panels, where it
+          stays on screen whichever topic is open — which the e2e suite asserts on every tab and at
+          both widths. Printing the same seven dense lines a second time, a screen apart, taught a
+          reader to skip them, which is the one outcome the rule exists to prevent. */}
       <p className="mt-4 text-sm leading-relaxed">
         <span className="font-semibold">{th.finalResult.scopeLabel}: </span>
         {final.scope_statement_th}
