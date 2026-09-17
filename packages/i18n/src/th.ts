@@ -130,6 +130,7 @@ export const th = {
       AI_TIMEOUT: "ใช้เวลานานเกินกำหนด",
       AI_UNAVAILABLE: "ติดต่อบริการไม่ได้",
       AI_OUTPUT_INVALID: "คำตอบไม่ผ่านการตรวจสอบ",
+      ANALYSIS_INCOMPLETE: "การวิเคราะห์หยุดกลางทาง กรุณาเริ่มใหม่อีกครั้ง",
     },
   },
 

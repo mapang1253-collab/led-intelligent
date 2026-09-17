@@ -332,14 +332,24 @@ analysisRuns.get("/:run_id", async (c) => {
     // so an empty corpus means "not yet" as often as it means "nothing to find", and the two must
     // not be reported alike: telling a reader a source is not activated, when it is and is being
     // read from at that moment, is a false statement about the system.
-    const working = run.run_state === "RUNNING";
+    // A run that says it is working has to still be working. Nothing observes the deferred
+    // analysis — no client holds its promise — so if it dies the run would otherwise sit at
+    // RUNNING and be polled until it expired twenty-four hours later, under a screen that says
+    // "กำลังวิเคราะห์" the whole time. Past this age it is reported as stopped, which is both true
+    // and something the reader can act on.
+    const STALLED_AFTER_MS = 90_000;
+    const ageMs = Date.now() - new Date(run.created_at).getTime();
+    const stalled = run.run_state === "RUNNING" && ageMs > STALLED_AFTER_MS;
+    const working = run.run_state === "RUNNING" && !stalled;
     const evidenceLinks = await loadRunEvidence(db, run.run_id);
     const evidence: EvidenceStageResult =
       evidenceLinks.length > 0
         ? { state: "SUCCEEDED", linkCount: evidenceLinks.length }
         : working
           ? { state: "RUNNING", linkCount: 0 }
-          : { state: "SKIPPED", reason: "SOURCE_NOT_ACTIVATED", linkCount: 0 };
+          : stalled
+            ? { state: "SKIPPED", reason: "ANALYSIS_INCOMPLETE", linkCount: 0 }
+            : { state: "SKIPPED", reason: "SOURCE_NOT_ACTIVATED", linkCount: 0 };
     const evidenceGroups = groupEvidenceForDisplay(evidenceLinks, areas.province);
     const conceptSet = await loadConceptSet(db, run.run_id);
     const validationByConcept = new Map(
@@ -349,7 +359,7 @@ analysisRuns.get("/:run_id", async (c) => {
     return c.json({
       schema_version: SCHEMA_VERSION,
       run_id: run.run_id,
-      run_state: run.run_state === "QUEUED" ? "PARTIAL" : run.run_state,
+      run_state: stalled ? "FAILED_FINAL" : run.run_state === "QUEUED" ? "PARTIAL" : run.run_state,
       requested_scope: run.requested_scope,
       permitted_scope: run.permitted_scope,
       created_at: run.created_at,

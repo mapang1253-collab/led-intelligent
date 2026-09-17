@@ -117,14 +117,17 @@ async function createRun(area) {
   return { ok: true, elapsed, runId: body.run_id, state: body.run_state, cookie };
 }
 
+/** Reads a run. Refusals come back as data for the same reason createRun's do. */
 async function readRun(runId, cookie) {
   const response = await fetch(`${baseUrl}/api/v1/analysis-runs/${runId}`, {
     headers: { Accept: "application/json", Origin: origin, Cookie: cookie },
   });
   if (!response.ok) {
-    throw new Error(`read run failed: ${response.status}`);
+    const text = await response.text();
+    const cfCode = text.match(/error code: (\d+)/)?.[1];
+    return { ok: false, code: cfCode ?? String(response.status) };
   }
-  return response.json();
+  return { ok: true, envelope: await response.json() };
 }
 
 /** The real RunState union (packages/data-access). Earlier this held two states that do not exist. */
@@ -174,8 +177,8 @@ console.log("");
 const rejections = new Map();
 let attempts = 0;
 
-function recordRejection(created) {
-  rejections.set(created.code, (rejections.get(created.code) ?? 0) + 1);
+function recordRejection(refusal) {
+  rejections.set(refusal.code, (rejections.get(refusal.code) ?? 0) + 1);
 }
 
 const ackTimes = [];
@@ -192,9 +195,14 @@ for (let i = 0; i < samples; i += 1) {
   ackTimes.push(created.elapsed);
 
   const progressStart = performance.now();
-  const envelope = await readRun(created.runId, created.cookie);
+  const read = await readRun(created.runId, created.cookie);
+  if (!read.ok) {
+    recordRejection(read);
+    process.stdout.write("r");
+    continue;
+  }
   // "Truthful" means a real stage state, not a fabricated percentage (§7).
-  if (!envelope.run_state) {
+  if (!read.envelope.run_state) {
     throw new Error("run envelope carried no state");
   }
   progressTimes.push(performance.now() - progressStart);
@@ -219,7 +227,12 @@ for (let i = 0; i < runCount; i += 1) {
       break;
     }
     await new Promise((resolve) => setTimeout(resolve, 250));
-    state = (await readRun(created.runId, created.cookie)).run_state;
+    const read = await readRun(created.runId, created.cookie);
+    if (!read.ok) {
+      recordRejection(read);
+      continue;
+    }
+    state = read.envelope.run_state;
   }
   endToEnd.push(performance.now() - started);
   process.stdout.write(".");
