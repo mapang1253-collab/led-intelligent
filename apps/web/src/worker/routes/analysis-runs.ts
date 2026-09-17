@@ -337,7 +337,14 @@ analysisRuns.get("/:run_id", async (c) => {
     // RUNNING and be polled until it expired twenty-four hours later, under a screen that says
     // "กำลังวิเคราะห์" the whole time. Past this age it is reported as stopped, which is both true
     // and something the reader can act on.
-    const STALLED_AFTER_MS = 90_000;
+    //
+    // Five minutes, not the ninety seconds this first carried. Measured on the deployed site, a
+    // real run reaches PARTIAL at about seventy-six seconds — post-response work is throttled
+    // there in a way it is not in local development, where the same run takes ten. Ninety seconds
+    // would have declared healthy runs dead on the strength of a fourteen-second margin. This
+    // threshold exists to bound a hang, not to enforce a deadline; §7's deadline is a separate
+    // claim and is measured by pnpm benchmark, not asserted here.
+    const STALLED_AFTER_MS = 300_000;
     const ageMs = Date.now() - new Date(run.created_at).getTime();
     const stalled = run.run_state === "RUNNING" && ageMs > STALLED_AFTER_MS;
     const working = run.run_state === "RUNNING" && !stalled;
