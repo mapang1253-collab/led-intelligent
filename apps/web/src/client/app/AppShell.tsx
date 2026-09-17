@@ -12,12 +12,14 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Search,
+  Star,
   Users,
   X,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router";
 import { TerrainBackdrop } from "../features/design-system/TerrainBackdrop.js";
+import { useFavourites } from "../features/intake/useFavourites.js";
 
 /**
  * The application frame: one navigation rail that is present from the first screen.
@@ -90,6 +92,8 @@ function NavRail({ onNavigate, onCollapse }: { onNavigate?: () => void; onCollap
   const view = useResultView();
   const onIntake = location.pathname === "/";
   const onStatus = location.pathname === "/status";
+  const onSaved = location.pathname === "/saved";
+  const savedCount = useFavourites().list.length;
 
   const itemClass = (active: boolean) =>
     `flex items-center gap-2.5 rounded-card px-3 py-2.5 text-sm transition-colors ${
@@ -131,6 +135,20 @@ function NavRail({ onNavigate, onCollapse }: { onNavigate?: () => void; onCollap
         >
           <Search size={16} aria-hidden="true" />
           {th.nav.chooseArea}
+        </Link>
+        {/* The shortlist needs somewhere it stays put. Kept beside "choose an area" because that is
+            what it is — a way of choosing one you already looked at — and carrying its count, so a
+            reader can see at a glance whether there is anything in it. */}
+        <Link
+          to="/saved"
+          onClick={onNavigate}
+          aria-current={onSaved ? "page" : undefined}
+          className={itemClass(onSaved)}
+          style={itemStyle(onSaved)}
+        >
+          <Star size={16} aria-hidden="true" />
+          {th.nav.savedAreas}
+          {savedCount > 0 && <span className="tabular-nums opacity-70">({savedCount})</span>}
         </Link>
       </div>
 

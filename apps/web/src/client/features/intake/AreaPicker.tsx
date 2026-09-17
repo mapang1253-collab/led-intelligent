@@ -267,40 +267,10 @@ export function AreaPicker({
         </ul>
       )}
 
-      {/* The reader's own shortlist, above the suggestions, because a place they already marked
-          beats anything this app can suggest. Only shown when there is one. */}
-      {debounced.length < 2 && favourites.list.length > 0 && (
-        <div className="mt-5 border-border border-t pt-4">
-          <p className="flex items-center gap-1.5 font-medium text-sm">
-            <Star size={14} aria-hidden="true" />
-            {th.picker.favouritesHeading} ({favourites.list.length})
-          </p>
-          <p className="mt-1 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
-            <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
-            {th.picker.favouritesNote}
-          </p>
-          <ul className="mt-2">
-            {favourites.list.map((entry) => {
-              // A saved entry carries its whole chain, so it is already a valid choice.
-              const choice: AreaChoice = {
-                ...entry,
-                has_own_population: false,
-                matched_building_th: null,
-              };
-              return (
-                <ChoiceRow
-                  key={entry.subdistrict_id}
-                  choice={choice}
-                  onPick={onPick}
-                  starred
-                  onToggleStar={favourites.toggle}
-                />
-              );
-            })}
-          </ul>
-        </div>
-      )}
-
+      {/* The shortlist itself lives at /saved, reached from the rail, where it stays put and can
+          be opened from a result. A second copy here would be two lists for one thing, and this one
+          disappeared the moment anybody typed a search. The stars stay — this is where you add to
+          it. */}
       {/* Folded away rather than filling the screen. Someone who knows where they are going should
           see the search box and nothing competing with it; this is here for the reader who does
           not, and opens on request. */}

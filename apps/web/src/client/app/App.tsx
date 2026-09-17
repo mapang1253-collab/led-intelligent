@@ -3,6 +3,7 @@ import { Building2 } from "lucide-react";
 import { Route, Routes } from "react-router";
 import { DesignSystemPreview } from "../features/design-system/DesignSystemPreview.js";
 import { PropertyIntakeForm } from "../features/intake/PropertyIntakeForm.js";
+import { SavedAreasPage } from "../features/intake/SavedAreasPage.js";
 import { RunPage } from "../features/run/RunPage.js";
 import { SystemStatusPage } from "../features/status/SystemStatusPage.js";
 import { AppShell } from "./AppShell.js";
@@ -46,6 +47,7 @@ export function App() {
             <Routes>
               <Route path="/" element={<IntakePage />} />
               <Route path="/runs/:runId" element={<RunPage />} />
+              <Route path="/saved" element={<SavedAreasPage />} />
               <Route path="/status" element={<SystemStatusPage />} />
             </Routes>
           </AppShell>
