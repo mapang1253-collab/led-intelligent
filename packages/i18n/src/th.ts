@@ -142,6 +142,9 @@ export const th = {
     stageIntro: "รายการนี้บอกว่าระบบทำอะไรให้แล้วบ้าง และขั้นไหนยังให้คำตอบไม่ได้ พร้อมเหตุผล",
     stageSucceeded: "เสร็จแล้ว",
     stageSkipped: "ยังไม่เปิดใช้งาน",
+    /* A stage waiting on the one before it is not a stage somebody switched off, and telling a
+       reader it was sends them looking for a setting that does not exist. */
+    stageBlocked: "รอผลจากขั้นก่อนหน้า",
     stageDegraded: "ได้ข้อมูลไม่ครบ",
     stageFailed: "ไม่สำเร็จ",
     stageFailedRetryable: "ไม่สำเร็จ ลองใหม่ได้",

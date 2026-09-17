@@ -52,6 +52,8 @@ function StageRow({ record }: { record: StageRecord }) {
   const degraded = record.state === "DEGRADED";
   const failed = record.state === "FAILED";
   const running = record.state === "RUNNING";
+  /** Skipped because the stage it feeds from produced nothing, rather than because it is off. */
+  const blocked = record.state === "SKIPPED" && record.reason === "NO_CANDIDATES";
 
   const statusText = done
     ? th.progress.stageSucceeded
@@ -63,7 +65,11 @@ function StageRow({ record }: { record: StageRecord }) {
       : degraded
         ? th.progress.stageDegraded
         : skipped
-          ? th.progress.stageSkipped
+          ? // "Not activated" and "waiting for the stage before it" are different facts, and only
+            // one of them is about a switch. A reader told the first goes looking for a setting.
+            blocked
+            ? th.progress.stageBlocked
+            : th.progress.stageSkipped
           : running
             ? th.progress.stageRunning
             : th.progress.stagePending;
