@@ -35,6 +35,14 @@ export const th = {
     showcaseNote:
       "เลือกมาเพราะเป็นชื่อที่คนคุ้นเคยและมีข้อมูลให้ดูพอสมควร ไม่ใช่การจัดอันดับว่าที่ไหนน่าลงทุนกว่ากัน ระบบนี้ไม่ได้เรียงลำดับพื้นที่ตามความน่าลงทุน",
     browseToggle: "หรือเลือกจากรายการจังหวัด อำเภอ ตำบล",
+    /* A shortlist, kept in this browser only. Named for what it is — somewhere to put places you
+       want to come back to — and never described as a ranking, which the product does not do. */
+    favouritesHeading: "พื้นที่ที่คุณสนใจ",
+    favouritesNote:
+      "เก็บไว้ในเบราว์เซอร์นี้เท่านั้น ไม่ได้ส่งขึ้นเซิร์ฟเวอร์ ไม่ผูกกับบัญชี และไม่ได้เก็บผลวิเคราะห์ เก็บแค่ว่าคุณสนใจพื้นที่ไหน",
+    favouriteAdd: "เก็บพื้นที่นี้ไว้ดูภายหลัง",
+    favouriteRemove: "เอาออกจากพื้นที่ที่สนใจ",
+    favouritesEmpty: "ยังไม่ได้เก็บพื้นที่ไหนไว้ กดรูปดาวข้างพื้นที่เพื่อเก็บไว้เปรียบเทียบกัน",
     selectedHeading: "พื้นที่ที่จะวิเคราะห์",
     change: "เปลี่ยนพื้นที่",
   },
@@ -44,7 +52,7 @@ export const th = {
     /* What the tool is, said before it starts. Read without this, a result full of "ยัง…" lines
        looks like an analysis that broke; read with it, the same lines are the scope. */
     description:
-      "เครื่องมือนี้ช่วย “คัดกรองก่อนลงทุน” — บอกว่าที่ดินในพื้นที่นี้น่าจะสร้างอะไรได้ ราคาประเมินเท่าไหร่ และกฎหมายติดตรงไหน ยังไม่ใช่เครื่องคำนวณผลตอบแทน",
+      "เครื่องมือนี้ช่วย “คัดกรองก่อนลงทุน” — บอกว่าอสังหาริมทรัพย์ในพื้นที่นี้ราคาประเมินเท่าไหร่ ที่ดินน่าจะสร้างอะไรได้ และกฎหมายติดตรงไหน ยังไม่ใช่เครื่องคำนวณผลตอบแทน",
 
     provinceLabel: "จังหวัด",
     districtLabel: "อำเภอ/เขต",

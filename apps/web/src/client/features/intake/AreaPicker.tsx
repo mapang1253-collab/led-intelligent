@@ -1,7 +1,8 @@
 import { th } from "@reis/i18n";
 import { useQuery } from "@tanstack/react-query";
-import { Building2, ChevronDown, Info, LoaderCircle, MapPin, Search, X } from "lucide-react";
+import { Building2, ChevronDown, Info, LoaderCircle, MapPin, Search, Star, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useFavourites } from "./useFavourites.js";
 
 /**
  * Choosing where to look.
@@ -92,19 +93,23 @@ function ChoiceRow({
   choice,
   onPick,
   nickname,
+  starred,
+  onToggleStar,
 }: {
   choice: AreaChoice;
   onPick: (c: AreaChoice) => void;
   /** The name people say, when it differs from the one on the map. */
   nickname?: string;
+  starred?: boolean;
+  onToggleStar?: (c: AreaChoice) => void;
 }) {
   const { name, within } = placeLabel(choice);
   return (
-    <li>
+    <li className="flex items-center gap-1 border-border border-b last:border-b-0">
       <button
         type="button"
         onClick={() => onPick(choice)}
-        className="flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-1 border-border border-b px-1 py-3 text-left last:border-b-0 hover:bg-surface-sunken"
+        className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-4 gap-y-1 px-1 py-3 text-left hover:bg-surface-sunken"
       >
         <span>
           <span className="font-medium">{nickname ?? name}</span>
@@ -120,6 +125,20 @@ function ChoiceRow({
         </span>
         <DataBadges choice={choice} />
       </button>
+      {/* Its own control, outside the row button: a star is not a way of choosing the place. */}
+      {onToggleStar && (
+        <button
+          type="button"
+          onClick={() => onToggleStar(choice)}
+          aria-pressed={starred}
+          aria-label={starred ? th.picker.favouriteRemove : th.picker.favouriteAdd}
+          title={starred ? th.picker.favouriteRemove : th.picker.favouriteAdd}
+          className="shrink-0 rounded-card p-2 text-ink-muted hover:text-ink"
+          style={starred ? { color: "var(--color-signature-text)" } : undefined}
+        >
+          <Star size={16} fill={starred ? "currentColor" : "none"} aria-hidden="true" />
+        </button>
+      )}
     </li>
   );
 }
@@ -142,6 +161,7 @@ export function AreaPicker({
   const [debounced, setDebounced] = useState("");
   const [showFallback, setShowFallback] = useState(false);
   const [showShowcase, setShowShowcase] = useState(false);
+  const favourites = useFavourites();
 
   // One request per pause in typing, not one per keystroke.
   useEffect(() => {
@@ -235,10 +255,50 @@ export function AreaPicker({
             <li className="py-3 text-ink-muted text-sm">{th.picker.noMatches}</li>
           ) : (
             results.data.map((choice) => (
-              <ChoiceRow key={choice.subdistrict_id} choice={choice} onPick={onPick} />
+              <ChoiceRow
+                key={choice.subdistrict_id}
+                choice={choice}
+                onPick={onPick}
+                starred={favourites.has(choice.subdistrict_id)}
+                onToggleStar={favourites.toggle}
+              />
             ))
           )}
         </ul>
+      )}
+
+      {/* The reader's own shortlist, above the suggestions, because a place they already marked
+          beats anything this app can suggest. Only shown when there is one. */}
+      {debounced.length < 2 && favourites.list.length > 0 && (
+        <div className="mt-5 border-border border-t pt-4">
+          <p className="flex items-center gap-1.5 font-medium text-sm">
+            <Star size={14} aria-hidden="true" />
+            {th.picker.favouritesHeading} ({favourites.list.length})
+          </p>
+          <p className="mt-1 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
+            <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
+            {th.picker.favouritesNote}
+          </p>
+          <ul className="mt-2">
+            {favourites.list.map((entry) => {
+              // A saved entry carries its whole chain, so it is already a valid choice.
+              const choice: AreaChoice = {
+                ...entry,
+                has_own_population: false,
+                matched_building_th: null,
+              };
+              return (
+                <ChoiceRow
+                  key={entry.subdistrict_id}
+                  choice={choice}
+                  onPick={onPick}
+                  starred
+                  onToggleStar={favourites.toggle}
+                />
+              );
+            })}
+          </ul>
+        </div>
       )}
 
       {/* Folded away rather than filling the screen. Someone who knows where they are going should
@@ -275,6 +335,8 @@ export function AreaPicker({
                       choice={choice}
                       onPick={onPick}
                       nickname={entry.nickname}
+                      starred={favourites.has(choice.subdistrict_id)}
+                      onToggleStar={favourites.toggle}
                     />
                   ) : null;
                 })}
