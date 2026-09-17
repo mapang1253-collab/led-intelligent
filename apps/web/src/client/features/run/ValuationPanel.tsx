@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState } from "react";
 import methodFile from "../../../../../../database/reviewed-packs/th-valuation-assessed-v1.json" with {
   type: "json",
 };
+import { Caveat } from "./Caveat.js";
 import type { EvidenceGroup } from "./useAnalysisRun.js";
 
 /**
@@ -160,14 +161,10 @@ function LandValuation({
       <h3 className="mt-8 font-semibold">{th.valuation.landHeading}</h3>
       <p className="mt-1 text-ink-muted text-sm leading-relaxed">{th.valuation.landIntro}</p>
 
-      {/* Scope before numbers: most urban land is titled and therefore absent from this schedule. */}
-      <p
-        className="mt-3 flex items-start gap-2 rounded-card p-3 text-sm leading-relaxed"
-        style={{ backgroundColor: "var(--color-partial-soft)", color: "var(--color-partial)" }}
-      >
-        <TriangleAlert size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
-        {th.valuation.landNotTitleDeed}
-      </p>
+      {/* Scope before numbers: most urban land is titled and therefore absent from this schedule.
+          The amber on this screen is spent on "assessed is not market", which is the one that
+          costs money to misread. */}
+      <Caveat>{th.valuation.landNotTitleDeed}</Caveat>
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <label className="block">

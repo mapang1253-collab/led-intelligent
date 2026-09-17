@@ -136,8 +136,15 @@ export function RunPage() {
       : th.progress.heading;
   // Once a final analysis exists the "nothing to show" notice contradicts it: the run did reach a
   // determination, and that determination is INSUFFICIENT_EVIDENCE with its reasons stated.
+  //
+  // And it waits for the run to stop. "ยังไม่มีผลวิเคราะห์ ... ยังไม่ได้เปิดใช้งาน" under a heading
+  // reading "กำลังวิเคราะห์" told a reader the work would not happen while it was happening — the
+  // stages it names are running at that moment, and one of them may yet produce the result the
+  // notice says does not exist.
   const notActivated =
-    !final && envelope?.notices?.some((n) => n.code === "ANALYTICAL_STAGES_NOT_ACTIVATED");
+    !final &&
+    isTerminal(state) &&
+    envelope?.notices?.some((n) => n.code === "ANALYTICAL_STAGES_NOT_ACTIVATED");
   const evidenceStage = envelope?.stage_records?.find((s) => s.stage === "EVIDENCE_ACQUISITION");
   const conceptStage = envelope?.stage_records?.find((s) => s.stage === "CONCEPT_PROPOSAL");
   const unavailable = envelope?.errors?.some((e) => e.code === "RUN_NOT_AVAILABLE");

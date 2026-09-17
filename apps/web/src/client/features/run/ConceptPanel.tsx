@@ -1,6 +1,7 @@
 import { th } from "@reis/i18n";
-import { Check, CircleHelp, Info, Lightbulb, TriangleAlert, X } from "lucide-react";
+import { Check, CircleHelp, Info, Lightbulb, X } from "lucide-react";
 import { useState } from "react";
+import { Caveat } from "./Caveat.js";
 import type { ConceptCard, RuleOutcomeView } from "./useAnalysisRun.js";
 
 /**
@@ -85,16 +86,11 @@ function ConceptCardView({ concept }: { concept: ConceptCard }) {
         {th.concepts.buildingTypeLabel}: {concept.building_type_th}
       </p>
 
-      {/* The proposal's own stated uncertainty sits with the proposal, not in a footnote. */}
-      <p
-        className="mt-3 flex items-start gap-2 rounded-card p-3 text-sm leading-relaxed"
-        style={{ backgroundColor: "var(--color-partial-soft)", color: "var(--color-partial)" }}
-      >
-        <TriangleAlert size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
-        <span>
-          {th.concepts.uncertaintyLabel}: {concept.uncertainty_th}
-        </span>
-      </p>
+      {/* The proposal's own stated uncertainty sits with the proposal, not in a footnote — and one
+          of these rides on every concept, so it reads as a note rather than as an alarm. */}
+      <Caveat>
+        {th.concepts.uncertaintyLabel}: {concept.uncertainty_th}
+      </Caveat>
 
       {concept.unmapped_activities_th.length > 0 && (
         <p className="mt-2 text-ink-muted text-xs">

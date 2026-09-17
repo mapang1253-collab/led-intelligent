@@ -1,6 +1,7 @@
 import { th } from "@reis/i18n";
-import { ChevronDown, ChevronRight, Database, Info, MapPin, TriangleAlert } from "lucide-react";
+import { ChevronDown, ChevronRight, Database, Info, MapPin } from "lucide-react";
 import { useState } from "react";
+import { Caveat } from "./Caveat.js";
 import type { EvidenceGroup } from "./useAnalysisRun.js";
 
 /**
@@ -181,21 +182,14 @@ export function EvidencePanel({
               </span>
             </h3>
 
-            {/* Scope first: what this evidence is about, before any number is read. */}
-            <p
-              className="mt-2 flex items-start gap-2 rounded-card p-3 text-sm leading-relaxed"
-              style={{
-                backgroundColor: "var(--color-partial-soft)",
-                color: "var(--color-partial)",
-              }}
-            >
-              <TriangleAlert size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
-              <span>
-                {group.geography_note_th}
-                {" · "}
-                {FITNESS_LABELS[group.purpose_fitness] ?? group.purpose_fitness}
-              </span>
-            </p>
+            {/* Scope first: what this evidence is about, before any number is read. Quiet, because
+                there is one of these under every group and a screen of amber panels is a screen
+                nobody reads. */}
+            <Caveat>
+              {group.geography_note_th}
+              {" · "}
+              {FITNESS_LABELS[group.purpose_fitness] ?? group.purpose_fitness}
+            </Caveat>
 
             <EvidenceItems group={group} />
 
