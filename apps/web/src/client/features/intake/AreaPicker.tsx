@@ -29,6 +29,26 @@ export interface AreaChoice {
   matched_building_th: string | null;
 }
 
+/**
+ * Somewhere to start, for a reader with no place in mind.
+ *
+ * Six places chosen for being recognisable across the country and for having figures worth
+ * opening — not for being good investments, which this product does not rank and must not appear
+ * to. Each is listed under the name people actually say: nobody calls ทองหล่อ "แขวงคลองตันเหนือ",
+ * and a starting list written in administrative names would not be a starting list at all.
+ *
+ * Ids rather than names, because a name lookup could drift to a different place as data changes,
+ * and this list is meant to be the same six every time.
+ */
+const SHOWCASE: readonly { readonly id: string; readonly nickname: string }[] = [
+  { id: "1151", nickname: "ทองหล่อ" },
+  { id: "1993", nickname: "พัทยา" },
+  { id: "1964", nickname: "บางแสน" },
+  { id: "5168", nickname: "เชียงใหม่" },
+  { id: "7638", nickname: "ป่าตอง ภูเก็ต" },
+  { id: "7964", nickname: "หาดใหญ่" },
+];
+
 async function fetchChoices(url: string): Promise<readonly AreaChoice[]> {
   const response = await fetch(url, { headers: { Accept: "application/json" } });
   if (!response.ok) {
@@ -68,7 +88,16 @@ function DataBadges({ choice }: { choice: AreaChoice }) {
   );
 }
 
-function ChoiceRow({ choice, onPick }: { choice: AreaChoice; onPick: (c: AreaChoice) => void }) {
+function ChoiceRow({
+  choice,
+  onPick,
+  nickname,
+}: {
+  choice: AreaChoice;
+  onPick: (c: AreaChoice) => void;
+  /** The name people say, when it differs from the one on the map. */
+  nickname?: string;
+}) {
   const { name, within } = placeLabel(choice);
   return (
     <li>
@@ -78,8 +107,10 @@ function ChoiceRow({ choice, onPick }: { choice: AreaChoice; onPick: (c: AreaCho
         className="flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-1 border-border border-b px-1 py-3 text-left last:border-b-0 hover:bg-surface-sunken"
       >
         <span>
-          <span className="font-medium">{name}</span>
-          <span className="block text-ink-muted text-xs">{within}</span>
+          <span className="font-medium">{nickname ?? name}</span>
+          <span className="block text-ink-muted text-xs">
+            {nickname ? `${name} · ${within}` : within}
+          </span>
           {/* Why this place came back at all, when its own name does not contain the word. */}
           {choice.matched_building_th && (
             <span className="mt-0.5 block text-signature-text text-xs">
@@ -110,6 +141,7 @@ export function AreaPicker({
   const [term, setTerm] = useState("");
   const [debounced, setDebounced] = useState("");
   const [showFallback, setShowFallback] = useState(false);
+  const [showShowcase, setShowShowcase] = useState(false);
 
   // One request per pause in typing, not one per keystroke.
   useEffect(() => {
@@ -125,9 +157,12 @@ export function AreaPicker({
     staleTime: 5 * 60_000,
   });
 
-  const documented = useQuery({
-    queryKey: ["area-well-documented"],
-    queryFn: () => fetchChoices("/api/v1/administrative-areas/well-documented"),
+  const showcase = useQuery({
+    queryKey: ["area-showcase"],
+    queryFn: () =>
+      fetchChoices(
+        `/api/v1/administrative-areas/by-ids?ids=${SHOWCASE.map((s) => s.id).join(",")}`,
+      ),
     staleTime: Number.POSITIVE_INFINITY,
   });
 
@@ -206,23 +241,50 @@ export function AreaPicker({
         </ul>
       )}
 
+      {/* Folded away rather than filling the screen. Someone who knows where they are going should
+          see the search box and nothing competing with it; this is here for the reader who does
+          not, and opens on request. */}
       {debounced.length < 2 && (
-        <div className="mt-6">
-          <p className="font-medium text-sm">{th.picker.startHereHeading}</p>
-          {/* The ordering is about this system's coverage, never about the places themselves. */}
-          <p className="mt-1 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
-            <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
-            {th.picker.startHereNote}
-          </p>
-          <ul className="mt-2">
-            {documented.data?.map((choice) => (
-              <ChoiceRow key={choice.subdistrict_id} choice={choice} onPick={onPick} />
-            ))}
-          </ul>
+        <div className="mt-5 border-border border-t pt-4">
+          <button
+            type="button"
+            onClick={() => setShowShowcase((open) => !open)}
+            aria-expanded={showShowcase}
+            className="flex items-center gap-2 font-medium text-signature-text text-sm"
+          >
+            <ChevronDown
+              size={16}
+              aria-hidden="true"
+              className={showShowcase ? "" : "-rotate-90 transition-transform"}
+            />
+            {th.picker.showcaseToggle}
+          </button>
+          {showShowcase && (
+            <div className="mt-3">
+              {/* Chosen for being familiar, never for being good places to buy. */}
+              <p className="flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
+                <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
+                {th.picker.showcaseNote}
+              </p>
+              <ul className="mt-2">
+                {SHOWCASE.map((entry) => {
+                  const choice = showcase.data?.find((c) => c.subdistrict_id === entry.id);
+                  return choice ? (
+                    <ChoiceRow
+                      key={entry.id}
+                      choice={choice}
+                      onPick={onPick}
+                      nickname={entry.nickname}
+                    />
+                  ) : null;
+                })}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 
-      <div className="mt-6 border-border border-t pt-4">
+      <div className="mt-4 border-border border-t pt-4">
         <button
           type="button"
           onClick={() => setShowFallback((open) => !open)}

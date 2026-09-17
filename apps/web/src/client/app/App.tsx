@@ -17,9 +17,9 @@ function IntakePage() {
             <Building2 size={14} aria-hidden="true" /> {th.app.academicBadge}
           </span>
           <h1 className="mt-5 font-bold text-4xl leading-tight tracking-tight md:text-5xl">
-            ที่ดินแปลงนี้
+            {th.app.headlineLead}
             <br />
-            <span className="headline-gradient">ใช้ทำอะไรได้คุ้มที่สุด</span>
+            <span className="headline-gradient">{th.app.headlineAnswer}</span>
           </h1>
           <p className="mt-3 max-w-xl text-base text-ink-muted">{th.app.tagline}</p>
         </div>

@@ -1,6 +1,7 @@
 import type { LegalRulePack } from "@reis/contracts";
 import {
   aiStatus,
+  areasByIds,
   createDb,
   listDistricts,
   listProvinces,
@@ -111,6 +112,31 @@ app.get("/api/v1/administrative-areas/search", async (c) => {
   const db = createDb(c.env.HYPERDRIVE.connectionString);
   try {
     const data = await searchAreas(db, query, 20);
+    return c.json({ schema_version: SCHEMA_VERSION, data });
+  } finally {
+    await db.destroy();
+  }
+});
+
+/**
+ * Figures for a named handful of areas, for the front page's starting list.
+ *
+ * The ids come from the client because which places are worth offering is a product decision, and
+ * the familiar name each is known by lives there with them. A cap and a shape check keep a public
+ * endpoint from being turned into an arbitrary bulk reader of the area table.
+ */
+app.get("/api/v1/administrative-areas/by-ids", async (c) => {
+  const ids = (c.req.query("ids") ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter((id) => /^\d{1,8}$/.test(id))
+    .slice(0, 12);
+  if (ids.length === 0) {
+    return c.json({ schema_version: SCHEMA_VERSION, data: [] });
+  }
+  const db = createDb(c.env.HYPERDRIVE.connectionString);
+  try {
+    const data = await areasByIds(db, ids);
     return c.json({ schema_version: SCHEMA_VERSION, data });
   } finally {
     await db.destroy();

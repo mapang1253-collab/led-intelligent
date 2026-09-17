@@ -208,6 +208,30 @@ export async function searchAreas(db: Db, query: string, limit = 20): Promise<Ar
  * Ordered by how much property evidence each has, which is a statement about this system's
  * coverage and not about the places. The screen that shows these must say so.
  */
+/**
+ * A fixed handful of areas by id, for the front page's "somewhere to start" list.
+ *
+ * Which places appear is a product decision and lives in the client beside the familiar name each
+ * is actually known by — ทองหล่อ rather than แขวงคลองตันเหนือ. This function only fills in the
+ * figures, and it returns them in the order asked for rather than in any order of its own, because
+ * the caller's order is the only one that carries meaning here.
+ */
+export async function areasByIds(db: Db, ids: readonly string[]): Promise<AreaChoice[]> {
+  if (ids.length === 0) {
+    return [];
+  }
+  const { rows } = await db.executeQuery<AreaChoice>({
+    sql: `${AREA_CHOICE_SQL} AND sd.id = ANY($1)`,
+    parameters: [ids as string[]],
+    query: { kind: "SelectQueryNode" } as never,
+  });
+  const byId = new Map(rows.map((row) => [row.subdistrict_id, row]));
+  return ids.flatMap((id) => {
+    const row = byId.get(id);
+    return row ? [row] : [];
+  });
+}
+
 export async function wellDocumentedAreas(db: Db, limit = 6): Promise<AreaChoice[]> {
   const { rows } = await db.executeQuery<AreaChoice>({
     sql: `${AREA_CHOICE_SQL}

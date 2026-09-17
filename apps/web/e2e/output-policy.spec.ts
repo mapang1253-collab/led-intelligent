@@ -32,6 +32,20 @@ const RESULT_HEADING = new RegExp(`${th.finalResult.heading}|${th.notActivated.h
  */
 const RESULT_TIMEOUT = 35_000;
 
+/**
+ * Picks a place the way the product intends: type a name people actually say.
+ *
+ * It used to click the first suggestion on the page, which stopped working the moment those moved
+ * behind a fold — and searching is the path almost every reader takes anyway, so this is both more
+ * stable and more representative.
+ */
+async function pickAnArea(page: Page) {
+  await page.getByRole("searchbox").fill("บางแสน");
+  const first = page.getByRole("button", { name: /ต\.|แขวง/ }).first();
+  await expect(first).toBeVisible();
+  await first.click();
+}
+
 /** Enough of the sentence to be this sentence and nothing else, short enough to survive an edit. */
 const DISCLAIMER_FRAGMENT = BASE_DISCLAIMER_TH.slice(0, 40);
 
@@ -45,10 +59,7 @@ const TOPICS = [
 
 async function startRun(page: Page) {
   await page.goto("/");
-  await page
-    .getByRole("button", { name: /ต\.|แขวง/ })
-    .first()
-    .click();
+  await pickAnArea(page);
   await page.getByRole("button", { name: th.intake.submit }).click();
   await expect(page).toHaveURL(/\/runs\/[^/?#]+/);
   await expect(page.getByRole("heading", { level: 1, name: RESULT_HEADING })).toBeVisible({

@@ -1,3 +1,4 @@
+import { th } from "@reis/i18n";
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -201,9 +202,9 @@ export function DesignSystemPreview() {
             <Building2 size={14} /> ต้นแบบเชิงวิชาการ
           </span>
           <h1 className="mt-5 font-bold text-4xl leading-tight tracking-tight md:text-6xl">
-            ที่ดินแปลงนี้
+            {th.app.headlineLead}
             <br />
-            <span className="headline-gradient">ใช้ทำอะไรได้คุ้มที่สุด</span>
+            <span className="headline-gradient">{th.app.headlineAnswer}</span>
           </h1>
           <p className="mt-3 max-w-xl text-base text-ink-muted">
             วิเคราะห์จากหลักฐานจริง ครบทุกจังหวัดทั่วประเทศ พร้อมบอกตรง ๆ ว่าอะไรที่ยังไม่รู้

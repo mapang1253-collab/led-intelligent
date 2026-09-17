@@ -24,6 +24,7 @@ export {
   aiStatus,
   searchAreas,
   sourceStatuses,
+  areasByIds,
   wellDocumentedAreas,
   listSubdistricts,
   type AreaChoice,

@@ -8,7 +8,13 @@
 export const th = {
   app: {
     title: "ระบบวิเคราะห์ศักยภาพการลงทุนอสังหาริมทรัพย์",
-    tagline: "วิเคราะห์จากหลักฐานจริง ครบทุกจังหวัดทั่วประเทศ พร้อมบอกตรง ๆ ว่าอะไรที่ยังไม่รู้",
+    /* The two halves of the front-page headline. It is the question this field actually asks —
+       "highest and best use" is that sentence in English — and it belongs here rather than in a
+       component, like every other Thai string in the product. */
+    headlineLead: "ที่ดินผืนนี้",
+    headlineAnswer: "ควรเป็นอะไร จึงจะดีที่สุด",
+    tagline:
+      "Highest and Best Use — หาคำตอบจากหลักฐานที่หน่วยงานรัฐเผยแพร่จริง ครบทุกจังหวัดทั่วประเทศ และบอกตรง ๆ ว่าอะไรที่ยังไม่รู้",
     academicBadge: "ต้นแบบเชิงวิชาการ",
   },
 
@@ -22,9 +28,12 @@ export const th = {
     condoBadge: "ราคาคอนโด",
     landBadge: "ราคาที่ดิน",
     noPropertyData: "ยังไม่มีข้อมูลราคาอสังหาในพื้นที่นี้",
-    startHereHeading: "ยังไม่มีพื้นที่ในใจ เริ่มจากตรงนี้ได้",
-    startHereNote:
-      "เรียงตามจำนวนข้อมูลราคาที่ระบบมี ไม่ใช่การจัดอันดับว่าพื้นที่ไหนน่าลงทุนกว่ากัน พื้นที่ที่มีข้อมูลน้อยไม่ได้แปลว่าไม่ดี แปลว่าระบบยังบอกอะไรเกี่ยวกับที่นั่นได้ไม่มาก",
+    showcaseToggle: "ยังไม่รู้จะเริ่มจากที่ไหน ลองเมืองที่คนรู้จักกันดี",
+    /* "เมืองที่คนรู้จัก", never "พื้นที่ที่น่าสนใจ": this list is chosen for being recognisable and for
+       having figures to show, and the product does not rank places by how good they are to invest
+       in. Saying otherwise in a label would be the one claim the whole system refuses to make. */
+    showcaseNote:
+      "เลือกมาเพราะเป็นชื่อที่คนคุ้นเคยและมีข้อมูลให้ดูพอสมควร ไม่ใช่การจัดอันดับว่าที่ไหนน่าลงทุนกว่ากัน ระบบนี้ไม่ได้เรียงลำดับพื้นที่ตามความน่าลงทุน",
     browseToggle: "หรือเลือกจากรายการจังหวัด อำเภอ ตำบล",
     selectedHeading: "พื้นที่ที่จะวิเคราะห์",
     change: "เปลี่ยนพื้นที่",
