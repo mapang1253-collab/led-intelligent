@@ -21,3 +21,6 @@ build/
 coverage/
 playwright-report/
 test-results/
+
+# Playwright HTML report (test-results/ is already covered above)
+playwright-report/
