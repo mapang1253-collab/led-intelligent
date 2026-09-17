@@ -14,7 +14,6 @@ import {
   LoaderCircle,
   MapPin,
   RotateCw,
-  ShieldAlert,
   TriangleAlert,
   Users,
 } from "lucide-react";
@@ -24,6 +23,7 @@ import { useResultView } from "../../app/AppShell.js";
 import { ConceptPanel } from "./ConceptPanel.js";
 import { EvidencePanel } from "./EvidencePanel.js";
 import { FinalResultPanel } from "./FinalResultPanel.js";
+import { Notice } from "./Notice.js";
 import { type ResultTab, ResultTabs } from "./ResultTabs.js";
 import { ValuationPanel } from "./ValuationPanel.js";
 import {
@@ -175,11 +175,25 @@ export function RunPage() {
             <h2 className="mb-1 font-semibold text-ink-muted text-sm">
               {th.progress.stageHeading}
             </h2>
-            <ul>
+            {/* What this list is for. Without it, six rows of states read as six things that broke
+                rather than as the shape of the work. */}
+            <p className="mt-1 text-ink-muted text-sm leading-relaxed">{th.progress.stageIntro}</p>
+            <ul className="mt-3">
               {envelope?.stage_records?.map((record) => (
                 <StageRow key={record.stage} record={record} />
               ))}
             </ul>
+            {/* The financial stage is switched off deliberately. A reader told only "ยังไม่เปิด
+                ใช้งาน" reasonably concludes the analysis failed, when what happened is that the
+                product declines to print a return it cannot support. */}
+            {envelope?.stage_records?.some(
+              (record) => record.stage === "SCENARIO" && record.state === "SKIPPED",
+            ) && (
+              <p className="mt-3 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
+                <Info size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
+                {th.progress.scenarioOffNote}
+              </p>
+            )}
           </section>
           <FinalResultPanel final={final} />
         </>
@@ -293,25 +307,15 @@ export function RunPage() {
 
             {/* Above the tabs and above every price table, per docs/output-policy.md §3. An
                 unselected tab panel is a collapsed area, which §3 forbids as its only home. */}
-            <p
-              className="mt-5 flex items-start gap-2.5 rounded-card p-4 text-sm leading-relaxed"
-              style={{
-                backgroundColor: "var(--color-partial-soft)",
-                color: "var(--color-partial)",
-                border: "1px solid color-mix(in srgb, var(--color-partial) 35%, transparent)",
-              }}
-            >
-              <ShieldAlert size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
-              {final?.disclaimer_th ?? BASE_DISCLAIMER_TH}
-            </p>
+            <Notice>{final?.disclaimer_th ?? BASE_DISCLAIMER_TH}</Notice>
 
             <ResultTabs tabs={tabs} activeId={view} />
 
             {notActivated && (
               <section
-                className="mt-5 rounded-card p-6"
+                className="mt-5 rounded-card p-5"
                 style={{
-                  backgroundColor: "var(--color-partial-soft)",
+                  backgroundColor: "var(--notice-bg)",
                   color: "var(--color-partial)",
                   border: "1px solid color-mix(in srgb, var(--color-partial) 35%, transparent)",
                 }}

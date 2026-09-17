@@ -45,6 +45,12 @@
   --cloud: rgba(148, 178, 214, 0.28);
   --glass-bg: rgba(255, 255, 255, 0.74);
   --glass-border: rgba(30, 70, 120, 0.1);
+  /* Standing notices — the academic disclaimer and its kin. Deliberately NOT a status colour: a
+     disclaimer is not a PARTIAL verdict, and dressing it as one spent the amber that PASS / FAIL /
+     PARTIAL / UNKNOWN rely on to mean something. This is the product's own blue, held back. */
+  --notice-bg: rgba(35, 98, 237, 0.07);
+  --notice-border: rgba(35, 98, 237, 0.22);
+  --notice-ink: #2f4a6d;
 
   /* Signature + gradients — overridden per [data-palette] below.
      Two tiers by necessity: `grad-deep-*` sits behind white text and is contrast-verified, while
@@ -175,6 +181,9 @@
   --cloud: rgba(140, 180, 235, 0.17);
   --glass-bg: rgba(255, 255, 255, 0.06);
   --glass-border: rgba(255, 255, 255, 0.1);
+  --notice-bg: rgba(96, 150, 235, 0.09);
+  --notice-border: rgba(96, 150, 235, 0.24);
+  --notice-ink: #b9c9e4;
 
   --color-header: #14171f;
   --color-header-on: #eef1f5;

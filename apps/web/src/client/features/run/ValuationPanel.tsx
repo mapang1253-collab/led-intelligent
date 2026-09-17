@@ -12,6 +12,7 @@ import methodFile from "../../../../../../database/reviewed-packs/th-valuation-a
   type: "json",
 };
 import { Caveat } from "./Caveat.js";
+import { Notice } from "./Notice.js";
 import type { EvidenceGroup } from "./useAnalysisRun.js";
 
 /**
@@ -72,19 +73,10 @@ function ValuationResultView({
         ))}
       </ul>
 
-      <p
-        className="mt-4 flex items-start gap-2 rounded-card p-3 text-sm leading-relaxed"
-        style={{
-          backgroundColor: "var(--color-partial-soft)",
-          color: "var(--color-partial)",
-        }}
-      >
-        <TriangleAlert size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
-        <span>
-          {th.valuation.notMarketValue}
-          {extraWarningTh && ` · ${extraWarningTh}`}
-        </span>
-      </p>
+      <Notice>
+        {th.valuation.notMarketValue}
+        {extraWarningTh && ` · ${extraWarningTh}`}
+      </Notice>
 
       <p className="mt-3 font-medium text-ink-muted text-xs">{th.valuation.limitationsHeading}</p>
       <ul className="mt-1 list-disc pl-5 text-ink-muted text-xs leading-relaxed">

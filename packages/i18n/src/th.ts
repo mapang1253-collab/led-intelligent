@@ -41,7 +41,10 @@ export const th = {
 
   intake: {
     heading: "ทรัพย์สินที่ต้องการวิเคราะห์",
-    description: "เลือกพื้นที่ที่ต้องการวิเคราะห์ ระบบใช้ข้อมูลเท่าที่มีจริง และจะบอกชัดเจนว่าส่วนไหนยังไม่ทราบ",
+    /* What the tool is, said before it starts. Read without this, a result full of "ยัง…" lines
+       looks like an analysis that broke; read with it, the same lines are the scope. */
+    description:
+      "เครื่องมือนี้ช่วย “คัดกรองก่อนลงทุน” — บอกว่าที่ดินในพื้นที่นี้น่าจะสร้างอะไรได้ ราคาประเมินเท่าไหร่ และกฎหมายติดตรงไหน ยังไม่ใช่เครื่องคำนวณผลตอบแทน",
 
     provinceLabel: "จังหวัด",
     districtLabel: "อำเภอ/เขต",
@@ -115,6 +118,11 @@ export const th = {
     expiresAt: "ผลลัพธ์นี้จะหมดอายุ",
     targetHeading: "พื้นที่ที่วิเคราะห์",
     stageHeading: "ขั้นตอนการทำงาน",
+    stageIntro: "รายการนี้บอกว่าระบบทำอะไรให้แล้วบ้าง และขั้นไหนยังให้คำตอบไม่ได้ พร้อมเหตุผล",
+    /* The financial stage is off by design, not by accident, and a reader who is not told that
+       reasonably concludes the analysis failed. */
+    scenarioOffNote:
+      "ขั้นคำนวณการเงินปิดไว้ตั้งใจ เพราะยังไม่มีข้อมูลต้นทุนก่อสร้างที่อ้างอิงได้ทั้งประเทศ ระบบจึงไม่แสดงผลตอบแทนหรือระยะคืนทุน แทนที่จะเดาตัวเลขให้",
     stageSucceeded: "เสร็จแล้ว",
     stageSkipped: "ยังไม่เปิดใช้งาน",
     stageDegraded: "ได้ข้อมูลไม่ครบ",

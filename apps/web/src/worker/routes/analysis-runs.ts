@@ -395,8 +395,9 @@ analysisRuns.get("/:run_id", async (c) => {
           stage: "VALIDATION",
           version: "1.0.0",
           // With no concepts there is nothing to validate; that is not the pack's fault, and
-          // saying "pack not activated" would send the reader after the wrong thing.
-          ...validationStageRecord(conceptSet),
+          // saying "pack not activated" would send the reader after the wrong thing. While the run
+          // is still working there are no concepts *yet*, which is a different statement again.
+          ...(working ? { state: "RUNNING" } : validationStageRecord(conceptSet)),
         },
         {
           stage: "SCENARIO",
@@ -404,7 +405,11 @@ analysisRuns.get("/:run_id", async (c) => {
           state: "SKIPPED",
           reason: "COMPONENT_NOT_ACTIVATED",
         },
-        { stage: "COMPARISON", version: "1.0.0", ...comparisonStageRecord(conceptSet) },
+        {
+          stage: "COMPARISON",
+          version: "1.0.0",
+          ...(working ? { state: "RUNNING" } : comparisonStageRecord(conceptSet)),
+        },
       ],
       // Present only when a candidate set existed and a decision could be made. A run that never
       // produced one keeps this null and reports an operational state instead.
