@@ -105,7 +105,8 @@ pnpm lint           # Biome
 pnpm test           # Vitest + Testing Library
 pnpm test:e2e       # Playwright
 pnpm benchmark
-pnpm deploy         # Deploy ผ่าน Wrangler ไปยัง Cloudflare Workers; migration เป็นขั้นตอนแยกก่อนหน้าเสมอ ไม่ใช่ implicit
+pnpm run deploy     # Deploy ผ่าน Wrangler ไปยัง Cloudflare Workers; migration เป็นขั้นตอนแยกก่อนหน้าเสมอ ไม่ใช่ implicit
+                    # ต้องมีคำว่า run เพราะ deploy เป็นคำสั่งในตัวของ pnpm 10 ที่ชนะสคริปต์ของรีโพ
 ```
 
 Toolchain: Node.js 24 LTS, pnpm 10 ไม่ต้องรัน `supabase start` เพราะ Supabase แบบ hosted ให้ PostgreSQL/PostGIS สำหรับ dev อยู่แล้ว

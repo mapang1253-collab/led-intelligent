@@ -250,10 +250,20 @@ pnpm lint
 pnpm test
 pnpm test:e2e
 pnpm benchmark
-pnpm deploy
+pnpm run deploy
 ```
 
-`pnpm dev` starts the React application and Worker through the Cloudflare Vite plugin and connects to the configured hosted development database. `pnpm deploy` validates configuration, runs non-destructive pre-deploy checks, builds and deploys the Cloudflare application; database migrations remain an explicit preceding command and are never hidden inside page startup.
+`pnpm dev` starts the React application and Worker through the Cloudflare Vite plugin and connects to the configured hosted development database. `pnpm run deploy` builds and deploys the Cloudflare application; database migrations remain an explicit preceding command and are never hidden inside page startup.
+
+Two corrections recorded here on 2026-09-18, after the first real deployment:
+
+- The command is `pnpm run deploy`, with the `run`. `deploy` is one of pnpm 10's own built-in
+  commands, so the bare `pnpm deploy` never reaches this repository's script — pnpm runs its own
+  and stops at `ERR_PNPM_DEPLOY_NONINJECTED_WORKSPACE`. The built-in wins before any script is
+  looked up, so no change to the script could rescue the bare spelling.
+- This command does not validate configuration and runs no pre-deploy checks. It is
+  `vite build && wrangler deploy` and nothing more. The earlier sentence described a step that was
+  never built; `wrangler deploy --dry-run` is the nearest thing that exists, and it is run by hand.
 
 Provide `.dev.vars.example`, `.env.migration.example` and `wrangler.jsonc`. Generate typed Cloudflare bindings. No secret may use the public `VITE_` prefix. Never commit Gemini keys, database connection strings, deployment tokens or capability/signing secrets.
 
@@ -262,7 +272,7 @@ Provide `.dev.vars.example`, `.env.migration.example` and `wrangler.jsonc`. Gene
 Implementation is incomplete until all of the following hold:
 
 - `pnpm dev` opens the full web flow on localhost without Docker;
-- `pnpm deploy` deploys the same application to Cloudflare;
+- `pnpm run deploy` deploys the same application to Cloudflare;
 - no production branch hard-codes Chon Buri/EEC;
 - no user-visible screen, error or report field lacks a Thai rendering;
 - user-visible AI output is Thai and schema/ID/citation validated before display;
