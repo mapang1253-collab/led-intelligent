@@ -16,7 +16,7 @@
     "format": "biome format --write .",
     "test": "pnpm -r --if-present run test",
     "test:e2e": "pnpm --filter @reis/web test:e2e",
-    "benchmark": "pnpm --filter @reis/web benchmark",
+    "benchmark": "node tools/benchmarks/latency.mjs",
     "deploy": "pnpm --filter @reis/web run deploy",
     "db:migrate": "pnpm --filter @reis/data-access run db:migrate",
     "db:seed:reference": "pnpm --filter @reis/data-access run db:seed:reference",

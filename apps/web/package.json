@@ -9,7 +9,6 @@
     "typecheck": "tsc -p tsconfig.client.json && tsc -p tsconfig.worker.json && tsc -p tsconfig.json",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "benchmark": "echo \"benchmark suite not implemented yet (see docs/performance-and-reliability.md §7)\" && exit 0",
     "deploy": "vite build && wrangler deploy",
     "cf-typegen": "wrangler types"
   },
