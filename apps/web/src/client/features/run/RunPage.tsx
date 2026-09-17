@@ -82,24 +82,45 @@ function StageRow({ record }: { record: StageRecord }) {
     ? ((th.progress.stageReason as Record<string, string>)[record.reason] ?? undefined)
     : undefined;
 
+  // And the long answer, for the reader who wants to know on whose authority a stage stayed shut.
+  // A stage that succeeded is not asked to explain itself.
+  const why =
+    !done && record.reason
+      ? (th.progress.stageWhy as Record<string, string>)[record.reason]
+      : undefined;
+
   return (
-    <li className="flex items-center justify-between gap-4 border-border border-b py-3 last:border-b-0">
-      <span className="flex items-center gap-2.5">
-        <span style={{ color }} aria-hidden="true">
-          {done ? (
-            <Check size={17} strokeWidth={2.5} />
-          ) : running ? (
-            <LoaderCircle size={17} className="animate-spin" />
-          ) : (
-            <CircleDashed size={17} />
-          )}
+    <li className="border-border border-b py-3 last:border-b-0">
+      <div className="flex items-center justify-between gap-4">
+        <span className="flex items-center gap-2.5">
+          <span style={{ color }} aria-hidden="true">
+            {done ? (
+              <Check size={17} strokeWidth={2.5} />
+            ) : running ? (
+              <LoaderCircle size={17} className="animate-spin" />
+            ) : (
+              <CircleDashed size={17} />
+            )}
+          </span>
+          {label}
         </span>
-        {label}
-      </span>
-      <span className="text-right text-sm" style={{ color }}>
-        {statusText}
-        {reasonText && <span className="block text-ink-muted text-xs">{reasonText}</span>}
-      </span>
+        <span className="text-right text-sm" style={{ color }}>
+          {statusText}
+          {reasonText && <span className="block text-ink-muted text-xs">{reasonText}</span>}
+        </span>
+      </div>
+
+      {/* Folded, because six open explanations would bury the list they belong to; and present on
+          the row itself rather than as one footnote at the bottom, because each stage stopped for
+          a reason of its own. */}
+      {why && (
+        <details className="mt-2">
+          <summary className="cursor-pointer text-signature-text text-xs">
+            {th.progress.stageWhyToggle}
+          </summary>
+          <p className="mt-1.5 text-ink-muted text-xs leading-relaxed">{why}</p>
+        </details>
+      )}
     </li>
   );
 }
@@ -191,17 +212,9 @@ export function RunPage() {
                 <StageRow key={record.stage} record={record} />
               ))}
             </ul>
-            {/* The financial stage is switched off deliberately. A reader told only "ยังไม่เปิด
-                ใช้งาน" reasonably concludes the analysis failed, when what happened is that the
-                product declines to print a return it cannot support. */}
-            {envelope?.stage_records?.some(
-              (record) => record.stage === "SCENARIO" && record.state === "SKIPPED",
-            ) && (
-              <p className="mt-3 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
-                <Info size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
-                {th.progress.scenarioOffNote}
-              </p>
-            )}
+            {/* The note that used to sit here, explaining the financial stage, is now that stage's
+                own explanation on its own row — where a reader looking at "ยังไม่เปิดใช้งาน" will
+                actually look for it. */}
           </section>
           <FinalResultPanel final={final} />
         </>
