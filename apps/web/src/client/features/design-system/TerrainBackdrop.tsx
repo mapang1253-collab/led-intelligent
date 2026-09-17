@@ -157,8 +157,8 @@ interface Tower {
   readonly landmark: Landmark | null;
 }
 
-/** The two Bangkok towers a Thai reader can name on sight. */
-type Landmark = "mahanakhon" | "baiyoke";
+/** A Bangkok tower a Thai reader can name on sight. */
+type Landmark = "mahanakhon";
 
 /**
  * One row of towers, laid out left to right until the band is crossed.
@@ -222,24 +222,22 @@ const FAR_TOWERS = row({
 });
 
 /**
- * Two of the near row are named buildings rather than anonymous ones.
+ * One of the near row is a named building rather than an anonymous one.
  *
- * A generic skyline says "a city"; Baiyoke and MahaNakhon say "Bangkok", which is the city this
- * product's condominium prices actually come from. They are the two towers a Thai reader picks out
- * without being told, and drawn in the same hairline as everything else they cost nothing in
- * attention — the silhouette does the work.
+ * A generic skyline says "a city"; MahaNakhon says "Bangkok", which is the city this product's
+ * condominium prices actually come from. One is the right number: a second named tower turned the
+ * row into a landmark line-up, and a skyline is mostly buildings nobody can name.
  *
- * They replace towers 1 and 4, which sit left and right of the reading column rather than behind
- * it, and they keep the row's own spacing: only the width and height of those two entries change,
- * never their x, so nothing downstream shifts.
+ * It replaces tower 1, which sits left of the reading column rather than behind it, and it keeps
+ * the row's own spacing: only that entry's width and height change, never its x, so nothing
+ * downstream shifts.
  *
- * Proportions are the real ones in spirit, not measured: Baiyoke is the slender one, MahaNakhon the
- * broad one. This is a decorative silhouette, not an elevation drawing.
+ * Proportions are the real ones in spirit, not measured. This is a decorative silhouette, not an
+ * elevation drawing.
  */
-function nameTwo(towers: Tower[]): Tower[] {
+function nameOne(towers: Tower[]): Tower[] {
   const next = [...towers];
   const mahanakhon = next[1];
-  const baiyoke = next[4];
   if (mahanakhon) {
     next[1] = {
       ...mahanakhon,
@@ -253,24 +251,10 @@ function nameTwo(towers: Tower[]): Tower[] {
       landmark: "mahanakhon",
     };
   }
-  if (baiyoke) {
-    next[4] = {
-      ...baiyoke,
-      w: 58,
-      h: 470,
-      taper: 0.1,
-      bow: 2,
-      roof: "flat",
-      setback: false,
-      // The antenna. Baiyoke's is the reason it held the height record as long as it did.
-      mast: true,
-      landmark: "baiyoke",
-    };
-  }
   return next;
 }
 
-const NEAR_TOWERS = nameTwo(
+const NEAR_TOWERS = nameOne(
   row({
     seed: 11,
     minH: 190,
@@ -381,12 +365,11 @@ function slab(x: number, y: number, w: number, h: number, bow = 1.2): string {
 }
 
 /**
- * What makes each named tower recognisable, over the plain shaft underneath.
+ * What makes the named tower recognisable, over the plain shaft underneath.
  *
- * Baiyoke is read from its two cantilevered decks — the observation floor and the revolving roof
- * deck above it — sitting proud of a very slender shaft, on a wider podium. MahaNakhon is read from
- * one thing only: the ribbon of cut cubes winding up the facade. Both are drawn as the outline of
- * the feature, never as a labelled diagram; if the silhouette does not carry it, nothing will.
+ * MahaNakhon is read from one thing only: the ribbon of cut cubes winding up the facade. It is
+ * drawn as the outline of that feature, never as a labelled diagram; if the silhouette does not
+ * carry it, nothing will.
  *
  * The voxel run wobbles off its diagonal by a few per cent, from the same hash as everything else
  * here, so it looks wound around a building rather than ruled across a drawing.
@@ -398,18 +381,7 @@ function landmarkParts(tower: Tower): string[] {
   const { x, w, h } = tower;
   const top = GROUND_Y - h;
 
-  if (tower.landmark === "baiyoke") {
-    const deckY = top + h * 0.2;
-    const roofY = top + h * 0.075;
-    const podiumH = h * 0.09;
-    return [
-      slab(x - w * 0.3, deckY, w * 1.6, w * 0.3),
-      slab(x - w * 0.14, roofY, w * 1.28, w * 0.19),
-      slab(x - w * 0.26, GROUND_Y - podiumH, w * 1.52, podiumH, 1.6),
-    ];
-  }
-
-  // MahaNakhon: the cubes climb from low on the right to high on the left, thinning as they go.
+  // The cubes climb from low on the right to high on the left, thinning as they go.
   const parts: string[] = [];
   const cubes = 11;
   for (let k = 0; k < cubes; k += 1) {
