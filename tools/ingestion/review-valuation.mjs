@@ -44,6 +44,10 @@ function methodHash(pack) {
     version: pack.version,
     never_produces_th: [...pack.never_produces_th].sort(),
     methods: pack.methods,
+    // Included because a sensitivity block changes what the method outputs: turning +/-20% into
+    // +/-80% after review would otherwise inherit the approval. Packs without one hash exactly as
+    // before, because stableStringify drops undefined.
+    sensitivity: pack.sensitivity,
   });
   return createHash("sha256").update(canonical, "utf8").digest("hex");
 }

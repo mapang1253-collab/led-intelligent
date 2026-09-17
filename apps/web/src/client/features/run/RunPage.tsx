@@ -22,6 +22,7 @@ import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { useResultView } from "../../app/AppShell.js";
 import { ConceptPanel } from "./ConceptPanel.js";
 import { EvidencePanel } from "./EvidencePanel.js";
+import { FeasibilityPanel } from "./FeasibilityPanel.js";
 import { FinalResultPanel } from "./FinalResultPanel.js";
 import { Notice } from "./Notice.js";
 import { OverviewSummary } from "./OverviewSummary.js";
@@ -247,15 +248,21 @@ export function RunPage() {
       label: th.resultTabs.valuation,
       icon: Calculator,
       render: () => (
-        <ValuationPanel
-          groups={allEvidence}
-          // Carried from the intake so the land calculator starts with what was already typed.
-          intakeArea={{
-            rai: intake?.land_area_rai as string | undefined,
-            ngan: intake?.land_area_ngan as string | undefined,
-            wa: intake?.land_area_wa as string | undefined,
-          }}
-        />
+        <>
+          <ValuationPanel
+            groups={allEvidence}
+            // Carried from the intake so the land calculator starts with what was already typed.
+            intakeArea={{
+              rai: intake?.land_area_rai as string | undefined,
+              ngan: intake?.land_area_ngan as string | undefined,
+              wa: intake?.land_area_wa as string | undefined,
+            }}
+          />
+          {/* Below the assessed value, because that is the order of the question: what is the land
+              worth on the state's schedule, and then what would happen if something were built on
+              it. The second one runs entirely on the reader's own assumptions and says so. */}
+          <FeasibilityPanel />
+        </>
       ),
     },
     {

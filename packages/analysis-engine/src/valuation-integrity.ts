@@ -18,6 +18,10 @@ export function canonicalMethodContent(pack: ValuationMethodPack): string {
     version: pack.version,
     never_produces_th: [...pack.never_produces_th].sort(),
     methods: pack.methods,
+    // A sensitivity block, where a method carries one, changes what it outputs — so it is signed
+    // with the formulas rather than left free to be edited after approval. Methods without one
+    // hash exactly as before: stableStringify drops undefined entries.
+    sensitivity: (pack as { sensitivity?: unknown }).sensitivity,
   });
 }
 
