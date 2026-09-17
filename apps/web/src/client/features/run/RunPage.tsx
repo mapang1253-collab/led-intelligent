@@ -24,6 +24,7 @@ import { ConceptPanel } from "./ConceptPanel.js";
 import { EvidencePanel } from "./EvidencePanel.js";
 import { FinalResultPanel } from "./FinalResultPanel.js";
 import { Notice } from "./Notice.js";
+import { OverviewSummary } from "./OverviewSummary.js";
 import { type ResultTab, ResultTabs } from "./ResultTabs.js";
 import { ValuationPanel } from "./ValuationPanel.js";
 import {
@@ -171,6 +172,13 @@ export function RunPage() {
       icon: LayoutList,
       render: () => (
         <>
+          {/* What was found, before how it was found. A reader opening the overview wants the
+              numbers; the stage list explains where they came from and is the second question. */}
+          <OverviewSummary
+            evidence={allEvidence}
+            conceptCount={envelope?.partial_artifacts?.concepts?.length ?? 0}
+          />
+
           <section className="glass mt-5 rounded-card p-6">
             <h2 className="mb-1 font-semibold text-ink-muted text-sm">
               {th.progress.stageHeading}

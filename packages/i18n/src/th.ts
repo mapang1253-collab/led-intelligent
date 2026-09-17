@@ -11,7 +11,7 @@ export const th = {
     /* The two halves of the front-page headline. It is the question this field actually asks —
        "highest and best use" is that sentence in English — and it belongs here rather than in a
        component, like every other Thai string in the product. */
-    headlineLead: "ที่ดินผืนนี้",
+    headlineLead: "อสังหาริมทรัพย์ในพื้นที่นี้",
     headlineAnswer: "ควรเป็นอะไร จึงจะดีที่สุด",
     tagline:
       "Highest and Best Use — หาคำตอบจากหลักฐานที่หน่วยงานรัฐเผยแพร่จริง ครบทุกจังหวัดทั่วประเทศ และบอกตรง ๆ ว่าอะไรที่ยังไม่รู้",
@@ -117,6 +117,16 @@ export const th = {
     backToIntake: "กลับไปหน้ากรอกข้อมูล",
     expiresAt: "ผลลัพธ์นี้จะหมดอายุ",
     targetHeading: "พื้นที่ที่วิเคราะห์",
+    /* The headline numbers, so the overview answers "what did you find" without five tab visits. */
+    summaryHeading: "สรุปตัวเลขสำคัญของพื้นที่นี้",
+    summaryNote: "เป็นช่วงต่ำสุด–สูงสุดของตัวเลขที่แหล่งข้อมูลประกาศไว้จริงในพื้นที่นี้ ไม่ใช่ค่าเฉลี่ย และไม่ใช่ราคาตลาด",
+    summaryEmpty: "พื้นที่นี้ยังไม่มีตัวเลขที่สรุปเป็นช่วงได้",
+    summaryCondo: "ราคาประเมินห้องชุด",
+    summaryLand: "ราคาประเมินที่ดิน",
+    summaryPopulation: "ประชากรตามทะเบียนราษฎร",
+    summaryConcepts: "แนวคิดที่เสนอ",
+    summaryConceptsUnit: "แนวคิด",
+    summaryFromItems: "จาก {n} รายการในพื้นที่",
     stageHeading: "ขั้นตอนการทำงาน",
     stageIntro: "รายการนี้บอกว่าระบบทำอะไรให้แล้วบ้าง และขั้นไหนยังให้คำตอบไม่ได้ พร้อมเหตุผล",
     /* The financial stage is off by design, not by accident, and a reader who is not told that
