@@ -48,6 +48,23 @@ function packHash(pack) {
   return createHash("sha256").update(canonical, "utf8").digest("hex");
 }
 
+/**
+ * The date here in Thailand, not in UTC.
+ *
+ * `toISOString()` is UTC, and Bangkok is seven hours ahead of it: a review recorded at 03:51 on the
+ * 18th was being dated the 17th. These are academic review records whose date is part of what the
+ * reviewer is attesting to, and a record dated the day before the person read it is wrong on its
+ * face — the more so when the basis text beside it names the real date.
+ */
+function reviewDateTh() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Bangkok",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
 async function main() {
   const path = arg("pack");
   if (!path) {
@@ -107,7 +124,7 @@ async function main() {
   pack.lifecycle_state = "ACADEMIC_REVIEWED";
   pack.review = {
     reviewers,
-    reviewed_on: new Date().toISOString().slice(0, 10),
+    reviewed_on: reviewDateTh(),
     content_hash: hash,
     evidence_basis_th: basis,
     limitations_th: limitations,
