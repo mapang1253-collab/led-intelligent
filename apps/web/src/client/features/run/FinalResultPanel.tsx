@@ -1,5 +1,6 @@
 import { th } from "@reis/i18n";
-import { ClipboardCheck, TriangleAlert } from "lucide-react";
+import { ArrowRight, ClipboardCheck, PencilLine, TriangleAlert } from "lucide-react";
+import { Link } from "react-router";
 import type { FinalAnalysisView } from "./useAnalysisRun.js";
 
 /**
@@ -25,6 +26,21 @@ const DOMAIN_ORDER = [
 ] as const;
 
 /**
+ * Actions the reader can discharge on the intake form, rather than at a government office.
+ *
+ * The whole list used to be presented at one pitch, so "measure the road outside" sat among "obtain
+ * the title deed" and inherited its weight — and a reader who could have unblocked three rules with
+ * a tape measure read the screen as a wall. These are the site facts `propertyIntakeSchema` accepts
+ * and nothing else: the ids come from the rule pack's inputs, and an action only appears at all
+ * because this run found the field blank.
+ *
+ * Kept here rather than in the contract because which facts are typeable is a property of this
+ * form, not of the analysis. Adding a field to the form is what should move an item between these
+ * two groups, and doing it in one file keeps that true.
+ */
+const ANSWERABLE_ON_FORM = new Set(["legal-input.road_width", "legal-input.water_body_width"]);
+
+/**
  * A date a Thai reader can read.
  *
  * The envelope carries ISO, which is right for a wire format and wrong on screen: "2026-09-17" is
@@ -39,14 +55,67 @@ function thaiDate(iso: string): string {
   return parsed.toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" });
 }
 
-export function FinalResultPanel({ final }: { final: FinalAnalysisView | undefined | null }) {
+type Action = FinalAnalysisView["verification_actions"][number];
+
+/**
+ * One item of work.
+ *
+ * The priority badge is deliberately not `--color-fail`. That colour means a validator returned
+ * FAIL — a requirement this land does not meet — and spending it on "we have not checked this yet"
+ * told readers the analysis had found something wrong when it had found something absent. An
+ * outstanding step is signature blue; a failed check keeps the red.
+ */
+function ActionItem({ action }: { action: Action }) {
+  const blocking = action.priority === "BLOCKING";
+  return (
+    <li className="border-border border-b py-3 last:border-b-0">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <span className="font-medium text-sm">{action.target_th}</span>
+        <span
+          className="rounded-pill px-2.5 py-0.5 text-xs"
+          style={{
+            backgroundColor: blocking
+              ? "var(--color-signature-wash)"
+              : "var(--color-surface-sunken)",
+            color: blocking ? "var(--color-signature-text)" : "var(--color-ink-muted)",
+          }}
+        >
+          {PRIORITY_LABELS[action.priority] ?? action.priority}
+        </span>
+      </div>
+      <p className="mt-1 text-ink-muted text-xs leading-relaxed">
+        {th.finalResult.whyLabel}: {action.why_th}
+      </p>
+      <p className="mt-0.5 text-ink-muted text-xs leading-relaxed">
+        {th.finalResult.sourceLabel}: {action.suggested_source_th}
+      </p>
+      <p className="mt-0.5 text-ink-muted text-xs leading-relaxed">
+        {th.finalResult.couldChangeLabel}: {action.could_change_th}
+      </p>
+    </li>
+  );
+}
+
+export function FinalResultPanel({
+  final,
+  intake,
+}: {
+  final: FinalAnalysisView | undefined | null;
+  /** The request that produced this run, so the form can reopen filled in. Absent after a reload. */
+  intake?: Record<string, unknown> | undefined;
+}) {
   if (!final) {
     return null;
   }
 
+  // What the reader can settle themselves comes out of the domain grouping entirely, because the
+  // point of the split is that these two kinds of work happen in different places on different days.
+  const selfServe = final.verification_actions.filter((a) => ANSWERABLE_ON_FORM.has(a.action_id));
+  const rest = final.verification_actions.filter((a) => !ANSWERABLE_ON_FORM.has(a.action_id));
+
   const byDomain = DOMAIN_ORDER.map((domain) => ({
     domain,
-    actions: final.verification_actions.filter((action) => action.domain === domain),
+    actions: rest.filter((action) => action.domain === domain),
   })).filter((group) => group.actions.length > 0);
 
   return (
@@ -103,44 +172,59 @@ export function FinalResultPanel({ final }: { final: FinalAnalysisView | undefin
           <ClipboardCheck size={17} aria-hidden="true" />
           {th.finalResult.verificationHeading}
         </h3>
-        <p className="text-ink-muted text-xs">{th.finalResult.verificationNote}</p>
+        {/* Said before the list, because the list is what a reader takes for a verdict otherwise. */}
+        <p className="mt-1 text-ink-muted text-xs leading-relaxed">
+          {th.finalResult.verificationIntro}
+        </p>
+        <p className="mt-0.5 text-ink-muted text-xs">{th.finalResult.verificationNote}</p>
 
+        {/* First, because it is the only part the reader can act on without leaving the screen. */}
+        {selfServe.length > 0 && (
+          <div
+            className="mt-4 rounded-card p-4"
+            style={{ backgroundColor: "var(--color-signature-wash)" }}
+          >
+            <h4
+              className="flex items-center gap-2 font-semibold text-sm"
+              style={{ color: "var(--color-signature-text)" }}
+            >
+              <PencilLine size={15} aria-hidden="true" />
+              {th.finalResult.selfHeading}
+            </h4>
+            <p className="mt-1 text-ink-muted text-xs leading-relaxed">{th.finalResult.selfNote}</p>
+            <ul className="mt-2">
+              {selfServe.map((action) => (
+                <ActionItem key={action.action_id} action={action} />
+              ))}
+            </ul>
+            {/* Carries the run's own intake so the form reopens on this place with what was
+                already given, rather than sending the reader back to an empty first screen. */}
+            <Link
+              to="/"
+              state={intake ? { intake } : undefined}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-pill px-4 py-2 font-semibold text-sm"
+              style={{
+                backgroundColor: "var(--color-signature)",
+                color: "var(--color-signature-on)",
+              }}
+            >
+              {th.finalResult.selfCta}
+              <ArrowRight size={15} aria-hidden="true" />
+            </Link>
+          </div>
+        )}
+
+        {byDomain.length > 0 && (
+          <h4 className="mt-5 font-semibold text-sm">{th.finalResult.obtainHeading}</h4>
+        )}
         {byDomain.map((group) => (
           <div key={group.domain} className="mt-4">
-            <h4 className="font-medium text-ink-muted text-sm">
+            <h5 className="font-medium text-ink-muted text-sm">
               {DOMAIN_LABELS[group.domain] ?? group.domain}
-            </h4>
+            </h5>
             <ul className="mt-2">
               {group.actions.map((action) => (
-                <li key={action.action_id} className="border-border border-b py-3 last:border-b-0">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <span className="font-medium text-sm">{action.target_th}</span>
-                    <span
-                      className="rounded-pill px-2.5 py-0.5 text-xs"
-                      style={{
-                        backgroundColor:
-                          action.priority === "BLOCKING"
-                            ? "color-mix(in srgb, var(--color-fail) 16%, transparent)"
-                            : "var(--color-surface-sunken)",
-                        color:
-                          action.priority === "BLOCKING"
-                            ? "var(--color-fail)"
-                            : "var(--color-ink-muted)",
-                      }}
-                    >
-                      {PRIORITY_LABELS[action.priority] ?? action.priority}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-ink-muted text-xs leading-relaxed">
-                    {th.finalResult.whyLabel}: {action.why_th}
-                  </p>
-                  <p className="mt-0.5 text-ink-muted text-xs leading-relaxed">
-                    {th.finalResult.sourceLabel}: {action.suggested_source_th}
-                  </p>
-                  <p className="mt-0.5 text-ink-muted text-xs leading-relaxed">
-                    {th.finalResult.couldChangeLabel}: {action.could_change_th}
-                  </p>
-                </li>
+                <ActionItem key={action.action_id} action={action} />
               ))}
             </ul>
           </div>

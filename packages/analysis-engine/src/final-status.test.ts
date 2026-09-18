@@ -114,7 +114,12 @@ describe("status decision", () => {
 
     expect(result.final.status).toBe("INSUFFICIENT_EVIDENCE");
     expect(result.final.status_reason).toBe("NO_SUPPORTED_COMMON_BASIS");
-    expect(result.final.missing_basis_th.join(" ")).toContain("องค์ประกอบทางเศรษฐศาสตร์");
+    // The gap is the cost and price evidence, not the method: a reviewed feasibility method exists
+    // and runs on assumptions the reader supplies. Naming the method here sent readers looking for
+    // a calculator that was already on the screen.
+    const missing = result.final.missing_basis_th.join(" ");
+    expect(missing).toContain("ต้นทุนก่อสร้าง");
+    expect(missing).toContain("เปรียบเทียบ");
   });
 
   it("never names a leading use, and lists concepts in proposal order", () => {

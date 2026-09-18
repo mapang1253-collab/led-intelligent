@@ -68,34 +68,47 @@ function jurisdictionCovers(rule: LegalRule, areaCodes: readonly number[]): bool
  *
  * A characteristic the concept simply does not state is UNRESOLVED, not "does not match" — the
  * difference decides whether a requirement may be dropped.
+ *
+ * When the answer is UNRESOLVED it also reports which of the rule's own inputs the undecidable
+ * conditions were reading. The result used to be a bare status, and the fact that settled it was
+ * thrown away — so a run with no road width told the reader that four setback clauses could not be
+ * ruled out, and never that one measurement would rule all four in or out. Characteristic keys are
+ * not reported: they are properties of a proposed concept, not facts about the land, and there is
+ * nowhere for a reader to go and measure one.
  */
-function applicabilityFor(rule: LegalRule, concept: ConceptUnderTest): Applicability {
+function applicabilityFor(
+  rule: LegalRule,
+  concept: ConceptUnderTest,
+): { applicability: Applicability; unresolvedInputIds: readonly string[] } {
+  const settled = (applicability: Applicability) => ({ applicability, unresolvedInputIds: [] });
+
   if (
     rule.applicability.activity_ids.length > 0 &&
     !rule.applicability.activity_ids.some((id) => concept.activity_ids.includes(id))
   ) {
-    return "NOT_APPLICABLE";
+    return settled("NOT_APPLICABLE");
   }
 
   for (const required of rule.applicability.required_characteristics) {
     const stated = concept.characteristics[required.key];
     if (stated === undefined) {
-      return "UNRESOLVED";
+      return settled("UNRESOLVED");
     }
     if (stated !== required.value) {
-      return "NOT_APPLICABLE";
+      return settled("NOT_APPLICABLE");
     }
   }
 
   const anyOf = rule.applicability.any_of ?? [];
   if (anyOf.length > 0) {
     let matched = false;
-    let undetermined = false;
+    const undetermined: string[] = [];
+    let undeterminedByCharacteristic = false;
     for (const option of anyOf) {
       if (option.kind === "CHARACTERISTIC") {
         const stated = concept.characteristics[option.key];
         if (stated === undefined) {
-          undetermined = true;
+          undeterminedByCharacteristic = true;
         } else if (stated === option.value) {
           matched = true;
         }
@@ -103,7 +116,7 @@ function applicabilityFor(rule: LegalRule, concept: ConceptUnderTest): Applicabi
       }
       const evaluation = evaluatePredicate(option.predicate, concept.inputs);
       if (evaluation.status === "UNKNOWN") {
-        undetermined = true;
+        undetermined.push(...predicateInputs(option.predicate));
       } else if (evaluation.status === "PASS") {
         matched = true;
       }
@@ -111,7 +124,10 @@ function applicabilityFor(rule: LegalRule, concept: ConceptUnderTest): Applicabi
     if (!matched) {
       // One alternative nobody has measured is enough to keep the rule in play: ruling it out
       // would drop a requirement on the strength of a fact we do not have.
-      return undetermined ? "UNRESOLVED" : "NOT_APPLICABLE";
+      if (undetermined.length > 0 || undeterminedByCharacteristic) {
+        return { applicability: "UNRESOLVED", unresolvedInputIds: undetermined };
+      }
+      return settled("NOT_APPLICABLE");
     }
   }
 
@@ -119,14 +135,14 @@ function applicabilityFor(rule: LegalRule, concept: ConceptUnderTest): Applicabi
     const evaluation = evaluatePredicate(condition, concept.inputs);
     if (evaluation.status === "UNKNOWN") {
       // The band this clause applies to cannot be determined, so the clause cannot be ruled out.
-      return "UNRESOLVED";
+      return { applicability: "UNRESOLVED", unresolvedInputIds: predicateInputs(condition) };
     }
     if (evaluation.status === "FAIL") {
-      return "NOT_APPLICABLE";
+      return settled("NOT_APPLICABLE");
     }
   }
 
-  return "APPLICABLE";
+  return settled("APPLICABLE");
 }
 
 function predicateInputs(predicate: RulePredicate): readonly string[] {
@@ -285,7 +301,7 @@ function evaluateRule(
     };
   }
 
-  const applicability = applicabilityFor(rule, concept);
+  const { applicability, unresolvedInputIds } = applicabilityFor(rule, concept);
   if (applicability === "NOT_APPLICABLE") {
     return {
       ...base,
@@ -297,12 +313,15 @@ function evaluateRule(
     };
   }
   if (applicability === "UNRESOLVED") {
-    // The concept does not say enough to decide whether the rule bites. The requirement stays.
+    // The concept does not say enough to decide whether the rule bites. The requirement stays, and
+    // the fact that would settle it is named: an input the applicability test could not read is
+    // missing in exactly the sense this field means, and reporting it empty here was what stopped
+    // the result page from ever telling a reader to go and measure the road.
     return {
       ...base,
       applicability,
       status: "UNKNOWN",
-      missing_inputs: [],
+      missing_inputs: rule.inputs.filter((input) => unresolvedInputIds.includes(input.input_id)),
       requirement_th: requirementFor(rule, concept.inputs),
       explanation_th: "ยังระบุไม่ได้ว่ากฎข้อนี้ใช้กับแนวคิดนี้หรือไม่ จึงยังตัดออกไม่ได้",
     };
@@ -409,7 +428,13 @@ export function validateLegal(
     (entry) => entry.declared_critical && !entry.covered,
   );
 
-  const unresolvedInputs = dedupeInputs(applicable.flatMap((outcome) => outcome.missing_inputs));
+  // Facts the reader would have to go and find, from both kinds of gap: a rule that applies and
+  // cannot be tested, and a rule that cannot even be shown to apply. The second was left out while
+  // unresolved applicability reported no inputs at all, so the one measurement that would settle
+  // four setback clauses never reached this list.
+  const unresolvedInputs = dedupeInputs(
+    [...applicable, ...unresolvedApplicability].flatMap((outcome) => outcome.missing_inputs),
+  );
 
   const { status, status_reason_th } = aggregate({
     criticalFailureCount: criticalFailures.length,

@@ -157,17 +157,28 @@ export function buildVerificationActions(input: VerificationInput): Verification
     });
   }
 
-  // The financial basis is absent by design in this increment; saying so is part of the policy.
+  /**
+   * What is missing financially, stated as it now stands.
+   *
+   * It used to say the system had no reviewed economic components at all. That stopped being true
+   * when `th.feasibility.assumption` was reviewed: the calculator on the feasibility tab runs
+   * reviewed components and will work out payback and yield for any concept. What it cannot do is
+   * rank concepts, because every figure it uses is an assumption the reader typed rather than
+   * evidence about this place — and a ranking built on assumed inputs is a ranking of the
+   * assumptions. So the action names the actual gap, the cost and price evidence, and points at the
+   * tool that already exists rather than at nothing.
+   */
   actions.push({
     action_id: "finance.model",
     domain: "MARKET_AND_FINANCE",
     priority: "BLOCKING",
-    target_th: "ต้นทุนก่อสร้าง ราคาที่ดิน อัตราผลตอบแทน และสมมติฐานทางการเงินของแต่ละแนวคิด",
+    target_th: "ต้นทุนก่อสร้างและราคาขายหรือค่าเช่าจริงในพื้นที่นี้ สำหรับแต่ละแนวคิด",
     why_th:
-      "ระบบยังไม่มีองค์ประกอบทางเศรษฐศาสตร์ที่ผ่านการตรวจทาน จึงคำนวณความเป็นไปได้ทางการเงินและเปรียบเทียบแนวคิดไม่ได้",
+      "ระบบมีเครื่องคำนวณความเป็นไปได้ทางการเงินที่ผ่านการตรวจทานแล้ว (ดูแท็บ 'ความเป็นไปได้ทางการเงิน') แต่คำนวณจากสมมติฐานที่ผู้ใช้กรอกเอง ไม่ใช่หลักฐานของพื้นที่นี้ จึงใช้จัดอันดับว่าแนวคิดใดคุ้มค่ากว่ากันไม่ได้",
     suggested_source_th: "ผู้ประเมินราคาทรัพย์สิน ผู้รับเหมา หรือที่ปรึกษาด้านการพัฒนาโครงการ",
-    related_ids: [],
-    could_change_th: "เป็นเงื่อนไขที่ขาดอยู่สำหรับการสรุปว่าแนวคิดใดเป็นการใช้ประโยชน์สูงสุด",
+    related_ids: ["th.feasibility.assumption"],
+    could_change_th:
+      "ทำให้เปรียบเทียบผลตอบแทนระหว่างแนวคิดได้ด้วยตัวเลขของพื้นที่นี้ แทนที่จะได้เฉพาะผลลัพธ์ตามสมมติฐานที่กรอกเอง",
   });
 
   return actions;

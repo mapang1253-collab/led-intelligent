@@ -1,5 +1,6 @@
 import type { AdministrativeAreaOption, AdministrativeAreaResponse } from "@reis/contracts";
 import { useQuery } from "@tanstack/react-query";
+import type { AreaChoice } from "./AreaPicker.js";
 
 /**
  * Remote administrative-area lists. TanStack Query owns this state per
@@ -49,6 +50,32 @@ export function useSubdistricts(districtId: string | undefined) {
         `/api/v1/administrative-areas/subdistricts?district_id=${encodeURIComponent(districtId ?? "")}`,
       ),
     enabled: Boolean(districtId),
+    ...STATIC_AREA_CACHE,
+  });
+}
+
+/**
+ * One subdistrict with what is known about it, for a form reopened on an area chosen elsewhere.
+ *
+ * Shares the `by-ids` endpoint and cache key shape with the picker's starting list, so returning to
+ * a place the reader has already seen costs nothing. Returns undefined rather than a fabricated
+ * empty area while it loads: the confirmation prints figure counts, and a placeholder zero would
+ * read as "nothing is known here".
+ */
+export function useAreaChoice(subdistrictId: string | undefined) {
+  return useQuery({
+    queryKey: ["area-by-id", subdistrictId],
+    queryFn: async (): Promise<AreaChoice | undefined> => {
+      const response = await fetch(
+        `/api/v1/administrative-areas/by-ids?ids=${encodeURIComponent(subdistrictId ?? "")}`,
+        { headers: { Accept: "application/json" } },
+      );
+      if (!response.ok) {
+        throw new Error(`area lookup failed: ${response.status}`);
+      }
+      return ((await response.json()) as { data: AreaChoice[] }).data[0];
+    },
+    enabled: Boolean(subdistrictId),
     ...STATIC_AREA_CACHE,
   });
 }

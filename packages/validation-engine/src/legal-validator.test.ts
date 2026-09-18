@@ -404,3 +404,87 @@ describe("aggregate wording", () => {
     expect(result.approval_required).toHaveLength(1);
   });
 });
+
+describe("unresolved applicability names the fact that would settle it", () => {
+  /** A setback clause that bites only on roads narrower than six metres, as MR.55 ข้อ 41 does. */
+  const narrowRoad = (ruleId: string) =>
+    rule({
+      rule_id: ruleId,
+      inputs: [
+        {
+          input_id: "road_width",
+          label_th: "ความกว้างถนนสาธารณะที่ติดที่ดิน",
+          unit: "ม.",
+          obtained_from_th: "วัดหน้างาน",
+        },
+        { input_id: "setback", label_th: "ระยะร่น", unit: "ม.", obtained_from_th: "แบบผังบริเวณ" },
+      ],
+      applicability: {
+        activity_ids: [],
+        required_characteristics: [],
+        conditions: [{ kind: "NUMERIC", input_id: "road_width", op: "lt", value: "6", unit: "ม." }],
+        note_th: "",
+      },
+      predicate: { kind: "NUMERIC", input_id: "setback", op: "gte", value: "3", unit: "ม." },
+    });
+
+  it("still refuses to drop the requirement", () => {
+    const result = validateLegal(
+      pack([narrowRoad("rule.setback")]),
+      concept({ inputs: {} }),
+      TARGET,
+    );
+    // The invariant this whole branch exists to protect: an unmeasured road does not rule a clause out.
+    expect(result.outcomes[0]?.applicability).toBe("UNRESOLVED");
+    expect(result.outcomes[0]?.status).toBe("UNKNOWN");
+  });
+
+  it("reports the input the condition could not read", () => {
+    const result = validateLegal(
+      pack([narrowRoad("rule.setback")]),
+      concept({ inputs: {} }),
+      TARGET,
+    );
+    // Only the applicability input. The setback comes from a drawing for a building that does not
+    // exist yet, and asking for it alongside a tape-measure job buries the one that is doable.
+    expect(result.outcomes[0]?.missing_inputs.map((i) => i.input_id)).toEqual(["road_width"]);
+    expect(result.unresolved_inputs.map((i) => i.input_id)).toContain("road_width");
+  });
+
+  it("asks for one measurement once, however many clauses turn on it", () => {
+    const result = validateLegal(
+      pack([narrowRoad("rule.c41.1"), narrowRoad("rule.c41.2"), narrowRoad("rule.c41.3")]),
+      concept({ inputs: {} }),
+      TARGET,
+    );
+    expect(result.outcomes.every((o) => o.applicability === "UNRESOLVED")).toBe(true);
+    expect(result.unresolved_inputs.filter((i) => i.input_id === "road_width")).toHaveLength(1);
+  });
+
+  it("names nothing when a concept characteristic, not a site fact, is what is missing", () => {
+    // There is nowhere to go and measure "is this proposal a row house": it is a property of the
+    // idea under test, so the reader is not sent looking for it.
+    const byCharacteristic = rule({
+      rule_id: "rule.characteristic",
+      applicability: {
+        activity_ids: [],
+        required_characteristics: [{ key: "building_type", value: "ตึกแถว" }],
+        note_th: "",
+      },
+    });
+    const result = validateLegal(pack([byCharacteristic]), concept(), TARGET);
+    expect(result.outcomes[0]?.applicability).toBe("UNRESOLVED");
+    expect(result.outcomes[0]?.missing_inputs).toEqual([]);
+  });
+
+  it("says nothing is missing once the measurement is supplied", () => {
+    const result = validateLegal(
+      pack([narrowRoad("rule.setback")]),
+      concept({ inputs: { road_width: "8" } }),
+      TARGET,
+    );
+    // Eight metres is not under six, so the clause is ruled out on evidence rather than left open.
+    expect(result.outcomes[0]?.applicability).toBe("NOT_APPLICABLE");
+    expect(result.unresolved_inputs).toEqual([]);
+  });
+});

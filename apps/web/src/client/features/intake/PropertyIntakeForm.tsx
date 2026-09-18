@@ -1,11 +1,16 @@
 import { th } from "@reis/i18n";
 import { ArrowRight, ChevronDown, Info, Plus } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useCreateRun } from "../run/useAnalysisRun.js";
 import { type AreaChoice, AreaPicker } from "./AreaPicker.js";
 import { AreaSelect } from "./AreaSelect.js";
-import { useDistricts, useProvinces, useSubdistricts } from "./useAdministrativeAreas.js";
+import {
+  useAreaChoice,
+  useDistricts,
+  useProvinces,
+  useSubdistricts,
+} from "./useAdministrativeAreas.js";
 
 /**
  * Progressive property intake (docs/project-overview.md §7). The minimum is province → district →
@@ -14,14 +19,18 @@ import { useDistricts, useProvinces, useSubdistricts } from "./useAdministrative
  * Choosing a parent clears its children, so an intake can never carry a subdistrict that does not
  * belong to the selected district. The server re-checks the chain against the reference table
  * regardless, because this form is not the only way to reach the API.
+ *
+ * A result screen can send the reader back here to supply a site fact it could not settle, and the
+ * intake it produced travels with that navigation. Re-picking the province, district and
+ * subdistrict in order to type one road width is the kind of small tax that stops people from
+ * finishing, so the form reopens on the same place with the same answers and the site panel already
+ * open. Nothing arrives from storage — only from the navigation that asked for it.
  */
 
 interface SiteFields {
   road_width: string;
   water_body_width: string;
 }
-
-const EMPTY_SITE: SiteFields = { road_width: "", water_body_width: "" };
 
 interface OptionalFields {
   address_line: string;
@@ -32,16 +41,6 @@ interface OptionalFields {
   land_area_ngan: string;
   land_area_wa: string;
 }
-
-const EMPTY_OPTIONAL: OptionalFields = {
-  address_line: "",
-  title_deed_number: "",
-  map_sheet: "",
-  land_number: "",
-  land_area_rai: "",
-  land_area_ngan: "",
-  land_area_wa: "",
-};
 
 function OptionalTextField({
   label,
@@ -82,21 +81,59 @@ function areaSummaryTh(rai: string, ngan: string, wa: string): string | null {
   return `${th.intake.areaConversion} ${format(squareWa)} ${th.valuation.wa} (${format(squareWa * 4)} ตร.ม.)`;
 }
 
+/** A value from the carried intake as a form string. Numbers and strings both arrive as-is. */
+const asField = (value: unknown): string =>
+  typeof value === "number" || typeof value === "string" ? String(value) : "";
+
 export function PropertyIntakeForm() {
-  const [provinceId, setProvinceId] = useState("");
-  const [districtId, setDistrictId] = useState("");
-  const [subdistrictId, setSubdistrictId] = useState("");
+  const location = useLocation();
+  // Read once, on mount. A later render must not reset fields the reader is in the middle of typing.
+  const [prefill] = useState<Record<string, unknown>>(
+    () => (location.state as { intake?: Record<string, unknown> } | null)?.intake ?? {},
+  );
+
+  const [provinceId, setProvinceId] = useState(() => asField(prefill.province_id));
+  const [districtId, setDistrictId] = useState(() => asField(prefill.district_id));
+  const [subdistrictId, setSubdistrictId] = useState(() => asField(prefill.subdistrict_id));
   /**
    * The place the reader picked by name, kept whole so the confirmation can show it without
    * refetching. Browsing the cascading lists instead leaves this null and fills the three ids.
    */
   const [picked, setPicked] = useState<AreaChoice | null>(null);
-  const [optional, setOptional] = useState<OptionalFields>(EMPTY_OPTIONAL);
-  const [showOptional, setShowOptional] = useState(false);
-  const [showArea, setShowArea] = useState(false);
-  const [site, setSite] = useState<SiteFields>(EMPTY_SITE);
-  const [nearLargeWater, setNearLargeWater] = useState(false);
-  const [showSite, setShowSite] = useState(false);
+  /** Set when the reader presses "change", so a carried-in area does not reappear after clearing. */
+  const [areaCleared, setAreaCleared] = useState(false);
+  const [optional, setOptional] = useState<OptionalFields>(() => ({
+    address_line: asField(prefill.address_line),
+    title_deed_number: asField(prefill.title_deed_number),
+    map_sheet: asField(prefill.map_sheet),
+    land_number: asField(prefill.land_number),
+    land_area_rai: asField(prefill.land_area_rai),
+    land_area_ngan: asField(prefill.land_area_ngan),
+    land_area_wa: asField(prefill.land_area_wa),
+  }));
+  const [site, setSite] = useState<SiteFields>(() => ({
+    road_width: asField(prefill.road_width),
+    water_body_width: asField(prefill.water_body_width),
+  }));
+  const [nearLargeWater, setNearLargeWater] = useState(
+    () => prefill.near_large_water_body === true,
+  );
+  // A returning reader was sent here to fill in a site fact, so that panel starts open. The others
+  // open only if they already hold something, so nothing carried over is hidden behind a toggle.
+  const [showSite, setShowSite] = useState(() => Object.keys(prefill).length > 0);
+  const [showArea, setShowArea] = useState(
+    () =>
+      asField(prefill.land_area_rai) !== "" ||
+      asField(prefill.land_area_ngan) !== "" ||
+      asField(prefill.land_area_wa) !== "",
+  );
+  const [showOptional, setShowOptional] = useState(
+    () =>
+      asField(prefill.address_line) !== "" ||
+      asField(prefill.title_deed_number) !== "" ||
+      asField(prefill.map_sheet) !== "" ||
+      asField(prefill.land_number) !== "",
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const navigate = useNavigate();
@@ -104,6 +141,16 @@ export function PropertyIntakeForm() {
   const provinces = useProvinces();
   const districts = useDistricts(provinceId || undefined);
   const subdistricts = useSubdistricts(districtId || undefined);
+
+  /**
+   * The carried-in area, as the picker's confirmation needs it.
+   *
+   * Fetched rather than reconstructed from the three ids: the confirmation prints how many figures
+   * the area holds, and inventing zeros there would put "ไม่มีข้อมูลทรัพย์สิน" under a place the
+   * reader has just seen a land price for.
+   */
+  const carriedArea = useAreaChoice(areaCleared ? undefined : asField(prefill.subdistrict_id));
+  const selectedArea = picked ?? (areaCleared ? null : (carriedArea.data ?? null));
 
   // Selecting a parent invalidates its children.
   function selectProvince(id: string) {
@@ -168,9 +215,10 @@ export function PropertyIntakeForm() {
 
       <div className="mt-6">
         <AreaPicker
-          selected={picked}
+          selected={selectedArea}
           onPick={(choice) => {
             setPicked(choice);
+            setAreaCleared(false);
             setProvinceId(choice.province_id);
             setDistrictId(choice.district_id);
             setSubdistrictId(choice.subdistrict_id);
@@ -178,6 +226,7 @@ export function PropertyIntakeForm() {
           }}
           onClear={() => {
             setPicked(null);
+            setAreaCleared(true);
             setProvinceId("");
             setDistrictId("");
             setSubdistrictId("");

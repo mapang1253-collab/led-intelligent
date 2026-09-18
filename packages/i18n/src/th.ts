@@ -159,6 +159,12 @@ export const th = {
     summaryConcepts: "แนวคิดที่เสนอ",
     summaryConceptsUnit: "แนวคิด",
     summaryFromItems: "จาก {n} รายการในพื้นที่",
+    /* Which place a figure is about. Printed on every tile, not only the borrowed ones, because
+       "this subdistrict" is the fact a reader relies on when they read the number. */
+    summaryLevelOwn: "ข้อมูลของตำบลนี้",
+    summaryLevelContext: "ข้อมูลระดับอำเภอ ใช้เป็นบริบท",
+    summaryBorrowedNote:
+      "ตัวเลขที่ระบุว่าเป็นระดับอำเภอ เป็นของอำเภอที่ครอบคลุมตำบลนี้ เพราะหน่วยงานยังไม่ได้ประกาศตัวเลขรายตำบล ใช้เป็นบริบทได้ แต่ไม่ใช่ตัวเลขของตำบลนี้โดยตรง",
     stageHeading: "ขั้นตอนการทำงาน",
     stageIntro: "รายการนี้บอกว่าระบบทำอะไรให้แล้วบ้าง และขั้นไหนยังให้คำตอบไม่ได้ พร้อมเหตุผล",
     stageSucceeded: "เสร็จแล้ว",
@@ -190,8 +196,13 @@ export const th = {
      */
     stageWhyToggle: "ทำไมจึงเป็นเช่นนี้",
     stageWhy: {
+      /* Rewritten once the feasibility method was reviewed. It used to say the system shows no
+         yield or payback at all, which the feasibility tab had by then made untrue — and a reason
+         that contradicts the screen beside it costs the reader more trust than the limitation it
+         was explaining. The limitation itself is unchanged: no cost dataset, so no evidence-based
+         comparison between concepts. */
       COMPONENT_NOT_ACTIVATED:
-        "องค์ประกอบทางเศรษฐศาสตร์ที่จำเป็นต่อการคำนวณยังไม่ผ่านเกณฑ์การเปิดใช้งานตามที่กำหนดไว้ใน docs/implementation-plan.md §4 โดยเฉพาะอย่างยิ่งยังไม่มีชุดข้อมูลต้นทุนค่าก่อสร้างที่อ้างอิงได้และครอบคลุมทุกจังหวัด ระบบจึงไม่แสดงอัตราผลตอบแทน ระยะเวลาคืนทุน หรือประมาณการกระแสเงินสด เนื่องจากการแสดงตัวเลขที่ไม่มีหลักฐานรองรับย่อมทำให้ผู้ใช้เข้าใจผิดในสาระสำคัญ",
+        "ยังไม่มีชุดข้อมูลต้นทุนค่าก่อสร้างที่อ้างอิงได้และครอบคลุมทุกจังหวัด ตามเกณฑ์การเปิดใช้งานใน docs/implementation-plan.md §4 ระบบจึงยังคำนวณผลตอบแทนของแต่ละแนวคิดจากหลักฐานของพื้นที่นี้ไม่ได้ และยังเปรียบเทียบความคุ้มค่าระหว่างแนวคิดไม่ได้ ทั้งนี้ผู้ใช้สามารถกรอกสมมติฐานเองเพื่อคำนวณระยะเวลาคืนทุนและอัตราผลตอบแทนได้ที่แท็บความเป็นไปได้ทางการเงิน โดยผลลัพธ์จะผูกกับสมมติฐานที่กรอก มิใช่หลักฐานของพื้นที่",
       SOURCE_NOT_ACTIVATED:
         "แหล่งข้อมูลที่เกี่ยวข้องยังไม่ผ่านเกณฑ์การเปิดใช้งาน จึงยังไม่ถูกนำมาใช้ประกอบการวิเคราะห์ สถานะการเปิดใช้งานของทุกแหล่งตรวจสอบได้ที่หน้าสถานะระบบ",
       NO_EVIDENCE_FOR_AREA:
@@ -518,8 +529,19 @@ export const th = {
     missingHeading: "สิ่งที่ยังขาดจึงจะสรุปได้",
     evaluatedHeading: "แนวคิดที่ประเมินแล้ว",
     evaluatedNote: "แสดงตามลำดับที่เสนอ ไม่ได้เรียงตามความเหมาะสม",
-    verificationHeading: "สิ่งที่ต้องตรวจสอบเพิ่มเติม",
+    verificationHeading: "ขั้นตอนต่อไปที่ทำให้สรุปได้",
+    /* Read as a plan of work, not as a list of faults. Every line below was derived from something
+       this run actually could not settle, and each one names what settling it would change. */
+    verificationIntro:
+      "รายการนี้คือสิ่งที่ยังขาดอยู่และวิธีเติมให้ครบ ไม่ใช่ข้อผิดพลาดของการวิเคราะห์ เมื่อเติมรายการที่ระบุว่าจำเป็นได้ครบ ระบบจะสรุปให้ได้",
     verificationNote: "ระบบไม่ได้ติดต่อผู้เชี่ยวชาญให้ และไม่ถือว่ารายการใดดำเนินการแล้ว",
+    /* The split that matters most to someone reading this at home: two of these need a trip to a
+       government office, and two need a tape measure and a minute on the form they just left. */
+    selfHeading: "กรอกเองได้ทันที ไม่ต้องไปที่ไหน",
+    selfNote:
+      "ข้อมูลเหล่านี้วัดหรือระบุเองได้จากที่ดินหรือแผนที่ ไม่ต้องขอเอกสารจากหน่วยงาน เมื่อกรอกแล้ววิเคราะห์ใหม่ ระบบจะตรวจข้อกำหนดที่เกี่ยวข้องให้ทันที",
+    selfCta: "กรอกข้อมูลเพิ่มแล้ววิเคราะห์ใหม่",
+    obtainHeading: "ต้องขอจากหน่วยงานหรือผู้เชี่ยวชาญ",
     whyLabel: "เหตุผล",
     sourceLabel: "แหล่งที่ควรตรวจสอบ",
     couldChangeLabel: "ถ้าตรวจสอบแล้วจะเปลี่ยนอะไร",
@@ -540,9 +562,16 @@ export const th = {
     SOURCE_CURRENCY: "ความเป็นปัจจุบันและสิทธิ์ของแหล่งข้อมูล",
   },
 
+  /**
+   * Said as what the reader gets, not as an abstract weight.
+   *
+   * "มีผลต่อข้อสรุป" was accurate and unreadable: it describes the item's relationship to a
+   * conclusion the reader has not been shown. Each label now states the consequence of supplying
+   * the item, which is the only reason a reader is looking at the list.
+   */
   verificationPriority: {
-    BLOCKING: "ต้องมีก่อนจึงจะสรุปได้",
-    MATERIAL: "มีผลต่อข้อสรุป",
+    BLOCKING: "จำเป็นต่อการสรุป",
+    MATERIAL: "อาจเปลี่ยนข้อสรุปได้",
     ADVISORY: "ควรตรวจสอบ",
   },
 

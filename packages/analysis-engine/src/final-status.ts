@@ -45,8 +45,16 @@ function decide(input: FinalStatusInput): {
   const missing: string[] = [];
 
   // Step 4: no supported common-basis comparison for the claimed scope.
+  //
+  // What is missing is the evidence, not the method. A reviewed feasibility method exists and runs
+  // on the feasibility tab; it takes assumptions the reader supplies, which is enough to work out
+  // one concept's payback and nothing like enough to say which of two concepts is better. Naming
+  // the method as the gap, as this line did before the method was reviewed, sent a reader looking
+  // for a calculator that was already on the screen.
   if (!input.economic_components_available) {
-    missing.push("องค์ประกอบทางเศรษฐศาสตร์ที่ผ่านการตรวจทาน สำหรับคำนวณความเป็นไปได้ทางการเงินของแต่ละแนวคิด");
+    missing.push(
+      "ตัวเลขต้นทุนก่อสร้างและราคาขายหรือค่าเช่าของพื้นที่นี้ สำหรับใช้เปรียบเทียบความคุ้มค่าระหว่างแนวคิด (เครื่องคำนวณความเป็นไปได้ทางการเงินใช้สมมติฐานที่ผู้ใช้กรอกเองได้อยู่แล้ว)",
+    );
   }
 
   const everyConceptUnresolved = input.legal.every(
