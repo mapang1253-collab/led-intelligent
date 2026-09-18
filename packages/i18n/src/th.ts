@@ -253,6 +253,46 @@ export const th = {
     },
   },
 
+  /**
+   * Running the reviewed feasibility method across every proposed concept at once.
+   *
+   * The wording works hard in two places. It never calls the table a ranking: the rows stay in
+   * proposal order and the highest yield is not marked, because a return computed from the reader's
+   * own guesses is a property of the guesses. And it puts the legal column beside the money column
+   * on purpose — chasing the best yield onto land where the use cannot be cleared is the specific
+   * mistake this screen exists to prevent.
+   */
+  compare: {
+    heading: "เทียบผลตอบแทนระหว่างแนวคิด",
+    intro:
+      "ใช้วิธีคำนวณเดียวกับแท็บความเป็นไปได้ทางการเงิน แต่คำนวณให้ทุกแนวคิดพร้อมกัน เพื่อให้เห็นว่าภายใต้สมมติฐานชุดเดียวกัน แต่ละแนวทางให้ผลต่างกันอย่างไร ตัวเลขทุกตัวมาจากสมมติฐานที่ท่านกรอกเอง ไม่ใช่ราคาตลาดที่สำรวจได้",
+    sharedHeading: "สมมติฐานร่วม ใช้กับทุกแนวคิด",
+    perConceptHeading: "สมมติฐานรายแนวคิด",
+    perConceptNote:
+      "ค่าเริ่มต้นเท่ากันทุกแนวคิด หากไม่แก้ตัวเลขให้ต่างกัน ผลลัพธ์ย่อมออกมาเท่ากันทุกแนวคิด เพราะแนวคิดที่ต่างกันย่อมมีต้นทุนต่อตารางเมตรและค่าเช่าที่ต่างกัน",
+    compute: "คำนวณเทียบทุกแนวคิด",
+    resultHeading: "ผลการเทียบ",
+    columnConcept: "แนวคิด",
+    columnLegal: "ผลตรวจข้อกำหนด",
+    columnCapital: "เงินลงทุนรวม",
+    columnNet: "รายได้สุทธิต่อปี",
+    columnPayback: "คืนทุน",
+    columnYield: "ผลตอบแทนต่อปี",
+    floorArea: "พื้นที่อาคาร (ตร.ม.)",
+    cost: "ต้นทุนก่อสร้าง (บาท/ตร.ม.)",
+    rent: "ค่าเช่า (บาท/ตร.ม./เดือน)",
+    /* Said where the numbers are, not only in a footnote: an unresolved legal check does not become
+       less unresolved because a concept happens to show the largest return. */
+    notARanking:
+      "ตารางนี้เรียงตามลำดับที่เสนอ ไม่ได้เรียงตามความคุ้มค่า และระบบไม่ได้ระบุว่าแนวคิดใดดีที่สุด ตัวเลขผลตอบแทนคำนวณจากสมมติฐานที่ท่านกรอก การเปลี่ยนสมมติฐานย่อมเปลี่ยนลำดับได้ทั้งหมด",
+    legalWarning:
+      "แนวคิดที่ผลตรวจข้อกำหนดยังไม่ผ่านหรือยังสรุปไม่ได้ ไม่อาจถือว่าทำได้จริงเพียงเพราะให้ผลตอบแทนสูงกว่า ต้องแก้ข้อกำหนดให้ผ่านก่อนเสมอ",
+    noConcepts: "ยังไม่มีแนวคิดให้เทียบ ระบบจะเทียบได้เมื่อขั้นตอนเสนอแนวคิดทำงานเสร็จแล้ว",
+    identicalWarning:
+      "ขณะนี้ทุกแนวคิดใช้สมมติฐานชุดเดียวกัน ผลลัพธ์จึงเท่ากันทั้งหมด กรุณาปรับต้นทุนหรือค่าเช่าของแต่ละแนวคิดให้ต่างกันตามความเป็นจริง",
+    notComputedShort: "คำนวณไม่ได้",
+  },
+
   feasibility: {
     heading: "ความเป็นไปได้ทางการเงินเบื้องต้น",
     intro:

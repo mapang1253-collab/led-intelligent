@@ -20,6 +20,7 @@ import {
 import { useRef } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { useResultView } from "../../app/AppShell.js";
+import { ConceptComparison } from "./ConceptComparison.js";
 import { ConceptPanel } from "./ConceptPanel.js";
 import { EvidencePanel } from "./EvidencePanel.js";
 import { FeasibilityPanel } from "./FeasibilityPanel.js";
@@ -272,6 +273,11 @@ export function RunPage() {
               worth on the state's schedule, and then what would happen if something were built on
               it. The second one runs entirely on the reader's own assumptions and says so. */}
           <FeasibilityPanel />
+          {/* And last, the same method across every concept at once — the comparison the product is
+              named after. It comes after the single-concept calculator because a reader needs to
+              see one worked example, with its arithmetic, before a table of six of them means
+              anything. */}
+          <ConceptComparison concepts={envelope?.partial_artifacts?.concepts} />
         </>
       ),
     },
