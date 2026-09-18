@@ -58,7 +58,15 @@ function thaiDate(iso: string): string {
 type Action = FinalAnalysisView["verification_actions"][number];
 
 /**
- * One item of work.
+ * One item of work: what to get, and — folded — why it matters.
+ *
+ * The three explanation lines used to print on every row. With the twenty-odd actions a real run
+ * produces, that made this one panel 8,366 of the overview's 10,614 characters: four fifths of the
+ * first screen a reader sees, in dense grey small print, which is how a list of next steps turns
+ * into a wall nobody reads. The steps themselves are the scannable part and stay; the reasoning is
+ * one click away per row, and no action, reason or source has been removed — docs/output-policy.md
+ * §7 requires the structured action to carry all of it, and it still does. §3's rule against
+ * collapsing applies to the academic disclaimer, which is not here and is not folded.
  *
  * The priority badge is deliberately not `--color-fail`. That colour means a validator returned
  * FAIL — a requirement this land does not meet — and spending it on "we have not checked this yet"
@@ -83,15 +91,20 @@ function ActionItem({ action }: { action: Action }) {
           {PRIORITY_LABELS[action.priority] ?? action.priority}
         </span>
       </div>
-      <p className="mt-1 text-ink-muted text-xs leading-relaxed">
-        {th.finalResult.whyLabel}: {action.why_th}
-      </p>
-      <p className="mt-0.5 text-ink-muted text-xs leading-relaxed">
-        {th.finalResult.sourceLabel}: {action.suggested_source_th}
-      </p>
-      <p className="mt-0.5 text-ink-muted text-xs leading-relaxed">
-        {th.finalResult.couldChangeLabel}: {action.could_change_th}
-      </p>
+      <details className="mt-1">
+        <summary className="cursor-pointer text-signature-text text-xs">
+          {th.finalResult.actionWhyToggle}
+        </summary>
+        <p className="mt-1 text-ink-muted text-xs leading-relaxed">
+          {th.finalResult.whyLabel}: {action.why_th}
+        </p>
+        <p className="mt-0.5 text-ink-muted text-xs leading-relaxed">
+          {th.finalResult.sourceLabel}: {action.suggested_source_th}
+        </p>
+        <p className="mt-0.5 text-ink-muted text-xs leading-relaxed">
+          {th.finalResult.couldChangeLabel}: {action.could_change_th}
+        </p>
+      </details>
     </li>
   );
 }

@@ -1,5 +1,5 @@
 import { th } from "@reis/i18n";
-import { ArrowRight, ChevronDown, Info, Plus } from "lucide-react";
+import { ArrowRight, ChevronDown, ExternalLink, Info, Plus } from "lucide-react";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useCreateRun } from "../run/useAnalysisRun.js";
@@ -32,43 +32,18 @@ interface SiteFields {
   water_body_width: string;
 }
 
+/**
+ * The land area, which the valuation calculator on the result page reads.
+ *
+ * Deed number, ระวาง, เลขที่ดิน and street address used to sit alongside these. They are gone: the
+ * product cannot resolve a parcel from any of them, so they only ever set a `requested_scope` that
+ * the permitted scope refused. `propertyIntakeSchema` still accepts them, because the API is not
+ * this form — the form simply stopped asking for what it could not use.
+ */
 interface OptionalFields {
-  address_line: string;
-  title_deed_number: string;
-  map_sheet: string;
-  land_number: string;
   land_area_rai: string;
   land_area_ngan: string;
   land_area_wa: string;
-}
-
-function OptionalTextField({
-  label,
-  value,
-  placeholder,
-  help,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  placeholder?: string;
-  /** What this thing is, in words someone who has never opened a title deed can follow. */
-  help?: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <label className="flex flex-col gap-1.5">
-      <span className="font-medium text-sm">{label}</span>
-      <input
-        type="text"
-        value={value}
-        placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)}
-        className="rounded-card border border-border-strong bg-surface px-4 py-3 text-base text-ink placeholder:text-ink-muted"
-      />
-      {help && <span className="text-ink-muted text-xs leading-relaxed">{help}</span>}
-    </label>
-  );
 }
 
 /** 1 ไร่ = 4 งาน = 400 ตารางวา, 1 ตารางวา = 4 ตารางเมตร (ประมวลกฎหมายที่ดิน). */
@@ -103,10 +78,6 @@ export function PropertyIntakeForm() {
   /** Set when the reader presses "change", so a carried-in area does not reappear after clearing. */
   const [areaCleared, setAreaCleared] = useState(false);
   const [optional, setOptional] = useState<OptionalFields>(() => ({
-    address_line: asField(prefill.address_line),
-    title_deed_number: asField(prefill.title_deed_number),
-    map_sheet: asField(prefill.map_sheet),
-    land_number: asField(prefill.land_number),
     land_area_rai: asField(prefill.land_area_rai),
     land_area_ngan: asField(prefill.land_area_ngan),
     land_area_wa: asField(prefill.land_area_wa),
@@ -126,13 +97,6 @@ export function PropertyIntakeForm() {
       asField(prefill.land_area_rai) !== "" ||
       asField(prefill.land_area_ngan) !== "" ||
       asField(prefill.land_area_wa) !== "",
-  );
-  const [showOptional, setShowOptional] = useState(
-    () =>
-      asField(prefill.address_line) !== "" ||
-      asField(prefill.title_deed_number) !== "" ||
-      asField(prefill.map_sheet) !== "" ||
-      asField(prefill.land_number) !== "",
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -168,12 +132,6 @@ export function PropertyIntakeForm() {
     optional.land_area_ngan,
     optional.land_area_wa,
   );
-
-  const hasPropertyDetail =
-    optional.title_deed_number.trim() !== "" ||
-    optional.map_sheet.trim() !== "" ||
-    optional.land_number.trim() !== "" ||
-    optional.address_line.trim() !== "";
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -277,6 +235,13 @@ export function PropertyIntakeForm() {
           }
         />
       </div>
+
+      {/* The form is finished at this line. Said here rather than left to be inferred, because the
+          optional sections below read as required to anyone who does not know they are not. */}
+      <p className="mt-3 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
+        <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
+        {th.intake.enoughAlready}
+      </p>
 
       <div className="mt-6">
         <button
@@ -387,58 +352,26 @@ export function PropertyIntakeForm() {
         )}
       </div>
 
-      <div className="mt-6">
-        <button
-          type="button"
-          onClick={() => setShowOptional((open) => !open)}
-          aria-expanded={showOptional}
-          className="flex items-center gap-2 font-medium text-signature-text text-sm"
+      {/* Where the four dead parcel inputs used to be. A reader who wants parcel-level detail is
+          sent to the authority that has it, rather than typing four numbers this product ignores. */}
+      <div className="mt-6 rounded-card bg-surface-sunken p-5">
+        <p className="font-semibold text-sm">{th.intake.parcelHeading}</p>
+        <p className="mt-1.5 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
+          <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
+          {th.intake.parcelBody}
+        </p>
+        <p className="mt-2 text-ink-muted text-xs leading-relaxed">{th.intake.parcelLinkIntro}</p>
+        <a
+          href="https://landsmaps.dol.go.th/"
+          target="_blank"
+          rel="noreferrer noopener"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-pill border border-border-strong px-4 py-2 font-medium text-sm"
+          style={{ color: "var(--color-signature-text)" }}
         >
-          {showOptional ? <ChevronDown size={16} /> : <Plus size={16} />}
-          {th.intake.optionalToggle}
-        </button>
-
-        {showOptional && (
-          <div className="mt-4 rounded-card bg-surface-sunken p-5">
-            <p className="mb-4 flex items-start gap-2 text-ink-muted text-sm">
-              <Info size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
-              {th.intake.optionalHelp}
-            </p>
-            {/* Said plainly: this asks for a document nobody carries, and today it buys little. */}
-            <p className="-mt-2 mb-4 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
-              <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
-              {th.intake.optionalHonesty}
-            </p>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <OptionalTextField
-                label={th.intake.addressLabel}
-                placeholder={th.intake.addressPlaceholder}
-                value={optional.address_line}
-                onChange={(v) => setOptional((o) => ({ ...o, address_line: v }))}
-              />
-              <OptionalTextField
-                label={th.intake.titleDeedLabel}
-                value={optional.title_deed_number}
-                help={th.intake.titleDeedHelp}
-                onChange={(v) => setOptional((o) => ({ ...o, title_deed_number: v }))}
-              />
-              <OptionalTextField
-                label={th.intake.mapSheetLabel}
-                placeholder={th.intake.mapSheetPlaceholder}
-                help={th.intake.mapSheetHelp}
-                value={optional.map_sheet}
-                onChange={(v) => setOptional((o) => ({ ...o, map_sheet: v }))}
-              />
-              <OptionalTextField
-                label={th.intake.landNumberLabel}
-                help={th.intake.landNumberHelp}
-                value={optional.land_number}
-                onChange={(v) => setOptional((o) => ({ ...o, land_number: v }))}
-              />
-            </div>
-          </div>
-        )}
+          <ExternalLink size={14} aria-hidden="true" />
+          {th.intake.parcelLinkLabel}
+        </a>
+        <p className="mt-1.5 text-ink-muted text-xs">{th.intake.parcelLinkNote}</p>
       </div>
 
       {/* Scope is set by the evidence available, so say up front what the answer can claim. */}
@@ -450,9 +383,7 @@ export function PropertyIntakeForm() {
         }}
       >
         <p className="font-semibold">{th.intake.scopeNoticeTitle}</p>
-        <p className="mt-1">
-          {hasPropertyDetail ? th.intake.scopeNoticeProperty : th.intake.scopeNoticeArea}
-        </p>
+        <p className="mt-1">{th.intake.scopeNoticeArea}</p>
       </div>
 
       {createRun.isError && <p className="mt-4 text-fail text-sm">{th.error.generic}</p>}

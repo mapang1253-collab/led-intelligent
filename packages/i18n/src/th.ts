@@ -112,25 +112,36 @@ export const th = {
     waterWidthHelp:
       "กรอกเมื่อที่ดินติดคลอง ลำราง หรือลำน้ำสาธารณะ วัดความกว้างของลำน้ำ ถ้าที่ดินไม่ติดแหล่งน้ำให้เว้นว่างไว้",
     nearLargeWaterLabel: "ที่ดินอยู่ติดหรือใกล้บึง ทะเลสาบ หรือทะเล",
+    /* Said immediately under the area picker, because the commonest reason someone abandons this
+       form is believing the optional sections below are part of it. */
+    enoughAlready:
+      "เลือกพื้นที่แล้วกดเริ่มวิเคราะห์ได้เลย ส่วนด้านล่างเป็นตัวเลือกเสริมทั้งหมด ไม่รู้ก็ข้ามได้ ไม่กระทบการวิเคราะห์",
     areaToggle: "รู้เนื้อที่ดินไหม (ไม่บังคับ)",
     areaHelp: "กรอกตามที่ระบุไว้ในโฉนด ระบบจะเติมให้อัตโนมัติในเครื่องคำนวณมูลค่าที่ดินในหน้าผลลัพธ์ จะได้ไม่ต้องกรอกซ้ำ",
     areaConversion: "เท่ากับ",
-    optionalToggle: "ระบุว่าเป็นที่ดินแปลงไหน (ไม่บังคับ)",
-    optionalHelp:
-      "สามช่องนี้อยู่บนหน้าโฉนดที่ดิน ใช้ระบุว่าผลลัพธ์พูดถึงแปลงใด และทำให้ขอบเขตของผลเปลี่ยนจาก “ระดับพื้นที่” เป็น “เบื้องต้นระดับแปลง”",
-    optionalHonesty:
-      "บอกตรง ๆ ว่าตอนนี้ระบบยังไม่ได้ใช้สามช่องนี้ไปค้นราคาประเมินรายแปลง เพราะไฟล์รายแปลงของกรมธนารักษ์รวมกัน 1.44 GB และยังนำเข้าไม่ได้ ถ้าไม่กรอกก็ไม่เสียอะไรในตอนนี้",
 
-    addressLabel: "ที่อยู่/ถนน/ซอย",
-    addressPlaceholder: "เช่น 123 ถนนสุขุมวิท",
-    titleDeedLabel: "เลขที่โฉนด",
-    titleDeedHelp: "เลขประจำเอกสารสิทธิ พิมพ์อยู่บนหัวโฉนด เป็นคนละเลขกับ “เลขที่ดิน”",
-    mapSheetLabel: "ระวาง",
-    mapSheetHelp:
-      "รหัสแผ่นแผนที่ของกรมที่ดินที่บอกว่าที่ดินอยู่ในแผ่นไหน หน้าตาเป็นตัวเลขปนตัวอักษร เช่น 5136 III 8044-12 พิมพ์อยู่บนหัวโฉนดคู่กับคำว่า “ระวาง”",
-    mapSheetPlaceholder: "เช่น 5136 III 8044-12",
-    landNumberLabel: "เลขที่ดิน",
-    landNumberHelp: "เลขประจำแปลงภายในระวางนั้น อยู่ใกล้กับช่องระวางบนโฉนด",
+    /**
+     * The parcel block, after the four fields that did nothing were taken out.
+     *
+     * The form used to ask for address, deed number, ระวาง and เลขที่ดิน, and told the reader that
+     * supplying them moved the result from area level to preliminary-property level. That was not
+     * true: they set `requested_scope` and the permitted scope stayed AREA, because nothing in the
+     * product can look a parcel up — the Land Department publishes no public API and OSM holds zero
+     * Thai cadastral parcels. Four inputs that changed nothing, under a sentence promising they
+     * changed something, is the "ใช้งานไม่ได้จริง" the feedback named.
+     *
+     * What replaces them is the thing the reader actually wanted: a link to the Land Department's
+     * own parcel map, where the shape and the numbers are authoritative. It is an ordinary outbound
+     * link the reader clicks. Nothing is fetched from it — the site sits behind bot protection, and
+     * working around that is neither permitted nor necessary for a link.
+     */
+    parcelHeading: "อยากดูรูปแปลงที่ดินและเลขโฉนด",
+    parcelBody:
+      "ระบบนี้ยังค้นข้อมูลรายแปลงไม่ได้ เพราะกรมที่ดินไม่ได้เปิด API สาธารณะให้ค้นด้วยเลขโฉนด การกรอกเลขโฉนดจึงไม่ได้ทำให้ผลวิเคราะห์ละเอียดขึ้น ระบบจึงไม่ขอ",
+    parcelLinkIntro: "ดูรูปแปลง ระวาง และเลขที่ดินได้ที่แผนที่ของกรมที่ดินโดยตรง แล้วกลับมาวิเคราะห์ต่อที่นี่ได้เลย",
+    parcelLinkLabel: "เปิดแผนที่แปลงที่ดิน กรมที่ดิน (LandsMaps)",
+    parcelLinkNote: "เปิดในแท็บใหม่ เป็นเว็บของกรมที่ดิน ไม่ใช่ส่วนหนึ่งของระบบนี้",
+
     landAreaLabel: "เนื้อที่",
     raiUnit: "ไร่",
     nganUnit: "งาน",
@@ -140,8 +151,10 @@ export const th = {
     submitting: "กำลังส่งข้อมูล",
 
     scopeNoticeTitle: "ขอบเขตของผลที่จะได้รับ",
-    scopeNoticeArea: "ระบุเฉพาะพื้นที่ — จะได้การวิเคราะห์ศักยภาพระดับพื้นที่ ไม่ใช่ข้อสรุปเฉพาะแปลงที่ดิน",
-    scopeNoticeProperty: "มีข้อมูลเฉพาะทรัพย์ — ระบบจะพยายามวิเคราะห์ในระดับทรัพย์ เท่าที่หลักฐานรองรับ",
+    /* One sentence now, because there is only one outcome. The second variant promised a
+       property-level attempt that the permitted scope never granted. */
+    scopeNoticeArea:
+      "เป็นการวิเคราะห์ศักยภาพระดับพื้นที่ ไม่ใช่ข้อสรุปเฉพาะแปลงที่ดิน เพราะยังไม่มีแหล่งข้อมูลรายแปลงที่เข้าถึงได้",
   },
 
   validation: {
@@ -595,6 +608,9 @@ export const th = {
       "ข้อมูลเหล่านี้วัดหรือระบุเองได้จากที่ดินหรือแผนที่ ไม่ต้องขอเอกสารจากหน่วยงาน เมื่อกรอกแล้ววิเคราะห์ใหม่ ระบบจะตรวจข้อกำหนดที่เกี่ยวข้องให้ทันที",
     selfCta: "กรอกข้อมูลเพิ่มแล้ววิเคราะห์ใหม่",
     obtainHeading: "ต้องขอจากหน่วยงานหรือผู้เชี่ยวชาญ",
+    /* The reasoning, one click from the step it belongs to. Printing it on every one of twenty-odd
+       rows turned the list into four fifths of the overview screen, in small grey type. */
+    actionWhyToggle: "ทำไมต้องตรวจข้อนี้",
     whyLabel: "เหตุผล",
     sourceLabel: "แหล่งที่ควรตรวจสอบ",
     couldChangeLabel: "ถ้าตรวจสอบแล้วจะเปลี่ยนอะไร",
