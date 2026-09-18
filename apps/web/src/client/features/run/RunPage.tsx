@@ -207,6 +207,11 @@ export function RunPage() {
             conceptCount={envelope?.partial_artifacts?.concepts?.length ?? 0}
           />
 
+          {/* The answer, and the checklist of what to verify before acting on it, come before the
+              plumbing that produced them. A reader opening a result wants to know what it says and
+              what to do next; how each stage got there is the second question, not the first. */}
+          <FinalResultPanel final={final} />
+
           <section className="glass mt-5 rounded-card p-6">
             <h2 className="mb-1 font-semibold text-ink-muted text-sm">
               {th.progress.stageHeading}
@@ -223,7 +228,6 @@ export function RunPage() {
                 own explanation on its own row — where a reader looking at "ยังไม่เปิดใช้งาน" will
                 actually look for it. */}
           </section>
-          <FinalResultPanel final={final} />
         </>
       ),
     },

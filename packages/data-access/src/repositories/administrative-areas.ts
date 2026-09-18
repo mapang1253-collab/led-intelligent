@@ -232,6 +232,105 @@ export async function areasByIds(db: Db, ids: readonly string[]): Promise<AreaCh
   });
 }
 
+/** Side-by-side figures for a handful of areas, for the shortlist's comparison table. */
+export interface AreaComparison {
+  subdistrict_id: string;
+  subdistrict_name_th: string;
+  district_name_th: string;
+  province_name_th: string;
+  /** Lowest and highest published figure, as decimal strings. Null when the area has none. */
+  condominium_low: string | null;
+  condominium_high: string | null;
+  condominium_count: number;
+  /** Which area the figures actually describe: this subdistrict, or the district containing it. */
+  condominium_level: "SUBDISTRICT" | "DISTRICT" | null;
+  land_low: string | null;
+  land_high: string | null;
+  land_count: number;
+  land_level: "SUBDISTRICT" | "DISTRICT" | null;
+  population: string | null;
+}
+
+/**
+ * The figures a reader is actually choosing between, for several areas at once.
+ *
+ * Figures for the subdistrict itself are preferred, and the district that contains it is used only
+ * when the subdistrict has none of that measure — which is the ordinary case for land, published
+ * district by district. Whichever it used is returned with the span, because a comparison is the
+ * worst place to borrow a containing area's number silently: two subdistricts of one district would
+ * show the same land price, and a reader who was not told the level would read that as a finding
+ * about each place rather than as one figure covering both.
+ *
+ * The count travels with the span too, so an area backed by four figures is not read as though it
+ * were backed by four hundred.
+ *
+ * A span, never a mean — docs/adr/0002. A published range contributes both of its ends, because
+ * both are figures the source stated.
+ */
+export async function areaComparison(db: Db, ids: readonly string[]): Promise<AreaComparison[]> {
+  if (ids.length === 0) {
+    return [];
+  }
+  // One pass per measure: take the subdistrict's own figures, and fall back to the district's only
+  // when there are none. `level` names which of the two the row came from.
+  const spanFor = (measureId: string) => `
+    SELECT low, high, n, level FROM (
+      SELECT min(coalesce(ov.value_low, ov.value_scalar))  AS low,
+             max(coalesce(ov.value_high, ov.value_scalar)) AS high,
+             count(*)::int                                 AS n,
+             o.geography_level                             AS level,
+             CASE WHEN o.admin_area_id = sd.id THEN 0 ELSE 1 END AS preference
+        FROM evidence.observation o
+        JOIN evidence.observation_value ov ON ov.observation_id = o.id
+       WHERE o.is_current
+         AND o.measure_id = '${measureId}'
+         AND o.admin_area_id IN (sd.id, d.id)
+       GROUP BY o.geography_level, preference
+       ORDER BY preference
+       LIMIT 1
+    ) best`;
+
+  const { rows } = await db.executeQuery<AreaComparison>({
+    sql: `
+      SELECT sd.id       AS subdistrict_id,
+             sd.name_th  AS subdistrict_name_th,
+             d.name_th   AS district_name_th,
+             p.name_th   AS province_name_th,
+             c.low::text  AS condominium_low,
+             c.high::text AS condominium_high,
+             COALESCE(c.n, 0) AS condominium_count,
+             c.level      AS condominium_level,
+             l.low::text  AS land_low,
+             l.high::text AS land_high,
+             COALESCE(l.n, 0) AS land_count,
+             l.level      AS land_level,
+             pop.value::text  AS population
+        FROM reference.administrative_area sd
+        JOIN reference.administrative_area d ON d.id = sd.parent_id
+        JOIN reference.administrative_area p ON p.id = d.parent_id
+        LEFT JOIN LATERAL (${spanFor("assessed_condominium_value_per_sqm")}) c ON true
+        LEFT JOIN LATERAL (${spanFor("assessed_land_value_per_sqwa")}) l ON true
+        LEFT JOIN LATERAL (
+          SELECT ov.value_scalar AS value
+            FROM evidence.observation o
+            JOIN evidence.observation_value ov ON ov.observation_id = o.id
+           WHERE o.is_current
+             AND o.measure_id = 'registered_population'
+             AND o.admin_area_id = sd.id
+           LIMIT 1
+        ) pop ON true
+       WHERE sd.level = 'SUBDISTRICT' AND sd.valid_to IS NULL AND sd.id = ANY($1)`,
+    parameters: [ids as string[]],
+    query: { kind: "SelectQueryNode" } as never,
+  });
+  // The caller's order is the reader's order — the sequence they starred them in.
+  const byId = new Map(rows.map((row) => [row.subdistrict_id, row]));
+  return ids.flatMap((id) => {
+    const row = byId.get(id);
+    return row ? [row] : [];
+  });
+}
+
 export async function wellDocumentedAreas(db: Db, limit = 6): Promise<AreaChoice[]> {
   const { rows } = await db.executeQuery<AreaChoice>({
     sql: `${AREA_CHOICE_SQL}

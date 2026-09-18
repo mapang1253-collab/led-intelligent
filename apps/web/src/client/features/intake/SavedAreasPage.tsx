@@ -2,6 +2,7 @@ import { th } from "@reis/i18n";
 import { ArrowRight, Building2, Info, LoaderCircle, Star } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useCreateRun } from "../run/useAnalysisRun.js";
+import { AreaComparison } from "./AreaComparison.js";
 import { type Favourite, useFavourites } from "./useFavourites.js";
 
 /**
@@ -62,6 +63,11 @@ export function SavedAreasPage() {
             <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
             {th.picker.favouritesNote}
           </p>
+
+          {/* The figures side by side come first: holding four places in your head across four
+              result screens is the work this page exists to remove. The cards below are for
+              acting on one of them once the comparison has told you which. */}
+          <AreaComparison favourites={favourites.list} />
 
           <ul className="mt-5">
             {favourites.list.map((entry) => {

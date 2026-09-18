@@ -24,6 +24,8 @@ export {
   aiStatus,
   searchAreas,
   sourceStatuses,
+  areaComparison,
+  type AreaComparison,
   areasByIds,
   wellDocumentedAreas,
   listSubdistricts,

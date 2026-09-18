@@ -1,6 +1,7 @@
 import type { LegalRulePack } from "@reis/contracts";
 import {
   aiStatus,
+  areaComparison,
   areasByIds,
   createDb,
   listDistricts,
@@ -137,6 +138,31 @@ app.get("/api/v1/administrative-areas/by-ids", async (c) => {
   const db = createDb(c.env.HYPERDRIVE.connectionString);
   try {
     const data = await areasByIds(db, ids);
+    return c.json({ schema_version: SCHEMA_VERSION, data });
+  } finally {
+    await db.destroy();
+  }
+});
+
+/**
+ * The same handful of areas, with the figures a reader is choosing between rather than counts.
+ *
+ * Separate from `by-ids` because it is a different question and a heavier query: the picker wants
+ * "does this place have anything", the shortlist wants "how do these places differ". Same cap and
+ * same shape check.
+ */
+app.get("/api/v1/administrative-areas/compare", async (c) => {
+  const ids = (c.req.query("ids") ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter((id) => /^\d{1,8}$/.test(id))
+    .slice(0, 12);
+  if (ids.length === 0) {
+    return c.json({ schema_version: SCHEMA_VERSION, data: [] });
+  }
+  const db = createDb(c.env.HYPERDRIVE.connectionString);
+  try {
+    const data = await areaComparison(db, ids);
     return c.json({ schema_version: SCHEMA_VERSION, data });
   } finally {
     await db.destroy();

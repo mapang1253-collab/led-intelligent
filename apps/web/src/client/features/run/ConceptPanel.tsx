@@ -2,6 +2,7 @@ import { th } from "@reis/i18n";
 import { Check, ChevronDown, CircleHelp, Info, Lightbulb, X } from "lucide-react";
 import { useState } from "react";
 import { Caveat } from "./Caveat.js";
+import { Notice } from "./Notice.js";
 import type { ConceptCard, RuleOutcomeView } from "./useAnalysisRun.js";
 
 /**
@@ -155,7 +156,10 @@ function ConceptCardView({ concept }: { concept: ConceptCard }) {
             </p>
           )}
 
-          <Caveat>{th.concepts.legalDisclaimer}</Caveat>
+          {/* Notice, not Caveat. Every other per-item caveat on these screens is a note; this one
+              is the difference between "the setback rule passes" and "this land may be built on",
+              and a reader who conflates the two can lose money on it. */}
+          <Notice>{th.concepts.legalDisclaimer}</Notice>
 
           <button
             type="button"
