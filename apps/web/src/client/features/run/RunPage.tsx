@@ -213,22 +213,38 @@ export function RunPage() {
               what to do next; how each stage got there is the second question, not the first. */}
           <FinalResultPanel final={final} intake={intake} />
 
-          <section className="glass mt-5 rounded-card p-6">
-            <h2 className="mb-1 font-semibold text-ink-muted text-sm">
-              {th.progress.stageHeading}
-            </h2>
-            {/* What this list is for. Without it, six rows of states read as six things that broke
-                rather than as the shape of the work. */}
-            <p className="mt-1 text-ink-muted text-sm leading-relaxed">{th.progress.stageIntro}</p>
-            <ul className="mt-3">
-              {envelope?.stage_records?.map((record) => (
-                <StageRow key={record.stage} record={record} />
-              ))}
-            </ul>
-            {/* The note that used to sit here, explaining the financial stage, is now that stage's
-                own explanation on its own row — where a reader looking at "ยังไม่เปิดใช้งาน" will
-                actually look for it. */}
-          </section>
+          {/*
+            The stage list, while there is still a stage running.
+
+            Readers did not understand it on a finished run — it is the pipeline's internal shape,
+            named in the pipeline's own terms, and someone who came for an answer about land has no
+            reason to know what CONCEPT_PROPOSAL is. On a finished run it is also redundant: what
+            the analysis could not settle is already said in its own words by the status sentence,
+            the missing-basis list and the verification actions above.
+
+            It stays while the run is working, because that is the only honest progress this
+            product has. docs/system-design.md §5 requires real queued/running/stage progress and
+            forbids inventing a percentage, and a spinner with no stages would be exactly the
+            fabricated reassurance that rule exists to prevent. A finished run has no progress left
+            to report, which is why removing it there does not touch that requirement.
+          */}
+          {!isTerminal(state) && (
+            <section className="glass mt-5 rounded-card p-6">
+              <h2 className="mb-1 font-semibold text-ink-muted text-sm">
+                {th.progress.stageHeading}
+              </h2>
+              {/* What this list is for. Without it, six rows of states read as six things that
+                  broke rather than as the shape of the work. */}
+              <p className="mt-1 text-ink-muted text-sm leading-relaxed">
+                {th.progress.stageIntro}
+              </p>
+              <ul className="mt-3">
+                {envelope?.stage_records?.map((record) => (
+                  <StageRow key={record.stage} record={record} />
+                ))}
+              </ul>
+            </section>
+          )}
         </>
       ),
     },
