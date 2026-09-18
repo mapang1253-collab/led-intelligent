@@ -84,6 +84,50 @@ export const th = {
     change: "เปลี่ยนพื้นที่",
   },
 
+  /**
+   * The map pin and what it buys (docs/adr/0006).
+   *
+   * Every line here holds one of two lines the product must not cross. The pin is the reader's
+   * assertion, not a verified parcel, so nothing here calls it "ที่ดินของคุณ" as established fact.
+   * And the distances are straight-line context from OpenStreetMap, so nothing here lets them read
+   * as travel time or as a finding the analysis relied on.
+   */
+  map: {
+    heading: "ปักหมุดที่ดินบนแผนที่ (ไม่บังคับ)",
+    intro:
+      "ถ้าปักหมุด ระบบจะบอกได้ว่าจุดนั้นห่างจากถนนใหญ่ โรงเรียน โรงพยาบาล ร้านสะดวกซื้อ และสถานีรถไฟกี่เมตร ถ้าไม่ปักก็วิเคราะห์ได้ตามปกติ",
+    ariaLabel: "แผนที่สำหรับปักหมุดตำแหน่งที่ดิน",
+    instruction: "คลิกบนแผนที่ตรงตำแหน่งที่ดิน ปักแล้วลากย้ายได้",
+    pinned: "ปักหมุดไว้ที่",
+    clear: "เอาหมุดออก",
+    /* Said next to the pin, not buried in a footnote: the whole product rests on not letting an
+       assertion pass for evidence. */
+    assertedNote:
+      "ตำแหน่งนี้เป็นสิ่งที่ท่านระบุเอง ระบบไม่ได้ตรวจสอบว่าตรงกับแปลงที่ดินจริงหรือไม่ และไม่ได้ทำให้ขอบเขตของผลวิเคราะห์เปลี่ยนจากระดับพื้นที่",
+
+    proximityHeading: "ระยะห่างจากจุดสำคัญ",
+    proximityLoading: "กำลังวัดระยะห่าง",
+    proximityFailed: "ดึงข้อมูลแผนที่ไม่สำเร็จ บริการภายนอกอาจไม่ว่าง ลองใหม่อีกครั้งได้",
+    proximityRetry: "ลองใหม่",
+    proximityEmpty: "ไม่พบจุดสำคัญที่ระบบค้นหาภายในรัศมีที่กำหนด",
+    proximityRadius: "ค้นหาภายในรัศมี {n} เมตรจากหมุด",
+    proximityUnnamed: "ไม่ระบุชื่อ",
+    metres: "เมตร",
+    /* Two limits, both load-bearing. A straight line is not a walk, and this is context that the
+       analysis never consulted. */
+    proximityStraightLine:
+      "เป็นระยะเส้นตรงจากหมุด ไม่ใช่ระยะทางเดินหรือขับรถจริง และไม่ได้คิดว่ามีถนนเชื่อมถึงกันหรือไม่",
+    proximityContextOnly:
+      "ข้อมูลส่วนนี้ใช้ประกอบการพิจารณาเท่านั้น ไม่ได้ถูกนำไปใช้ในการวิเคราะห์ ไม่มีผลต่อผลตรวจข้อกำหนดหรือข้อสรุปสุดท้าย",
+    category: {
+      MAIN_ROAD: "ถนนสายหลัก",
+      SCHOOL: "โรงเรียน",
+      HOSPITAL: "โรงพยาบาลหรือคลินิก",
+      CONVENIENCE: "ร้านสะดวกซื้อหรือตลาด",
+      RAIL_STATION: "สถานีรถไฟหรือรถไฟฟ้า",
+    },
+  },
+
   intake: {
     heading: "ทรัพย์สินที่ต้องการวิเคราะห์",
     /* What the tool is, said before it starts. Read without this, a result full of "ยัง…" lines

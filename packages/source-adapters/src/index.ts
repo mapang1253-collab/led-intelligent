@@ -61,3 +61,21 @@ export {
   fetchLandValuation,
   parseLandValuationCsv,
 } from "./treasury/land-valuation.js";
+/**
+ * OSM proximity (docs/adr/0006). Deliberately not grouped with the evidence adapters above: it
+ * produces context for display, never an Observation, and the activation gates that govern the
+ * others do not apply to it for exactly that reason.
+ */
+export {
+  OSM_ATTRIBUTION_TH,
+  OVERPASS_ENDPOINT,
+  PROXIMITY_SOURCE_ID,
+  type ProximityCategory,
+  type ProximityFeature,
+  type ProximityResult,
+  buildQuery,
+  categorise,
+  fetchProximity,
+  nearestByCategory,
+} from "./osm/proximity.js";
+export { NOMINATIM_ENDPOINT, type AreaCentre, geocodeArea } from "./osm/geocode.js";

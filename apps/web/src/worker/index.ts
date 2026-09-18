@@ -12,6 +12,7 @@ import {
   sourceStatuses,
   wellDocumentedAreas,
 } from "@reis/data-access";
+import { fetchProximity, geocodeArea } from "@reis/source-adapters";
 import { Hono } from "hono";
 import mr55Pack from "../../../../database/reviewed-packs/th-cba-mr55-v1.json" with {
   type: "json",
@@ -167,6 +168,92 @@ app.get("/api/v1/administrative-areas/compare", async (c) => {
   } finally {
     await db.destroy();
   }
+});
+
+/**
+ * Straight-line distances from a reader-placed pin (docs/adr/0006).
+ *
+ * The client never reaches OpenStreetMap itself: UI may not call providers, and `source-adapters`
+ * is the only package allowed to (docs/technology-stack.md §4). What crosses the wire from the
+ * browser is two numbers, bounded to Thailand here as well as in the schema, so a user-supplied
+ * value can never become a user-supplied URL.
+ *
+ * Outside the run entirely — no run id, nothing stored, nothing in the envelope. Proximity is
+ * context for display, so it hangs off its own endpoint rather than the analysis pipeline, which
+ * is the same distinction that keeps it out of the evidence-activation gates.
+ */
+app.get("/api/v1/proximity", async (c) => {
+  const lat = Number(c.req.query("lat"));
+  const lon = Number(c.req.query("lon"));
+  const inThailand =
+    Number.isFinite(lat) &&
+    Number.isFinite(lon) &&
+    lat >= 5.5 &&
+    lat <= 20.5 &&
+    lon >= 97 &&
+    lon <= 106;
+  if (!inThailand) {
+    return c.json({ error: "COORDINATES_OUT_OF_RANGE" }, 400);
+  }
+
+  const result = await fetchProximity(lat, lon);
+  if (result.outcome === "FAILED") {
+    // 502, not 500: the upstream did not answer. The client tells the reader it can retry.
+    return c.json({ error: "PROXIMITY_LOOKUP_FAILED", retryable: result.retryable }, 502);
+  }
+  return c.json({
+    schema_version: SCHEMA_VERSION,
+    data: result.features,
+    radius_metres: result.radius_metres,
+    attribution_th: result.attribution_th,
+  });
+});
+
+/**
+ * Where to open the map for a chosen area (docs/adr/0006).
+ *
+ * Cached hard, and that is a courtesy rather than an optimisation: Nominatim's usage policy asks
+ * that a public instance not be hammered, and an administrative area's centre does not move. One
+ * lookup per area serves every reader who picks it afterwards.
+ */
+app.get("/api/v1/area-centre", async (c) => {
+  const subdistrictId = c.req.query("subdistrict_id");
+  if (!subdistrictId || !/^\d{1,8}$/.test(subdistrictId)) {
+    return c.json({ error: "MISSING_SUBDISTRICT_ID" }, 400);
+  }
+
+  const cache = caches.default;
+  const cacheKey = new Request(new URL(c.req.url).toString(), { method: "GET" });
+  const cached = await cache.match(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const db = createDb(c.env.HYPERDRIVE.connectionString);
+  let names: Awaited<ReturnType<typeof areasByIds>>[number] | undefined;
+  try {
+    names = (await areasByIds(db, [subdistrictId]))[0];
+  } finally {
+    await db.destroy();
+  }
+  if (!names) {
+    return c.json({ error: "AREA_NOT_FOUND" }, 404);
+  }
+
+  const centre = await geocodeArea({
+    subdistrict_th: names.subdistrict_name_th,
+    district_th: names.district_name_th,
+    province_th: names.province_name_th,
+  });
+  if (!centre) {
+    // Not an error the reader needs to see: the map simply opens on the whole country.
+    return c.json({ schema_version: SCHEMA_VERSION, data: null }, 200);
+  }
+
+  const response = c.json({ schema_version: SCHEMA_VERSION, data: centre });
+  response.headers.set("Cache-Control", "public, max-age=2592000");
+  c.executionCtx.waitUntil(cache.put(cacheKey, response.clone()));
+  return response;
 });
 
 app.get("/api/v1/administrative-areas/well-documented", async (c) => {
