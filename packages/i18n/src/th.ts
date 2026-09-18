@@ -22,7 +22,9 @@ export const th = {
   },
 
   picker: {
-    searchLabel: "อยากดูอสังหาแถวไหน",
+    /* The visible caption above the search box is gone — the province/district/subdistrict list
+       is the heading now. This one is read out to screen readers in its place. */
+    searchAria: "ค้นหาพื้นที่ด้วยชื่อ",
     searchPlaceholder: "พิมพ์ชื่อที่คุ้นเคย เช่น พัทยา ศรีราชา ลุมพินี",
     searchHelp:
       "ค้นได้ทั้งชื่อตำบล อำเภอ จังหวัด และชื่ออาคารชุด ชื่อที่คนเรียกกันอย่าง “พัทยา” ไม่ใช่ชื่อทางปกครอง ระบบจึงค้นจากชื่ออาคารที่มีอยู่จริงในพื้นที่ให้ด้วย",
@@ -47,7 +49,8 @@ export const th = {
        in. Saying otherwise in a label would be the one claim the whole system refuses to make. */
     showcaseNote:
       "เลือกมาเพราะเป็นชื่อที่คนคุ้นเคยและมีข้อมูลให้ดูพอสมควร ไม่ใช่การจัดอันดับว่าที่ไหนน่าลงทุนกว่ากัน ระบบนี้ไม่ได้เรียงลำดับพื้นที่ตามความน่าลงทุน",
-    browseToggle: "หรือเลือกจากรายการจังหวัด อำเภอ ตำบล",
+    /* No longer "หรือ…": this is the first thing on the picker now, not the alternative to it. */
+    browseToggle: "เลือกจากรายการจังหวัด อำเภอ ตำบล",
     /* A shortlist, kept in this browser only. Named for what it is — somewhere to put places you
        want to come back to — and never described as a ranking, which the product does not do. */
     favouritesHeading: "พื้นที่ที่คุณสนใจ",

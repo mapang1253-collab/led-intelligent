@@ -217,9 +217,31 @@ export function AreaPicker({
 
   return (
     <div>
-      <label className="block">
-        <span className="font-medium text-sm">{th.picker.searchLabel}</span>
-        <span className="relative mt-1.5 block">
+      {/* The exact lists, first and unfolded. They used to sit under the search box behind a
+          toggle, which made browsing feel like the fallback rather than the other way of doing
+          the same thing — and a reader who knows their อำเภอ should not have to find that out. */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setShowFallback((open) => !open)}
+          aria-expanded={showFallback}
+          className="flex items-center gap-2 font-medium text-signature-text text-sm"
+        >
+          <ChevronDown
+            size={16}
+            aria-hidden="true"
+            className={showFallback ? "" : "-rotate-90 transition-transform"}
+          />
+          {th.picker.browseToggle}
+        </button>
+        {showFallback && <div className="mt-4">{fallback}</div>}
+      </div>
+
+      <label className="mt-4 block border-border border-t pt-4">
+        {/* The input keeps a name for screen readers even though the visible caption is gone;
+            a search box with only a placeholder is unlabelled to anyone not looking at it. */}
+        <span className="sr-only">{th.picker.searchAria}</span>
+        <span className="relative block">
           <Search
             size={17}
             aria-hidden="true"
@@ -317,23 +339,6 @@ export function AreaPicker({
           )}
         </div>
       )}
-
-      <div className="mt-4 border-border border-t pt-4">
-        <button
-          type="button"
-          onClick={() => setShowFallback((open) => !open)}
-          aria-expanded={showFallback}
-          className="flex items-center gap-2 font-medium text-signature-text text-sm"
-        >
-          <ChevronDown
-            size={16}
-            aria-hidden="true"
-            className={showFallback ? "" : "-rotate-90 transition-transform"}
-          />
-          {th.picker.browseToggle}
-        </button>
-        {showFallback && <div className="mt-4">{fallback}</div>}
-      </div>
     </div>
   );
 }
