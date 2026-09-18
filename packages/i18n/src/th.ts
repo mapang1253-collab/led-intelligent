@@ -35,12 +35,15 @@ export const th = {
     landBadge: "ราคาประเมินที่ดิน",
     figureCountUnit: "รายการ",
     noPropertyData: "ยังไม่มีข้อมูลราคาอสังหาในพื้นที่นี้",
-    showcaseToggle: "ยังไม่รู้จะเริ่มจากที่ไหน ลองเมืองที่คนรู้จักกันดี",
-    /* "เมืองที่คนรู้จัก", never "พื้นที่ที่น่าสนใจ": this list is chosen for being recognisable and for
-       having figures to show, and the product does not rank places by how good they are to invest
-       in. Saying otherwise in a label would be the one claim the whole system refuses to make. */
+    showcaseToggle: "ยังไม่รู้จะเริ่มจากที่ไหน ดูพื้นที่ที่มีข้อมูลมากที่สุด",
+    /* The one claim this list must not make. It is ordered by how many figures the state has
+       published, which is a fact about data coverage and says nothing about whether a place is
+       worth buying — and ordering places by anything reads as a ranking unless the screen says
+       otherwise in as many words. */
     showcaseNote:
-      "เลือกมาเพราะเป็นชื่อที่คนคุ้นเคยและมีข้อมูลให้ดูพอสมควร ไม่ใช่การจัดอันดับว่าที่ไหนน่าลงทุนกว่ากัน ระบบนี้ไม่ได้เรียงลำดับพื้นที่ตามความน่าลงทุน",
+      "เรียงตามจำนวนข้อมูลที่หน่วยงานรัฐเผยแพร่ไว้ ไม่ใช่การจัดอันดับว่าที่ไหนน่าลงทุนกว่ากัน พื้นที่ที่มีข้อมูลมากแปลว่ามีอะไรให้ตรวจสอบเยอะ ไม่ได้แปลว่าดีกว่า",
+    showcaseSource:
+      "จำนวนรายการนับจากบัญชีราคาประเมินของกรมธนารักษ์ และทะเบียนราษฎรของกรมการปกครอง ตามที่นำเข้าระบบแล้ว",
     /* A shortlist, kept in this browser only. Named for what it is — somewhere to put places you
        want to come back to — and never described as a ranking, which the product does not do. */
     favouritesHeading: "พื้นที่ที่คุณสนใจ",
@@ -584,6 +587,13 @@ export const th = {
   finalResult: {
     heading: "ผลการวิเคราะห์",
     analysedOn: "วันที่วิเคราะห์",
+    /* The work, counted, above the limits. Every run reports the same status — the economic
+       components flag is a hardcoded false — so leading with it made a fixed sentence look like a
+       failure and hid what the run actually produced. */
+    workEvidence: "หลักฐานที่อ่านจากแหล่งข้อมูลรัฐ",
+    workConcepts: "แนวคิดการใช้ประโยชน์ที่ประเมิน",
+    workRules: "ข้อกำหนดที่นำมาตรวจต่อแนวคิด",
+    statusLabel: "ระดับข้อสรุป",
     scopeLabel: "ขอบเขตของผลลัพธ์",
     missingHeading: "สิ่งที่ยังขาดจึงจะสรุปได้",
     evaluatedHeading: "แนวคิดที่ประเมินแล้ว",

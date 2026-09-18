@@ -109,13 +109,23 @@ function ActionItem({ action }: { action: Action }) {
   );
 }
 
+/** What this run actually did, counted from what it produced. */
+export interface WorkDone {
+  readonly evidenceItems: number;
+  readonly concepts: number;
+  readonly rulesChecked: number;
+}
+
 export function FinalResultPanel({
   final,
   intake,
+  work,
 }: {
   final: FinalAnalysisView | undefined | null;
   /** The request that produced this run, so the form can reopen filled in. Absent after a reload. */
   intake?: Record<string, unknown> | undefined;
+  /** Counted by the caller, which is the only place that holds the partial artefacts. */
+  work?: WorkDone | undefined;
 }) {
   if (!final) {
     return null;
@@ -135,8 +145,43 @@ export function FinalResultPanel({
     <section className="glass mt-5 rounded-card p-6">
       <h2 className="font-bold text-xl tracking-tight">{th.finalResult.heading}</h2>
 
-      <p className="mt-2 font-bold text-2xl" style={{ color: "var(--color-partial)" }}>
-        {STATUS_LABELS[final.status] ?? final.status}
+      {/*
+        What the run did, before what it could not do.
+
+        "หลักฐานยังไม่เพียงพอ" used to open this panel at 2xl in the amber reserved for a partial
+        verdict, and it is the same words on every run in every province — `economic_components_
+        available` is a hardcoded false, so no input a reader can supply changes it. A fixed
+        sentence rendered as the loudest thing on the screen reads as a broken program rather than
+        as a scope, and buries the work that was genuinely done directly beneath it.
+
+        So the counts come first, and the status keeps every word the policy fixes but stops being
+        a headline. docs/output-policy.md §5 fixes the wording of the status sentence, not its type
+        size, and §3's rule about emphasis is about the academic disclaimer, which is not here.
+      */}
+      {work && (
+        <dl className="mt-3 grid gap-3 sm:grid-cols-3">
+          {[
+            [th.finalResult.workEvidence, work.evidenceItems],
+            [th.finalResult.workConcepts, work.concepts],
+            [th.finalResult.workRules, work.rulesChecked],
+          ]
+            .filter(([, count]) => (count as number) > 0)
+            .map(([label, count]) => (
+              <div key={label as string} className="rounded-card bg-surface-sunken p-3">
+                <dt className="text-ink-muted text-xs">{label as string}</dt>
+                <dd className="mt-0.5 font-bold text-lg tabular-nums">
+                  {(count as number).toLocaleString("th-TH")}
+                </dd>
+              </div>
+            ))}
+        </dl>
+      )}
+
+      <p className="mt-4 text-sm leading-relaxed">
+        <span className="font-semibold">{th.finalResult.statusLabel}: </span>
+        <span style={{ color: "var(--color-partial)" }}>
+          {STATUS_LABELS[final.status] ?? final.status}
+        </span>
       </p>
       <p className="mt-1 text-ink-muted text-sm">
         {th.finalResult.analysedOn} {thaiDate(final.analysed_on)}

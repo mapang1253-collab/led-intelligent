@@ -189,6 +189,22 @@ export function RunPage() {
   const priceGroups = allEvidence?.filter((g) => PRICE_REQUIREMENTS.has(g.requirement_id));
   const areaGroups = allEvidence?.filter((g) => !PRICE_REQUIREMENTS.has(g.requirement_id));
 
+  /**
+   * What this run did, counted here because this is the only place holding the partial artefacts.
+   *
+   * Rules are counted from one concept rather than summed across them: every concept is tested
+   * against the same pack, so a sum would report fifteen rules as thirty and turn a fact about the
+   * law into a fact about how many ideas the model happened to propose.
+   */
+  const concepts = envelope?.partial_artifacts?.concepts;
+  const workDone = final
+    ? {
+        evidenceItems: (allEvidence ?? []).reduce((n, group) => n + group.items.length, 0),
+        concepts: concepts?.length ?? 0,
+        rulesChecked: concepts?.[0]?.legal?.outcomes.length ?? 0,
+      }
+    : undefined;
+
   const canRetry =
     isTerminal(state) &&
     Boolean(intake) &&
@@ -211,7 +227,7 @@ export function RunPage() {
           {/* The answer, and the checklist of what to verify before acting on it, come before the
               plumbing that produced them. A reader opening a result wants to know what it says and
               what to do next; how each stage got there is the second question, not the first. */}
-          <FinalResultPanel final={final} intake={intake} />
+          <FinalResultPanel final={final} intake={intake} work={workDone} />
 
           {/*
             The stage list, while there is still a stage running.

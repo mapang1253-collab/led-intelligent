@@ -33,23 +33,16 @@ export interface AreaChoice {
 /**
  * Somewhere to start, for a reader with no place in mind.
  *
- * Six places chosen for being recognisable across the country and for having figures worth
- * opening — not for being good investments, which this product does not rank and must not appear
- * to. Each is listed under the name people actually say: nobody calls ทองหล่อ "แขวงคลองตันเหนือ",
- * and a starting list written in administrative names would not be a starting list at all.
+ * Six hardcoded famous names used to sit here. They are now the six subdistricts for which the
+ * state has actually published the most figures, read from the database rather than chosen by us,
+ * because "where is there enough data to be worth analysing" is a question this product can answer
+ * from evidence and "where is worth buying" is one it must never answer at all.
  *
- * Ids rather than names, because a name lookup could drift to a different place as data changes,
- * and this list is meant to be the same six every time.
+ * That distinction is not decoration. Ordering places by anything reads as a ranking of places,
+ * and a LOCKED decision forbids this product ranking areas by investment merit. So the list says
+ * what the number is — records published by the Treasury and DOPA — and the copy beside it says
+ * what the number is not.
  */
-const SHOWCASE: readonly { readonly id: string; readonly nickname: string }[] = [
-  { id: "1151", nickname: "ทองหล่อ" },
-  { id: "1993", nickname: "พัทยา" },
-  { id: "1964", nickname: "บางแสน" },
-  { id: "5168", nickname: "เชียงใหม่" },
-  { id: "7638", nickname: "ป่าตอง ภูเก็ต" },
-  { id: "7964", nickname: "หาดใหญ่" },
-];
-
 async function fetchChoices(url: string): Promise<readonly AreaChoice[]> {
   const response = await fetch(url, { headers: { Accept: "application/json" } });
   if (!response.ok) {
@@ -94,14 +87,11 @@ function DataBadges({ choice }: { choice: AreaChoice }) {
 function ChoiceRow({
   choice,
   onPick,
-  nickname,
   starred,
   onToggleStar,
 }: {
   choice: AreaChoice;
   onPick: (c: AreaChoice) => void;
-  /** The name people say, when it differs from the one on the map. */
-  nickname?: string;
   starred?: boolean;
   onToggleStar?: (c: AreaChoice) => void;
 }) {
@@ -114,10 +104,8 @@ function ChoiceRow({
         className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-4 gap-y-1 px-1 py-3 text-left hover:bg-surface-sunken"
       >
         <span>
-          <span className="font-medium">{nickname ?? name}</span>
-          <span className="block text-ink-muted text-xs">
-            {nickname ? `${name} · ${within}` : within}
-          </span>
+          <span className="font-medium">{name}</span>
+          <span className="block text-ink-muted text-xs">{within}</span>
           {/* `matched_building_th` is not rendered any more: it existed to explain why a search
               returned a place whose own name did not contain the word, and nothing searches. */}
         </span>
@@ -159,11 +147,8 @@ export function AreaPicker({
   const favourites = useFavourites();
 
   const showcase = useQuery({
-    queryKey: ["area-showcase"],
-    queryFn: () =>
-      fetchChoices(
-        `/api/v1/administrative-areas/by-ids?ids=${SHOWCASE.map((s) => s.id).join(",")}`,
-      ),
+    queryKey: ["area-well-documented"],
+    queryFn: () => fetchChoices("/api/v1/administrative-areas/well-documented"),
     staleTime: Number.POSITIVE_INFINITY,
   });
 
@@ -235,20 +220,20 @@ export function AreaPicker({
               {th.picker.showcaseNote}
             </p>
             <ul className="mt-2">
-              {SHOWCASE.map((entry) => {
-                const choice = showcase.data?.find((c) => c.subdistrict_id === entry.id);
-                return choice ? (
-                  <ChoiceRow
-                    key={entry.id}
-                    choice={choice}
-                    onPick={onPick}
-                    nickname={entry.nickname}
-                    starred={favourites.has(choice.subdistrict_id)}
-                    onToggleStar={favourites.toggle}
-                  />
-                ) : null;
-              })}
+              {(showcase.data ?? []).map((choice) => (
+                <ChoiceRow
+                  key={choice.subdistrict_id}
+                  choice={choice}
+                  onPick={onPick}
+                  starred={favourites.has(choice.subdistrict_id)}
+                  onToggleStar={favourites.toggle}
+                />
+              ))}
             </ul>
+            {/* Named, because "where did this list come from" is the first fair question. */}
+            <p className="mt-2 text-ink-muted text-xs leading-relaxed">
+              {th.picker.showcaseSource}
+            </p>
           </div>
         )}
       </div>
