@@ -1,6 +1,13 @@
 # ADR 0006 — A user-placed map pin, and OSM proximity as context
 
-- **Status:** Accepted
+- **Status:** **Reversed on 2026-09-19.** Built, deployed, and removed the next day at the
+  owners' instruction — "ช่วยเอาแผนที่ที่ชื่อว่าปักหมุดที่ดินบนแผนที่ออก เพราะไม่มีประโยชน์เลย".
+  The map, the proximity panel, both Worker routes, the OSM adapters, the Leaflet dependency and
+  the `latitude`/`longitude` intake fields are all gone; nothing of it remains active. It is
+  recoverable from git at `4022d12` should a later increment want it.
+- **Superseded by:** nothing. [ADR 0004](0004-no-property-imagery-or-surroundings.md)'s conclusion
+  stands again — this product shows no surroundings evidence — though now for a product reason
+  rather than the data reason ADR 0004 gave.
 - **Date:** 2026-09-18
 - **Approved by:** อรณภา and สุรัตนาพร (project owners), in session, on being shown why a
   distance cannot be computed from a subdistrict name
@@ -104,3 +111,19 @@ automatic.
 Storing the pin beyond the run. It is location data about a person's property; it lives and
 expires with the run's 24 hours like every other intake field, and reaches no third party
 except as the coordinates in an Overpass query.
+
+## Why it was reversed
+
+Not because it failed. It worked: the endpoint answered on the day it was removed with สถานี
+สยาม at 120 m and ถนนพระรามที่ 1 at 118 m, measured against way geometry, with retries and edge
+caching carrying it past Overpass's intermittency.
+
+The owners judged it of no use in practice, and that is a product call rather than a technical
+one. Worth recording plainly, because the technical notes above would otherwise read as an
+argument for keeping it: everything in them held, and the feature was removed anyway.
+
+What the reversal costs is worth stating for anyone reading this later. The pin was the only
+thing in the product that could locate a target more precisely than a subdistrict, so with it
+goes the only route to a distance, and ADR 0004's dependency chain closes again at the same
+link. A future increment that wants "ห่างจากถนนกี่เมตร" still needs a location first, and the
+map pin is still the only open way to get one.

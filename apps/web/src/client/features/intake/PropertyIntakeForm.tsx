@@ -5,15 +5,12 @@ import { useLocation, useNavigate } from "react-router";
 import { useCreateRun } from "../run/useAnalysisRun.js";
 import { type AreaChoice, AreaPicker } from "./AreaPicker.js";
 import { AreaSelect } from "./AreaSelect.js";
-import { LandPinMap, type PinnedPoint } from "./LandPinMap.js";
-import { ProximityPanel } from "./ProximityPanel.js";
 import {
   useAreaChoice,
   useDistricts,
   useProvinces,
   useSubdistricts,
 } from "./useAdministrativeAreas.js";
-import { useAreaCentre } from "./useAreaCentre.js";
 
 /**
  * Progressive property intake (docs/project-overview.md §7). The minimum is province → district →
@@ -101,15 +98,6 @@ export function PropertyIntakeForm() {
       asField(prefill.land_area_ngan) !== "" ||
       asField(prefill.land_area_wa) !== "",
   );
-  /**
-   * Where the reader says the land is. Never set by the app — see LandPinMap on why placing it
-   * automatically would manufacture a precise answer about an arbitrary point.
-   */
-  const [pin, setPin] = useState<PinnedPoint | null>(() => {
-    const lat = Number(prefill.latitude);
-    const lon = Number(prefill.longitude);
-    return Number.isFinite(lat) && Number.isFinite(lon) ? { latitude: lat, longitude: lon } : null;
-  });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const navigate = useNavigate();
@@ -127,7 +115,6 @@ export function PropertyIntakeForm() {
    */
   const carriedArea = useAreaChoice(areaCleared ? undefined : asField(prefill.subdistrict_id));
   const selectedArea = picked ?? (areaCleared ? null : (carriedArea.data ?? null));
-  const areaCentre = useAreaCentre(subdistrictId || undefined).data ?? null;
 
   // Selecting a parent invalidates its children.
   function selectProvince(id: string) {
@@ -170,8 +157,6 @@ export function PropertyIntakeForm() {
       ...optionalPayload,
       ...sitePayload,
       ...(nearLargeWater ? { near_large_water_body: true } : {}),
-      // Carried so a retry, or a trip back to this form from a result, keeps the pin.
-      ...(pin ? { latitude: pin.latitude, longitude: pin.longitude } : {}),
     };
 
     createRun.mutate(intake, {
@@ -364,25 +349,6 @@ export function PropertyIntakeForm() {
             {/* The statutory conversion, shown as it is typed, so the number is checkable. */}
             {areaSummary && <p className="mt-2 text-ink-muted text-sm">{areaSummary}</p>}
           </div>
-        )}
-      </div>
-
-      {/* The pin, and what it buys. Placed after the site facts because it is the heaviest thing
-          on the form, and before the parcel link because both are about "where exactly". */}
-      <div className="mt-6">
-        <p className="font-medium text-sm">{th.map.heading}</p>
-        <p className="mt-1 text-ink-muted text-xs leading-relaxed">{th.map.intro}</p>
-        <div className="mt-3">
-          <LandPinMap centre={areaCentre} value={pin} onChange={setPin} />
-        </div>
-        {pin && (
-          <>
-            <p className="mt-2 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
-              <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
-              {th.map.assertedNote}
-            </p>
-            <ProximityPanel point={pin} />
-          </>
         )}
       </div>
 

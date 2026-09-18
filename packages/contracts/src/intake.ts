@@ -43,17 +43,6 @@ export const propertyIntakeSchema = z.object({
   road_width: z.coerce.number().nonnegative().max(200).optional(),
   water_body_width: z.coerce.number().nonnegative().max(5_000).optional(),
   near_large_water_body: z.coerce.boolean().optional(),
-
-  /**
-   * Where the reader says the land is, placed by hand on a map (docs/adr/0006).
-   *
-   * USER_ASSERTED like every other optional field: the system does not verify the pin and it
-   * does not raise the output scope, because an assertion is not property evidence. Bounded to
-   * Thailand's extent so a transposed pair or a stray click is rejected here rather than sent to
-   * an external service as a query about the middle of an ocean.
-   */
-  latitude: z.coerce.number().min(5.5).max(20.5).optional(),
-  longitude: z.coerce.number().min(97).max(106).optional(),
 });
 
 export type PropertyIntake = z.infer<typeof propertyIntakeSchema>;
