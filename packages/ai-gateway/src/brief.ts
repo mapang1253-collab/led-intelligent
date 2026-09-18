@@ -27,6 +27,61 @@ export interface BriefEvidenceInput {
 
 const LEVEL_TH = { PROVINCE: "จังหวัด", DISTRICT: "อำเภอ", SUBDISTRICT: "ตำบล" } as const;
 
+/**
+ * How many cards of one measure, at one geography level, the brief carries.
+ *
+ * Every published figure used to go in. For ต.แสนสุข that is 597 condominium prices, a prompt of
+ * roughly 113,000 Thai characters, and Gemini's free tier allows 250,000 input tokens per minute —
+ * so two runs of a well-documented area exhausted it and the stage failed. Measured on one day:
+ * 122 calls rate-limited against 34 that succeeded, and the three stages downstream of concepts
+ * had nothing to work with in every one of those 122 cases.
+ *
+ * Twelve is a sample, not a summary. What the model has to know from a price cohort is its level
+ * and its spread, and the 598th row of the same measure at the same geography carries neither more
+ * of the first nor more of the second — it is the same measure repeated. What would be lost is a
+ * particular building's name, and the model is not asked to reason about particular buildings.
+ *
+ * The count omitted is stated in the brief. A sample presented as a corpus would invite exactly the
+ * over-generalisation this whole product exists to refuse.
+ */
+const CARDS_PER_COHORT = 12;
+
+/**
+ * The evidence the brief carries: the first N of each measure at each geography level.
+ *
+ * "First" is meaningful rather than arbitrary — the corpus arrives ordered by the link policy,
+ * newest period first — and taking a prefix keeps that order, keeps the choice deterministic, and
+ * keeps two runs of the same area identical.
+ *
+ * Exported because the citation index must select identically. `ev3` has to mean the same
+ * observation in both, and two separate filters would drift.
+ */
+export function selectBriefEvidence(
+  input: readonly BriefEvidenceInput[],
+): readonly BriefEvidenceInput[] {
+  const kept: BriefEvidenceInput[] = [];
+  const seen = new Map<string, number>();
+  for (const item of input) {
+    const cohort = `${item.measure_name_th}|${item.geography_level}`;
+    const count = seen.get(cohort) ?? 0;
+    if (count < CARDS_PER_COHORT) {
+      kept.push(item);
+    }
+    seen.set(cohort, count + 1);
+  }
+  return kept;
+}
+
+/** How many figures each cohort actually holds, so the brief can say what it left out. */
+function cohortTotals(input: readonly BriefEvidenceInput[]): ReadonlyMap<string, number> {
+  const totals = new Map<string, number>();
+  for (const item of input) {
+    const cohort = `${item.measure_name_th}|${item.geography_level}`;
+    totals.set(cohort, (totals.get(cohort) ?? 0) + 1);
+  }
+  return totals;
+}
+
 export interface BuildBriefInput {
   readonly target_th: string;
   readonly effective_on: string;
@@ -38,8 +93,25 @@ export interface BuildBriefInput {
   readonly allowed_building_types_th?: readonly BuildingTypeTh[];
 }
 
+/** "แสดง 12 จาก 597 รายการ", once per truncated cohort, and nothing at all when none was cut. */
+function sampleNote(
+  item: BriefEvidenceInput,
+  totals: ReadonlyMap<string, number>,
+  announced: Set<string>,
+): string {
+  const cohort = `${item.measure_name_th}|${item.geography_level}`;
+  const total = totals.get(cohort) ?? 0;
+  if (total <= CARDS_PER_COHORT || announced.has(cohort)) {
+    return "";
+  }
+  announced.add(cohort);
+  return `แสดงเป็นตัวอย่าง ${CARDS_PER_COHORT} จาก ${total} รายการของชุดข้อมูลนี้ในระดับพื้นที่เดียวกัน`;
+}
+
 export function buildOpportunityBrief(input: BuildBriefInput): OpportunityBrief {
-  const evidence_cards: EvidenceCard[] = input.evidence.map((item, index) => ({
+  const totals = cohortTotals(input.evidence);
+  const announced = new Set<string>();
+  const evidence_cards: EvidenceCard[] = selectBriefEvidence(input.evidence).map((item, index) => ({
     // Stable per-brief citation key. The observation id never leaves the server: the model cites
     // positions in what it was given, so an invented citation cannot resolve to a real row.
     evidence_id: `ev${index + 1}`,
@@ -54,6 +126,9 @@ export function buildOpportunityBrief(input: BuildBriefInput): OpportunityBrief 
       item.geography_match === "CONTAINING_AREA"
         ? "เป็นข้อมูลของพื้นที่ที่ครอบคลุมพื้นที่เป้าหมาย ไม่ใช่ข้อมูลของพื้นที่เป้าหมายโดยตรง"
         : "",
+      // Said once per cohort, on the first card of it: a sample the model believes is the whole
+      // corpus is a sample it will over-generalise from.
+      sampleNote(item, totals, announced),
       item.source_note_th ?? "",
       item.must_not_become_th,
     ]
@@ -78,5 +153,9 @@ export function buildOpportunityBrief(input: BuildBriefInput): OpportunityBrief 
 export function briefCitationIndex(
   input: readonly BriefEvidenceInput[],
 ): ReadonlyMap<string, string> {
-  return new Map(input.map((item, index) => [`ev${index + 1}`, item.observation_id]));
+  // The same selection the brief made. A citation key numbers a position in what the model was
+  // given, so an index built over the full corpus would resolve ev3 to a row the model never saw.
+  return new Map(
+    selectBriefEvidence(input).map((item, index) => [`ev${index + 1}`, item.observation_id]),
+  );
 }

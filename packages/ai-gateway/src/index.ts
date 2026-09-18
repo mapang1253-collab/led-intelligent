@@ -8,6 +8,7 @@ export {
   type BuildBriefInput,
   briefCitationIndex,
   buildOpportunityBrief,
+  selectBriefEvidence,
 } from "./brief.js";
 export {
   type ConceptValidation,
