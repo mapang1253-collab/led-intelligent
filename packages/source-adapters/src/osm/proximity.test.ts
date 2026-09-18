@@ -122,12 +122,21 @@ describe("categorise", () => {
 });
 
 describe("buildQuery", () => {
-  it("asks once, for every kind, around the pin", () => {
+  it("asks for road geometry and destination centres, in one request", () => {
     const query = buildQuery(PIN.lat, PIN.lon);
     expect(query).toContain(`${PIN.lat},${PIN.lon}`);
+    // Roads are lines and get full geometry; a road's centroid is not where the road runs.
     expect(query).toContain("out geom");
-    // Geometry, not centre: the whole accuracy argument depends on this.
-    expect(query).not.toContain("out center");
+    // Destinations are compact, and asking for every building outline is what made the query
+    // expensive enough that Overpass returned 504s with quota to spare.
+    expect(query).toContain("out center");
+    expect(query.match(/\[out:json/g)).toHaveLength(1);
+  });
+
+  it("searches roads closer than destinations", () => {
+    const query = buildQuery(PIN.lat, PIN.lon, 600, 1500);
+    expect(query).toContain(`way(around:600,${PIN.lat},${PIN.lon})[highway`);
+    expect(query).toContain(`node(around:1500,${PIN.lat},${PIN.lon})[amenity=school]`);
   });
 });
 

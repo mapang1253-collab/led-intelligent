@@ -196,17 +196,49 @@ app.get("/api/v1/proximity", async (c) => {
     return c.json({ error: "COORDINATES_OUT_OF_RANGE" }, 400);
   }
 
-  const result = await fetchProximity(lat, lon);
+  // Rounded to about 11 m so small differences in where a reader clicked share one cache entry.
+  const cache = caches.default;
+  const cacheKey = new Request(`https://proximity.invalid/${lat.toFixed(4)},${lon.toFixed(4)}`, {
+    method: "GET",
+  });
+  const cached = await cache.match(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  /**
+   * Retried here rather than in the adapter, because `source-adapters` deliberately leaves the
+   * retry decision to its caller (see `http.ts`).
+   *
+   * Measured on 2026-09-19: three identical queries to the public Overpass endpoint returned
+   * 504, 200, 504 — the successful one in two seconds with 39KB, the failures after ten seconds
+   * of gateway timeout. The instance is simply overloaded some of the time, with quota to spare,
+   * so one attempt makes a working feature look broken two times in three. Three attempts turn
+   * that around without pressing on a free shared service: only a retryable failure is retried,
+   * and a short gap separates them.
+   */
+  let result = await fetchProximity(lat, lon);
+  for (let attempt = 1; attempt < 3 && result.outcome === "FAILED" && result.retryable; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 600 * attempt));
+    result = await fetchProximity(lat, lon);
+  }
   if (result.outcome === "FAILED") {
     // 502, not 500: the upstream did not answer. The client tells the reader it can retry.
     return c.json({ error: "PROXIMITY_LOOKUP_FAILED", retryable: result.retryable }, 502);
   }
-  return c.json({
+  const response = c.json({
     schema_version: SCHEMA_VERSION,
     data: result.features,
-    radius_metres: result.radius_metres,
+    road_radius_metres: result.road_radius_metres,
+    poi_radius_metres: result.poi_radius_metres,
     attribution_th: result.attribution_th,
   });
+  // Overpass answers intermittently even with quota to spare, so an answer that did arrive is
+  // kept: a pin that worked once keeps working. Only successes are cached — a 502 is never
+  // stored, or a bad minute would outlive itself.
+  response.headers.set("Cache-Control", "public, max-age=604800");
+  c.executionCtx.waitUntil(cache.put(cacheKey, response.clone()));
+  return response;
 });
 
 /**

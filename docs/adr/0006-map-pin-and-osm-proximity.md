@@ -63,11 +63,16 @@ ADR 0004's findings were re-probed rather than assumed, because two of them had 
   reader wants the map to open. Requiring a boundary returned nothing for Chon Buri at all.
   Centring is a convenience throughout: a wrong centre costs the reader a pan, never a wrong
   answer, because every distance is measured from the pin the reader places.
-- **Overpass answered.** ADR 0004 recorded repeated HTTP 504s under light use. A query around
-  13.2828932, 100.9367915 returned 40 elements and yielded ถนนสุขุมวิท at 134 m and
-  Lan Le Saksa School at 152 m. The unreliability is real and unfixed, so the design treats a
-  failed lookup as a first-class outcome: the panel says the lookup failed and offers a retry.
-  A run never fails because of it, and no distance is ever estimated, cached stale, or inferred.
+- **Overpass answers, intermittently.** ADR 0004 recorded repeated HTTP 504s under light use;
+  that has not changed. A query around 13.2828932, 100.9367915 succeeded, and three identical
+  queries the next day returned 504, 200, 504 — the success in two seconds with 39KB, each failure
+  after ten seconds of gateway timeout, with the endpoint reporting spare quota throughout. The
+  instance is overloaded, not rationing us. Three things follow, and all three are implemented:
+  the query is made cheap (see below), the route retries a retryable failure up to three times,
+  and a success is cached at the edge for a week so a pin that worked once keeps working. A
+  failure that survives all that is still a first-class outcome — the panel says the lookup
+  failed and offers a retry. A run never fails because of it, and no distance is ever estimated,
+  inferred, or served stale from a previous point.
 - **`geothai` still carries no coordinates** — codes, names and postal codes only. This is why
   Nominatim is needed for centring at all.
 
@@ -75,9 +80,13 @@ ADR 0004's findings were re-probed rather than assumed, because two of them had 
 
 - `propertyIntakeSchema` gains optional `latitude`/`longitude`. Omitting them is not an error
   and changes nothing about the analysis, in keeping with every other optional intake field.
-- Distances are computed from way geometry (`out geom`), not from a way's centroid. A road's
-  centroid can sit hundreds of metres from its nearest point, and a number that looks precise
-  and is not is worse than no number.
+- Roads are fetched with `out geom` and measured segment by segment, not from the centroid
+  `out center` returns. A road's centroid can sit hundreds of metres from the stretch running past
+  the pin — on the แสนสุข fixture, 134 m against a true 17 m — and a number that looks precise and
+  is not is worse than no number. Destinations keep `out center`: a school or a market is compact
+  enough that its centre is honest, and asking for every building outline is what made the query
+  expensive enough to time out. Roads are searched to 600 m and destinations to 1,500 m, and both
+  radii are printed, so "no main road found" cannot be read as "none within 1,500 m".
 - Straight-line distance only, and labelled as such. It is not travel distance, and the screen
   says so: a school 150 m away across a motorway is not 150 m away on foot.
 - Usage policies are respected rather than tested. Nominatim results are cached per area so one

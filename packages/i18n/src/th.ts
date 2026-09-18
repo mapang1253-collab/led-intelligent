@@ -110,7 +110,9 @@ export const th = {
     proximityFailed: "ดึงข้อมูลแผนที่ไม่สำเร็จ บริการภายนอกอาจไม่ว่าง ลองใหม่อีกครั้งได้",
     proximityRetry: "ลองใหม่",
     proximityEmpty: "ไม่พบจุดสำคัญที่ระบบค้นหาภายในรัศมีที่กำหนด",
-    proximityRadius: "ค้นหาภายในรัศมี {n} เมตรจากหมุด",
+    /* Both radii, because roads are searched closer than the rest. One combined figure would let
+       "ไม่พบถนนสายหลัก" read as "ไม่มีถนนสายหลักในรัศมี 1,500 เมตร" when the road search stopped at 600. */
+    proximityRadius: "ค้นหาภายในรัศมี {poi} เมตรจากหมุด ส่วนถนนสายหลักค้นภายใน {road} เมตร",
     proximityUnnamed: "ไม่ระบุชื่อ",
     metres: "เมตร",
     /* Two limits, both load-bearing. A straight line is not a walk, and this is context that the

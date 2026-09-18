@@ -69,7 +69,9 @@ export {
 export {
   OSM_ATTRIBUTION_TH,
   OVERPASS_ENDPOINT,
+  POI_RADIUS_METRES,
   PROXIMITY_SOURCE_ID,
+  ROAD_RADIUS_METRES,
   type ProximityCategory,
   type ProximityFeature,
   type ProximityResult,

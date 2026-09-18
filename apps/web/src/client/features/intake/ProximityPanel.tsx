@@ -25,7 +25,9 @@ interface ProximityFeature {
 
 interface ProximityResponse {
   data: ProximityFeature[];
-  radius_metres: number;
+  /** Roads are searched closer than destinations; saying so keeps "none found" honest. */
+  road_radius_metres: number;
+  poi_radius_metres: number;
   attribution_th: string;
 }
 
@@ -52,8 +54,10 @@ export function ProximityPanel({ point }: { point: PinnedPoint | null }) {
     return null;
   }
 
-  const radiusNote = (radius: number) =>
-    th.map.proximityRadius.replace("{n}", radius.toLocaleString("th-TH"));
+  const radiusNote = (response: ProximityResponse) =>
+    th.map.proximityRadius
+      .replace("{poi}", response.poi_radius_metres.toLocaleString("th-TH"))
+      .replace("{road}", response.road_radius_metres.toLocaleString("th-TH"));
 
   return (
     <div className="mt-4 rounded-card bg-surface-sunken p-4">
@@ -92,7 +96,7 @@ export function ProximityPanel({ point }: { point: PinnedPoint | null }) {
         <>
           {proximity.data.data.length === 0 ? (
             <p className="mt-2 text-ink-muted text-xs leading-relaxed">
-              {th.map.proximityEmpty} · {radiusNote(proximity.data.radius_metres)}
+              {th.map.proximityEmpty} · {radiusNote(proximity.data)}
             </p>
           ) : (
             <ul className="mt-2">
@@ -116,7 +120,12 @@ export function ProximityPanel({ point }: { point: PinnedPoint | null }) {
             </ul>
           )}
 
-          <p className="mt-2.5 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
+          {/* How far the search went, on every result and not only on an empty one: a nearest
+              school of 1,400 m means something different once you know it stopped at 1,500. */}
+          <p className="mt-2.5 text-ink-muted text-xs leading-relaxed">
+            {radiusNote(proximity.data)}
+          </p>
+          <p className="mt-1 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
             <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
             {th.map.proximityStraightLine}
           </p>

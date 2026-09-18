@@ -45,8 +45,13 @@ export type ProximityResult =
   | {
       readonly outcome: "SUCCESS";
       readonly features: readonly ProximityFeature[];
-      /** How far out the query looked, so "nothing found" can be read as "none within this". */
-      readonly radius_metres: number;
+      /**
+       * How far out the query looked, so "nothing found" reads as "none within this" rather than
+       * as "none anywhere". Reported separately because roads are searched closer than the rest,
+       * and one combined figure would overstate how far the road search actually went.
+       */
+      readonly road_radius_metres: number;
+      readonly poi_radius_metres: number;
       readonly attribution_th: string;
     }
   | { readonly outcome: "FAILED"; readonly reason: string; readonly retryable: boolean };
@@ -54,27 +59,51 @@ export type ProximityResult =
 /** ODbL requires attribution wherever the data appears. */
 export const OSM_ATTRIBUTION_TH = "ข้อมูลจาก OpenStreetMap เผยแพร่ภายใต้สัญญาอนุญาต ODbL";
 
-const RADIUS_METRES = 2_000;
+/**
+ * Two radii, because roads and destinations are different questions — and because one radius made
+ * the query too expensive to answer.
+ *
+ * Roads are dense and are lines, so they need full geometry; asking for it across two kilometres
+ * returned every vertex of every road in the neighbourhood and drew repeated HTTP 504s from
+ * Overpass with quota to spare. Six hundred metres is past any distance at which "the nearest main
+ * road" is still an interesting answer. Destinations are sparse, so they can be searched further
+ * out, and they are compact enough that a centroid is honest for them in a way it is not for a
+ * road.
+ */
+export const ROAD_RADIUS_METRES = 600;
+export const POI_RADIUS_METRES = 1_500;
 
 /**
- * One request, not five. Overpass is the least reliable thing this product talks to
- * (ADR 0004 recorded repeated 504s), so the design asks it as little as possible.
+ * One request, in two parts. Overpass is the least reliable thing this product talks to
+ * (ADR 0004 recorded repeated 504s), so the design asks it for as little as it can.
+ *
+ * `out geom` for roads, `out center` for the rest. A road's centroid can sit hundreds of metres
+ * from the stretch running past the pin — on the แสนสุข fixture, 134 m against 17 m — so roads are
+ * measured segment by segment. A school or a market is small enough that its centre is within a
+ * few metres of its edge, and asking for the outline of every building would put the cost straight
+ * back.
  */
-export function buildQuery(lat: number, lon: number, radius = RADIUS_METRES): string {
-  const at = `${radius},${lat},${lon}`;
+export function buildQuery(
+  lat: number,
+  lon: number,
+  roadRadius = ROAD_RADIUS_METRES,
+  poiRadius = POI_RADIUS_METRES,
+): string {
+  const near = `${poiRadius},${lat},${lon}`;
   return [
     "[out:json][timeout:25];",
+    `way(around:${roadRadius},${lat},${lon})[highway~"^(motorway|trunk|primary|secondary|tertiary)$"];`,
+    "out geom tags 40;",
     "(",
-    `way(around:${at})[highway~"^(motorway|trunk|primary|secondary|tertiary)$"];`,
-    `node(around:${at})[amenity=school];`,
-    `way(around:${at})[amenity=school];`,
-    `node(around:${at})[amenity~"^(hospital|clinic)$"];`,
-    `way(around:${at})[amenity~"^(hospital|clinic)$"];`,
-    `node(around:${at})[shop~"^(convenience|supermarket)$"];`,
-    `node(around:${at})[amenity=marketplace];`,
-    `node(around:${at})[railway=station];`,
+    `node(around:${near})[amenity=school];`,
+    `way(around:${near})[amenity=school];`,
+    `node(around:${near})[amenity~"^(hospital|clinic)$"];`,
+    `way(around:${near})[amenity~"^(hospital|clinic)$"];`,
+    `node(around:${near})[shop~"^(convenience|supermarket)$"];`,
+    `node(around:${near})[amenity=marketplace];`,
+    `node(around:${near})[railway=station];`,
     ");",
-    "out geom tags 400;",
+    "out center tags 120;",
   ].join("");
 }
 
@@ -217,7 +246,8 @@ export async function fetchProximity(
   return {
     outcome: "SUCCESS",
     features: nearestByCategory(response.payload, lat, lon),
-    radius_metres: RADIUS_METRES,
+    road_radius_metres: ROAD_RADIUS_METRES,
+    poi_radius_metres: POI_RADIUS_METRES,
     attribution_th: OSM_ATTRIBUTION_TH,
   };
 }
