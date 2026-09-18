@@ -71,11 +71,13 @@ function placeLabel(choice: AreaChoice): { name: string; within: string } {
 
 function DataBadges({ choice }: { choice: AreaChoice }) {
   const badges: string[] = [];
+  // The unit goes after the number. "ราคาประเมินห้องชุด 603" without it reads as a price of 603.
+  const count = (n: number) => `${n.toLocaleString("th-TH")} ${th.picker.figureCountUnit}`;
   if (choice.condominium_figures > 0) {
-    badges.push(`${th.picker.condoBadge} ${choice.condominium_figures}`);
+    badges.push(`${th.picker.condoBadge} ${count(choice.condominium_figures)}`);
   }
   if (choice.land_figures > 0) {
-    badges.push(`${th.picker.landBadge} ${choice.land_figures}`);
+    badges.push(`${th.picker.landBadge} ${count(choice.land_figures)}`);
   }
   if (badges.length === 0) {
     // Said plainly rather than left blank: an empty row reads as a loading state.

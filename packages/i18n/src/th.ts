@@ -13,8 +13,11 @@ export const th = {
        component, like every other Thai string in the product. */
     headlineLead: "อสังหาริมทรัพย์ในพื้นที่นี้",
     headlineAnswer: "ควรเป็นอะไร จึงจะดีที่สุด",
+    /* "อะไรที่ยังไม่รู้" described the system's epistemics to someone who came to look at land.
+       The promise is the same and now says what the reader gets: the limits, and the list of what
+       to check. */
     tagline:
-      "Highest and Best Use — หาคำตอบจากหลักฐานที่หน่วยงานรัฐเผยแพร่จริง ครบทุกจังหวัดทั่วประเทศ และบอกตรง ๆ ว่าอะไรที่ยังไม่รู้",
+      "Highest and Best Use — หาคำตอบจากหลักฐานที่หน่วยงานรัฐเผยแพร่จริง ครบทุกจังหวัดทั่วประเทศ พร้อมสรุปข้อจำกัดทางกฎหมายและรายการที่ต้องตรวจสอบเพิ่มเติม",
     academicBadge: "ต้นแบบเชิงวิชาการ",
   },
 
@@ -25,8 +28,18 @@ export const th = {
       "ค้นได้ทั้งชื่อตำบล อำเภอ จังหวัด และชื่ออาคารชุด ชื่อที่คนเรียกกันอย่าง “พัทยา” ไม่ใช่ชื่อทางปกครอง ระบบจึงค้นจากชื่ออาคารที่มีอยู่จริงในพื้นที่ให้ด้วย",
     matchedBuilding: "พบอาคาร:",
     noMatches: "ไม่พบพื้นที่ที่ตรงกับคำค้นนี้",
-    condoBadge: "ราคาคอนโด",
-    landBadge: "ราคาที่ดิน",
+    /**
+     * Counts of published figures, and they must not read as the figures themselves.
+     *
+     * These rendered as "ราคาคอนโด 603" and were read by the project owner as a price of 603 —
+     * which is what the words say. The number is how many assessed-value records the Treasury has
+     * published for the area, so the label now names the record and the unit sits after the count,
+     * where a reader cannot mistake it for a baht figure. What the number is worth is said too:
+     * more records means better documented, never better to invest in.
+     */
+    condoBadge: "ราคาประเมินห้องชุด",
+    landBadge: "ราคาประเมินที่ดิน",
+    figureCountUnit: "รายการ",
     noPropertyData: "ยังไม่มีข้อมูลราคาอสังหาในพื้นที่นี้",
     showcaseToggle: "ยังไม่รู้จะเริ่มจากที่ไหน ลองเมืองที่คนรู้จักกันดี",
     /* "เมืองที่คนรู้จัก", never "พื้นที่ที่น่าสนใจ": this list is chosen for being recognisable and for

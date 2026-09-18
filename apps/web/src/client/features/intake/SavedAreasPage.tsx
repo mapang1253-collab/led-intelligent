@@ -73,11 +73,14 @@ export function SavedAreasPage() {
             {favourites.list.map((entry) => {
               const { name, within } = placeLabel(entry);
               const badges: string[] = [];
+              // Counts, with the unit after the number — never mistakable for a baht figure.
+              const count = (n: number) =>
+                `${n.toLocaleString("th-TH")} ${th.picker.figureCountUnit}`;
               if (entry.condominium_figures > 0) {
-                badges.push(`${th.picker.condoBadge} ${entry.condominium_figures}`);
+                badges.push(`${th.picker.condoBadge} ${count(entry.condominium_figures)}`);
               }
               if (entry.land_figures > 0) {
-                badges.push(`${th.picker.landBadge} ${entry.land_figures}`);
+                badges.push(`${th.picker.landBadge} ${count(entry.land_figures)}`);
               }
               return (
                 <li
