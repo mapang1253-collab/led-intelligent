@@ -1,20 +1,20 @@
 import { th } from "@reis/i18n";
 import { useQuery } from "@tanstack/react-query";
-import { Building2, ChevronDown, Info, LoaderCircle, MapPin, Search, Star, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Building2, ChevronDown, Info, MapPin, Star, X } from "lucide-react";
+import { useState } from "react";
 import { useFavourites } from "./useFavourites.js";
 
 /**
  * Choosing where to look.
  *
- * The three cascading dropdowns are exact but slow: seventy-seven provinces, then a district, then
- * a subdistrict, with no way to know whether the place you land on has anything in it. Searching by
- * name reaches the same place in one step, and each result carries what the system actually holds
- * for it, so nobody picks blind and finds out afterwards.
+ * Two ways in: the exact province → district → subdistrict lists, and a short starting list for a
+ * reader with no place in mind. Search by name used to sit above both and was removed at the
+ * owners' request; with it went the one route that could find an area by the name of a condominium
+ * standing in it, since that match lived in the search query rather than in the lists.
  *
- * The counts are counts of published figures. An area with more of them is better documented, not
- * better to invest in, and the copy on this screen says so — a list of places ordered by anything
- * must not be read as a ranking of places (docs/output-policy.md).
+ * The counts on each row are counts of published figures. An area with more of them is better
+ * documented, not better to invest in, and the copy on this screen says so — a list of places
+ * ordered by anything must not be read as a ranking of places (docs/output-policy.md).
  */
 
 export interface AreaChoice {
@@ -118,12 +118,8 @@ function ChoiceRow({
           <span className="block text-ink-muted text-xs">
             {nickname ? `${name} · ${within}` : within}
           </span>
-          {/* Why this place came back at all, when its own name does not contain the word. */}
-          {choice.matched_building_th && (
-            <span className="mt-0.5 block text-signature-text text-xs">
-              {th.picker.matchedBuilding} {choice.matched_building_th}
-            </span>
-          )}
+          {/* `matched_building_th` is not rendered any more: it existed to explain why a search
+              returned a place whose own name did not contain the word, and nothing searches. */}
         </span>
         <DataBadges choice={choice} />
       </button>
@@ -159,25 +155,8 @@ export function AreaPicker({
   /** The exact cascading lists, kept for anyone who would rather browse than search. */
   fallback: React.ReactNode;
 }) {
-  const [term, setTerm] = useState("");
-  const [debounced, setDebounced] = useState("");
-  const [showFallback, setShowFallback] = useState(false);
   const [showShowcase, setShowShowcase] = useState(false);
   const favourites = useFavourites();
-
-  // One request per pause in typing, not one per keystroke.
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(term.trim()), 250);
-    return () => clearTimeout(timer);
-  }, [term]);
-
-  const results = useQuery({
-    queryKey: ["area-search", debounced],
-    queryFn: () =>
-      fetchChoices(`/api/v1/administrative-areas/search?q=${encodeURIComponent(debounced)}`),
-    enabled: debounced.length >= 2,
-    staleTime: 5 * 60_000,
-  });
 
   const showcase = useQuery({
     queryKey: ["area-showcase"],
@@ -217,55 +196,10 @@ export function AreaPicker({
 
   return (
     <div>
-      {/* The exact lists, first and unfolded. They used to sit under the search box behind a
-          toggle, which made browsing feel like the fallback rather than the other way of doing
-          the same thing — and a reader who knows their อำเภอ should not have to find that out. */}
-      <div>
-        <button
-          type="button"
-          onClick={() => setShowFallback((open) => !open)}
-          aria-expanded={showFallback}
-          className="flex items-center gap-2 font-medium text-signature-text text-sm"
-        >
-          <ChevronDown
-            size={16}
-            aria-hidden="true"
-            className={showFallback ? "" : "-rotate-90 transition-transform"}
-          />
-          {th.picker.browseToggle}
-        </button>
-        {showFallback && <div className="mt-4">{fallback}</div>}
-      </div>
-
-      <label className="mt-4 block border-border border-t pt-4">
-        {/* The input keeps a name for screen readers even though the visible caption is gone;
-            a search box with only a placeholder is unlabelled to anyone not looking at it. */}
-        <span className="sr-only">{th.picker.searchAria}</span>
-        <span className="relative block">
-          <Search
-            size={17}
-            aria-hidden="true"
-            className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3.5 text-ink-muted"
-          />
-          <input
-            type="search"
-            value={term}
-            onChange={(event) => setTerm(event.target.value)}
-            placeholder={th.picker.searchPlaceholder}
-            autoComplete="off"
-            className="w-full rounded-card border border-border-strong bg-surface py-3 pr-4 pl-11 text-base"
-          />
-          {results.isFetching && (
-            <LoaderCircle
-              size={17}
-              className="-translate-y-1/2 absolute top-1/2 right-4 animate-spin text-ink-muted"
-              aria-hidden="true"
-            />
-          )}
-        </span>
-      </label>
-
-      <p className="mt-2 text-ink-muted text-xs leading-relaxed">{th.picker.searchHelp}</p>
+      {/* The lists, shown outright. They were behind a toggle while a search box sat above them
+          offering a faster route; with the search gone this is the way in, and a form whose only
+          control is a disclosure has nothing on it to do. */}
+      <div>{fallback}</div>
 
       {errorMessage && (
         <p className="mt-2 text-sm" style={{ color: "var(--color-fail)" }}>
@@ -273,72 +207,51 @@ export function AreaPicker({
         </p>
       )}
 
-      {debounced.length >= 2 && results.data && (
-        <ul className="mt-3">
-          {results.data.length === 0 ? (
-            <li className="py-3 text-ink-muted text-sm">{th.picker.noMatches}</li>
-          ) : (
-            results.data.map((choice) => (
-              <ChoiceRow
-                key={choice.subdistrict_id}
-                choice={choice}
-                onPick={onPick}
-                starred={favourites.has(choice.subdistrict_id)}
-                onToggleStar={favourites.toggle}
-              />
-            ))
-          )}
-        </ul>
-      )}
-
       {/* The shortlist itself lives at /saved, reached from the rail, where it stays put and can
           be opened from a result. A second copy here would be two lists for one thing, and this one
           disappeared the moment anybody typed a search. The stars stay — this is where you add to
           it. */}
-      {/* Folded away rather than filling the screen. Someone who knows where they are going should
-          see the search box and nothing competing with it; this is here for the reader who does
-          not, and opens on request. */}
-      {debounced.length < 2 && (
-        <div className="mt-5 border-border border-t pt-4">
-          <button
-            type="button"
-            onClick={() => setShowShowcase((open) => !open)}
-            aria-expanded={showShowcase}
-            className="flex items-center gap-2 font-medium text-signature-text text-sm"
-          >
-            <ChevronDown
-              size={16}
-              aria-hidden="true"
-              className={showShowcase ? "" : "-rotate-90 transition-transform"}
-            />
-            {th.picker.showcaseToggle}
-          </button>
-          {showShowcase && (
-            <div className="mt-3">
-              {/* Chosen for being familiar, never for being good places to buy. */}
-              <p className="flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
-                <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
-                {th.picker.showcaseNote}
-              </p>
-              <ul className="mt-2">
-                {SHOWCASE.map((entry) => {
-                  const choice = showcase.data?.find((c) => c.subdistrict_id === entry.id);
-                  return choice ? (
-                    <ChoiceRow
-                      key={entry.id}
-                      choice={choice}
-                      onPick={onPick}
-                      nickname={entry.nickname}
-                      starred={favourites.has(choice.subdistrict_id)}
-                      onToggleStar={favourites.toggle}
-                    />
-                  ) : null;
-                })}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
+      {/* Folded away rather than filling the screen: this is for the reader with no place in
+          mind, and it opens on request. */}
+      <div className="mt-5 border-border border-t pt-4">
+        <button
+          type="button"
+          onClick={() => setShowShowcase((open) => !open)}
+          aria-expanded={showShowcase}
+          className="flex items-center gap-2 font-medium text-signature-text text-sm"
+        >
+          <ChevronDown
+            size={16}
+            aria-hidden="true"
+            className={showShowcase ? "" : "-rotate-90 transition-transform"}
+          />
+          {th.picker.showcaseToggle}
+        </button>
+        {showShowcase && (
+          <div className="mt-3">
+            {/* Chosen for being familiar, never for being good places to buy. */}
+            <p className="flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
+              <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
+              {th.picker.showcaseNote}
+            </p>
+            <ul className="mt-2">
+              {SHOWCASE.map((entry) => {
+                const choice = showcase.data?.find((c) => c.subdistrict_id === entry.id);
+                return choice ? (
+                  <ChoiceRow
+                    key={entry.id}
+                    choice={choice}
+                    onPick={onPick}
+                    nickname={entry.nickname}
+                    starred={favourites.has(choice.subdistrict_id)}
+                    onToggleStar={favourites.toggle}
+                  />
+                ) : null;
+              })}
+            </ul>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

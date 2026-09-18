@@ -33,17 +33,16 @@ const RESULT_HEADING = new RegExp(`${th.finalResult.heading}|${th.notActivated.h
 const RESULT_TIMEOUT = 35_000;
 
 /**
- * Picks a place the way the product intends: type a name people actually say.
+ * Picks a place the way the product now intends: province, then district, then subdistrict.
  *
- * It used to click the first suggestion on the page, which stopped working the moment those moved
- * behind a fold — and searching is the path almost every reader takes anyway, so this is both more
- * stable and more representative.
+ * Search by name was removed, so the cascading lists are both the front door and the most stable
+ * thing to drive — the three selects are always present and their options come from the reference
+ * table rather than from a ranking that can reorder.
  */
 async function pickAnArea(page: Page) {
-  await page.getByRole("searchbox").fill("บางแสน");
-  const first = page.getByRole("button", { name: /ต\.|แขวง/ }).first();
-  await expect(first).toBeVisible();
-  await first.click();
+  await page.getByLabel(th.intake.provinceLabel).selectOption({ label: "ชลบุรี" });
+  await page.getByLabel(th.intake.districtLabel).selectOption({ label: "เมืองชลบุรี" });
+  await page.getByLabel(th.intake.subdistrictLabel).selectOption({ label: "แสนสุข" });
 }
 
 /** Enough of the sentence to be this sentence and nothing else, short enough to survive an edit. */

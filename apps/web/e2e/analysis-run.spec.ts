@@ -26,17 +26,17 @@ const RESULT_HEADING = new RegExp(`${th.finalResult.heading}|${th.notActivated.h
 const RESULT_TIMEOUT = 35_000;
 
 /**
- * Picks a place the way the product intends: type a name people actually say.
+ * Picks a place the way the product now intends: province, then district, then subdistrict.
  *
- * It used to click the first suggestion on the page, which stopped working the moment those moved
- * behind a fold — and searching is the path almost every reader takes anyway, so this is both more
- * stable and more representative.
+ * It typed into a search box until that box was removed, and before that it clicked whichever
+ * suggestion happened to be first. The cascading lists are the front door now, and they are also
+ * the most stable thing to drive: the three selects are always present, and each one's options
+ * come from the reference table rather than from a search ranking that can reorder.
  */
 async function pickAnArea(page: Page) {
-  await page.getByRole("searchbox").fill("บางแสน");
-  const first = page.getByRole("button", { name: /ต\.|แขวง/ }).first();
-  await expect(first).toBeVisible();
-  await first.click();
+  await page.getByLabel(th.intake.provinceLabel).selectOption({ label: "ชลบุรี" });
+  await page.getByLabel(th.intake.districtLabel).selectOption({ label: "เมืองชลบุรี" });
+  await page.getByLabel(th.intake.subdistrictLabel).selectOption({ label: "แสนสุข" });
 }
 
 test("choosing a suggested area and starting a run reaches a result", async ({ page }) => {
@@ -44,16 +44,9 @@ test("choosing a suggested area and starting a run reaches a result", async ({ p
 
   await expect(page.getByRole("heading", { name: th.intake.heading })).toBeVisible();
 
-  // The suggestions are the front door for a reader with no place in mind, so the test comes in
-  // through it rather than typing a name the fixture might stop containing.
-  await page.getByRole("searchbox").fill("บางแสน");
-  const firstSuggestion = page.getByRole("button", { name: /ต\.|แขวง/ }).first();
-  await expect(firstSuggestion).toBeVisible();
-  // innerText, not textContent: the suggestion stacks the area name, its parent chain and its
-  // figure counts, and textContent runs all three together into one unbroken string.
-  const chosenArea = (await firstSuggestion.innerText()).split("\n")[0]?.trim() ?? "";
-  expect(chosenArea.length).toBeGreaterThan(0);
-  await firstSuggestion.click();
+  await pickAnArea(page);
+  // The confirmation names the place that was chosen, which is what the result heading must echo.
+  const chosenArea = "แสนสุข";
 
   const submit = page.getByRole("button", { name: th.intake.submit });
   await expect(submit).toBeEnabled();
