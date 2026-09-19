@@ -100,6 +100,10 @@ export interface VerificationActionView {
   why_th: string;
   suggested_source_th: string;
   could_change_th: string;
+  /** The instrument and clause, when the action comes from a rule. */
+  legal_basis_th?: string;
+  legal_text_th?: string;
+  legal_url?: string;
 }
 
 export interface FinalAnalysisView {

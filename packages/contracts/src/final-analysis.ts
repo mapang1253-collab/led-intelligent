@@ -42,6 +42,20 @@ export interface VerificationAction {
   readonly related_ids: readonly string[];
   /** Whether completing it could change scope, validation coverage or the recommendation. */
   readonly could_change_th: string;
+  /**
+   * The law this action comes from, named the way a reader could look it up.
+   *
+   * Absent on actions that are not about a rule. Present ones used to show only the internal rule
+   * id — a screen full of "mr55.c41.1" tells a reader nothing and cannot be checked against
+   * anything, while the pack has carried the instrument, the clause and a link to the text all
+   * along. docs/output-policy.md §7 asks each action to name the rule it is about; an id is not a
+   * name.
+   */
+  readonly legal_basis_th?: string;
+  /** The rule as the instrument words it, so the reader can judge the summary above it. */
+  readonly legal_text_th?: string;
+  /** Where the instrument can be read in full. */
+  readonly legal_url?: string;
 }
 
 export interface FinalAnalysis {

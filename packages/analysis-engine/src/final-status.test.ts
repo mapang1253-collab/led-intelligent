@@ -188,11 +188,23 @@ describe("verification actions", () => {
           input_id: "road_width",
           label_th: "ความกว้างถนน",
           obtained_from_th: "สำรวจหน้างาน",
+          clauses_th: ["ข้อ 41 วรรคหนึ่ง"],
+          instrument_th: "กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543)",
+          source_url: null,
           rule_ids: ["mr55.c41.2.2"],
         },
       ],
       approvals: [{ title_th: "ก่อสร้างล้ำที่สาธารณะ", clause_th: "ข้อ 40" }],
-      unresolved_applicability: [{ rule_id: "mr55.c42.3", title_th: "ระยะร่นจากแหล่งน้ำขนาดใหญ่" }],
+      unresolved_applicability: [
+        {
+          rule_id: "mr55.c42.3",
+          title_th: "ระยะร่นจากแหล่งน้ำขนาดใหญ่",
+          clause_th: "ข้อ 41 วรรคหนึ่ง",
+          instrument_th: "กฎกระทรวง ฉบับที่ 55 (พ.ศ. 2543)",
+          statement_th: "ตัวบท",
+          source_url: null,
+        },
+      ],
       area_level_measures_th: ["รายได้เฉลี่ยต่อเดือนของครัวเรือน"],
     });
 
@@ -200,6 +212,17 @@ describe("verification actions", () => {
       "mr55.c41.2.2",
     ]);
     expect(actions.find((a) => a.action_id === "approval.ข้อ 40")?.priority).toBe("BLOCKING");
+
+    // A rule-derived action names the instrument and clause. Printing "mr55.c41.2.2" at a reader
+    // is a database key, not a citation, and cannot be checked against anything.
+    const roadWidth = actions.find((a) => a.action_id === "legal-input.road_width");
+    expect(roadWidth?.legal_basis_th).toContain("กฎกระทรวง ฉบับที่ 55");
+    expect(roadWidth?.legal_basis_th).toContain("ข้อ 41 วรรคหนึ่ง");
+    expect(roadWidth?.why_th).not.toContain("mr55.");
+
+    const applicability = actions.find((a) => a.action_id === "applicability.mr55.c42.3");
+    expect(applicability?.legal_basis_th).toContain("ข้อ 41 วรรคหนึ่ง");
+    expect(applicability?.legal_text_th).toBe("ตัวบท");
     expect(actions.some((a) => a.action_id === "applicability.mr55.c42.3")).toBe(true);
     expect(actions.some((a) => a.target_th.includes("รายได้เฉลี่ยต่อเดือนของครัวเรือน"))).toBe(true);
     // Every action says what completing it could change.
