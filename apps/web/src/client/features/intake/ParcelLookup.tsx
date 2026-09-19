@@ -1,6 +1,6 @@
 import { th } from "@reis/i18n";
 import { useQuery } from "@tanstack/react-query";
-import { Info, LoaderCircle, Search, TriangleAlert } from "lucide-react";
+import { ExternalLink, Info, LoaderCircle, Search, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import type { PinnedPoint } from "./LandPinMap.js";
 
@@ -238,6 +238,27 @@ export function ParcelLookup({
           </p>
         </div>
       )}
+
+      {/* The route out for readers this box cannot serve: a deed number instead of a เลขที่ดิน, a
+          province DOL has not opened, or a reader who wants to see the parcel drawn. LandsMaps
+          answers all three and hands back the two numbers above, so this is a round trip. */}
+      <details className="mt-4">
+        <summary className="cursor-pointer font-medium text-signature-text text-sm">
+          {th.parcel.fallbackHeading}
+        </summary>
+        <p className="mt-1.5 text-ink-muted text-xs leading-relaxed">{th.parcel.fallbackBody}</p>
+        <a
+          href="https://landsmaps.dol.go.th/"
+          target="_blank"
+          rel="noreferrer noopener"
+          className="mt-2.5 inline-flex items-center gap-1.5 rounded-pill border border-border-strong px-4 py-2 font-medium text-sm"
+          style={{ color: "var(--color-signature-text)" }}
+        >
+          <ExternalLink size={14} aria-hidden="true" />
+          {th.parcel.fallbackLink}
+        </a>
+        <p className="mt-1.5 text-ink-muted text-xs">{th.parcel.fallbackNote}</p>
+      </details>
     </div>
   );
 }

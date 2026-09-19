@@ -159,6 +159,22 @@ export const th = {
     notOwnership:
       "ข้อมูลนี้บอกว่าแปลงนี้อยู่ที่ไหนและมีเนื้อที่เท่าไร ไม่ได้บอกว่าใครเป็นเจ้าของ และไม่ได้ยืนยันว่าเป็นแปลงของท่าน ข้อมูลกรรมสิทธิ์ไม่ได้อยู่ในชุดข้อมูลเปิดนี้",
     source: "ที่มา: ข้อมูลรูปแปลงที่ดินแบบเปิดของ{publisher} ภายใต้ DGA Open Government License",
+
+    /**
+     * The way out for the readers this lookup cannot serve, and there are three kinds.
+     *
+     * Someone holding only a เลขที่โฉนด, which this product cannot resolve. Someone in one of the
+     * seventy-two provinces DOL has not published openly. And someone who wants to see the shape
+     * of the parcel rather than a point, which this product does not draw.
+     *
+     * LandsMaps serves all three, and it gives back the two numbers this box wants — so the link
+     * is a round trip, not a dead end, and the copy says so.
+     */
+    fallbackHeading: "ไม่รู้ระวาง หรือมีแต่เลขที่โฉนด",
+    fallbackBody:
+      "เปิดแผนที่ของกรมที่ดิน ค้นด้วยเลขที่โฉนดหรือเลื่อนหาแปลงบนแผนที่ก็ได้ จะเห็นรูปแปลงจริงพร้อมระวางและเลขที่ดิน แล้วนำสองเลขนั้นกลับมากรอกที่ช่องด้านบน · ใช้ได้ทุกจังหวัดทั่วประเทศ ไม่จำกัดเฉพาะจังหวัดที่ระบบนี้มีข้อมูล",
+    fallbackLink: "เปิดแผนที่แปลงที่ดิน กรมที่ดิน (LandsMaps)",
+    fallbackNote: "เปิดในแท็บใหม่ เป็นเว็บของกรมที่ดิน ไม่ใช่ส่วนหนึ่งของระบบนี้",
   },
 
   intake: {
