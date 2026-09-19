@@ -1,6 +1,12 @@
 # ADR 0006 — A user-placed map pin, and OSM proximity as context
 
-- **Status:** **Reversed on 2026-09-19.** Built, deployed, and removed the next day at the
+- **Status:** **Accepted again on 2026-09-19, with a search box.** Reversed earlier the same day
+  and restored once the owners named what was actually wrong with it: the map had no way to
+  search, so a reader had to drag across Thailand to find their own land. That was a defect in
+  what was built, not in the idea. The map, proximity panel, adapters and intake coordinates are
+  live again, now with free-text place search (`/api/v1/place-search`) that jumps the view to a
+  road, market or temple the reader names.
+- **Previously reversed on 2026-09-19.** Built, deployed, and removed the next day at the
   owners' instruction — "ช่วยเอาแผนที่ที่ชื่อว่าปักหมุดที่ดินบนแผนที่ออก เพราะไม่มีประโยชน์เลย".
   The map, the proximity panel, both Worker routes, the OSM adapters, the Leaflet dependency and
   the `latitude`/`longitude` intake fields are all gone; nothing of it remains active. It is
@@ -112,7 +118,7 @@ Storing the pin beyond the run. It is location data about a person's property; i
 expires with the run's 24 hours like every other intake field, and reaches no third party
 except as the coordinates in an Overpass query.
 
-## Why it was reversed
+## Why it was reversed, and what brought it back
 
 Not because it failed. It worked: the endpoint answered on the day it was removed with สถานี
 สยาม at 120 m and ถนนพระรามที่ 1 at 118 m, measured against way geometry, with retries and edge
@@ -137,3 +143,22 @@ publish parcel geometry outright under CC-BY. Neither is activated and neither w
 available to this increment, so nothing decided here changes — but the reason is that
 the permission was never requested, not that the door does not exist. See
 [`docs/data-sources/dol-parcel.md`](../data-sources/dol-parcel.md).
+
+## The search box, added 2026-09-19
+
+The reversal above was correct on the evidence the owners had. What shipped first centred the map
+on the chosen area only when an area had already been chosen, and otherwise opened on the whole
+country — and even the good case left a reader zooming around a district hunting for one plot.
+There was no search. "ไม่มีประโยชน์เลย" was a fair verdict on that.
+
+`/api/v1/place-search` closes it. Free text, bounded to Thailand, five results, each one a place
+the reader can recognise before jumping. It accepts any match type, unlike `geocodeArea` above:
+someone typing ตลาดหนองมน wants the market, not the tambon containing it. Selecting a result moves
+the view and places nothing — finding a place is not asserting that the land is there, and the pin
+stays the reader's own act.
+
+Verified end to end: ตลาดหนองมน resolves to 13.2813, 100.9362, the view jumps, one click on the
+map yields ตลาดหนองมน at 1 m, a main road at 27 m, a clinic at 183 m and a school at 249 m.
+
+Nominatim's usage policy is respected the same way as before: the client debounces at 400 ms, the
+query needs three characters, and the Worker caches each answer at the edge for a month.
