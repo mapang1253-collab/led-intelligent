@@ -63,3 +63,10 @@ export {
   expiryStatus,
   purgeExpiredRuns,
 } from "./repositories/purge.js";
+export {
+  type LandParcel,
+  type ParcelCoverage,
+  findParcel,
+  parcelCoverage,
+  parseMapSheet,
+} from "./repositories/land-parcels.js";

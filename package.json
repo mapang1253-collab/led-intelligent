@@ -31,7 +31,8 @@
     "ingest:treasury-building": "pnpm run build:adapters && node --env-file=apps/web/.env.migration tools/ingestion/ingest-treasury-building-valuation.mjs",
     "valuation:review": "node tools/ingestion/review-valuation.mjs",
     "ingest:treasury-condo": "pnpm run build:adapters && node --env-file=apps/web/.env.migration tools/ingestion/ingest-treasury-condominium-valuation.mjs",
-    "ingest:treasury-land": "pnpm run build:adapters && node --env-file=apps/web/.env.migration tools/ingestion/ingest-treasury-land-valuation.mjs"
+    "ingest:treasury-land": "pnpm run build:adapters && node --env-file=apps/web/.env.migration tools/ingestion/ingest-treasury-land-valuation.mjs",
+    "ingest:dol-parcels": "node --env-file=apps/web/.env.migration tools/ingestion/ingest-dol-parcels.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

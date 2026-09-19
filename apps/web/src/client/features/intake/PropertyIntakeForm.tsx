@@ -6,6 +6,7 @@ import { useCreateRun } from "../run/useAnalysisRun.js";
 import { type AreaChoice, AreaPicker } from "./AreaPicker.js";
 import { AreaSelect } from "./AreaSelect.js";
 import { LandPinMap, type PinnedPoint } from "./LandPinMap.js";
+import { ParcelLookup } from "./ParcelLookup.js";
 import { ProximityPanel } from "./ProximityPanel.js";
 import {
   useAreaChoice,
@@ -366,6 +367,23 @@ export function PropertyIntakeForm() {
           </div>
         )}
       </div>
+
+      {/* Before the map, because a reader who has a deed in hand should not have to find their
+          land by eye first: the lookup places the pin and fills the area for them. */}
+      <ParcelLookup
+        onFound={(found) => {
+          if (found.point) {
+            setPin(found.point);
+          }
+          setOptional((current) => ({
+            ...current,
+            land_area_rai: found.rai,
+            land_area_ngan: found.ngan,
+            land_area_wa: found.wa,
+          }));
+          setShowArea(true);
+        }}
+      />
 
       {/* The pin, and what it buys. It sits after the site facts because it is the heaviest thing
           on the form, and before the parcel link because both answer "where exactly". */}

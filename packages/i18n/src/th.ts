@@ -131,6 +131,36 @@ export const th = {
     },
   },
 
+  /**
+   * Parcel lookup by ระวาง and เลขที่ดิน (docs/adr/0007).
+   *
+   * Every string here holds one of three lines. Coverage is five provinces, said before the inputs
+   * rather than discovered by a reader who typed a correct deed. เลขที่ดิน is not เลขที่โฉนด, and
+   * the two are printed beside each other on the same document. And a hit locates a parcel, never
+   * establishes who owns it — ownership is not in this data at all.
+   */
+  parcel: {
+    heading: "รู้ระวางและเลขที่ดินไหม ค้นหาแปลงได้เลย (ไม่บังคับ)",
+    coverage:
+      "ขณะนี้ค้นได้เฉพาะจังหวัดที่กรมที่ดินเปิดข้อมูลรูปแปลงไว้ ได้แก่ {provinces} จังหวัดอื่นยังค้นไม่ได้ ไม่ได้แปลว่าเลขที่ท่านกรอกผิด",
+    coverageLoading: "กำลังตรวจสอบว่าจังหวัดใดค้นได้บ้าง",
+    mapSheetLabel: "ระวาง",
+    mapSheetPlaceholder: "เช่น 5137 II 9854-09",
+    mapSheetHelp: "พิมพ์อยู่บนหัวโฉนดคู่กับคำว่า “ระวาง” ใส่เว้นวรรคหรือขีดอย่างไรก็ได้",
+    landNoLabel: "เลขที่ดิน",
+    landNoHelp: "เลขประจำแปลงภายในระวางนั้น เป็นคนละเลขกับ “เลขที่โฉนด” ซึ่งระบบยังค้นไม่ได้",
+    lookup: "ค้นหาแปลงที่ดิน",
+    notFound: "ไม่พบแปลงที่ตรงกับระวางและเลขที่ดินนี้ ลองตรวจตัวเลขอีกครั้ง หรือที่ดินอาจอยู่นอกจังหวัดที่เปิดข้อมูลไว้",
+    failed: "ค้นหาไม่สำเร็จ ลองใหม่อีกครั้ง",
+    found: "พบแปลงที่ดิน",
+    foundWhere: "ที่ตั้ง",
+    foundArea: "เนื้อที่ตามที่กรมที่ดินคำนวณ",
+    use: "ใช้เนื้อที่และตำแหน่งนี้",
+    notOwnership:
+      "ข้อมูลนี้บอกว่าแปลงนี้อยู่ที่ไหนและมีเนื้อที่เท่าไร ไม่ได้บอกว่าใครเป็นเจ้าของ และไม่ได้ยืนยันว่าเป็นแปลงของท่าน ข้อมูลกรรมสิทธิ์ไม่ได้อยู่ในชุดข้อมูลเปิดนี้",
+    source: "ที่มา: ข้อมูลรูปแปลงที่ดินแบบเปิดของ{publisher} ภายใต้ DGA Open Government License",
+  },
+
   intake: {
     heading: "ทรัพย์สินที่ต้องการวิเคราะห์",
     /* What the tool is, said before it starts. Read without this, a result full of "ยัง…" lines
@@ -188,7 +218,7 @@ export const th = {
        department-issued credentials. The reason this product cannot search by deed is that it
        holds no such permission — a different and more accurate statement. */
     parcelBody:
-      "ระบบนี้ยังค้นข้อมูลรายแปลงไม่ได้ กรมที่ดินมีบริการ API สำหรับค้นรูปแปลงตามเลขโฉนด แต่ต้องทำหนังสือขออนุญาตและรับรหัสเข้าใช้งานจากกรมที่ดินก่อน ซึ่งโครงการนี้ยังไม่ได้ขอ การกรอกเลขโฉนดตอนนี้จึงไม่ได้ทำให้ผลวิเคราะห์ละเอียดขึ้น ระบบจึงไม่ขอ",
+      "ค้นด้วยเลขที่ดินและระวางได้แล้วในจังหวัดที่กรมที่ดินเปิดข้อมูลไว้ (ดูช่องค้นหาด้านบน) ส่วนการค้นด้วยเลขที่โฉนดยังทำไม่ได้ เพราะต้องใช้บริการ API ที่ต้องทำหนังสือขออนุญาตจากกรมที่ดินก่อน ซึ่งโครงการนี้ยังไม่ได้ขอ",
     parcelLinkIntro: "ดูรูปแปลง ระวาง และเลขที่ดินได้ที่แผนที่ของกรมที่ดินโดยตรง แล้วกลับมาวิเคราะห์ต่อที่นี่ได้เลย",
     parcelLinkLabel: "เปิดแผนที่แปลงที่ดิน กรมที่ดิน (LandsMaps)",
     parcelLinkNote: "เปิดในแท็บใหม่ เป็นเว็บของกรมที่ดิน ไม่ใช่ส่วนหนึ่งของระบบนี้",

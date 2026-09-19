@@ -4,9 +4,11 @@ import {
   areaComparison,
   areasByIds,
   createDb,
+  findParcel,
   listDistricts,
   listProvinces,
   listSubdistricts,
+  parcelCoverage,
   purgeExpiredRuns,
   searchAreas,
   sourceStatuses,
@@ -317,6 +319,46 @@ app.get("/api/v1/place-search", async (c) => {
   response.headers.set("Cache-Control", "public, max-age=2592000");
   c.executionCtx.waitUntil(cache.put(cacheKey, response.clone()));
   return response;
+});
+
+/**
+ * Parcel lookup by ระวาง and เลขที่ดิน (docs/adr/0007).
+ *
+ * The question readers kept asking the area picker to answer, now answerable — for the five
+ * provinces the Land Department publishes openly, and only those. Coverage is returned alongside
+ * every miss so the screen can tell "that parcel number is not in this sheet" from "we hold no
+ * data for your province at all", which are opposite messages to a reader holding a real deed.
+ *
+ * Not a deed-number search. `LAND_NO` is เลขที่ดิน; เลขที่โฉนด is a different number and is not in
+ * this data, which docs/data-sources/dol-parcel.md records along with what it would take.
+ */
+app.get("/api/v1/parcels/coverage", async (c) => {
+  const db = createDb(c.env.HYPERDRIVE.connectionString);
+  try {
+    return c.json({ schema_version: SCHEMA_VERSION, data: await parcelCoverage(db) });
+  } finally {
+    await db.destroy();
+  }
+});
+
+app.get("/api/v1/parcels/search", async (c) => {
+  const mapSheet = (c.req.query("map_sheet") ?? "").trim();
+  const landNo = (c.req.query("land_no") ?? "").trim();
+  if (!mapSheet || !landNo) {
+    return c.json({ error: "MISSING_PARCEL_KEY" }, 400);
+  }
+  if (!/^[0-9IViv\s\-/]{6,40}$/.test(mapSheet) || !/^[0-9]{1,12}$/.test(landNo)) {
+    // Shape-checked before it reaches a query: these two strings come straight from a text box.
+    return c.json({ error: "PARCEL_KEY_NOT_RECOGNISED" }, 400);
+  }
+
+  const db = createDb(c.env.HYPERDRIVE.connectionString);
+  try {
+    const parcel = await findParcel(db, mapSheet, landNo);
+    return c.json({ schema_version: SCHEMA_VERSION, data: parcel });
+  } finally {
+    await db.destroy();
+  }
 });
 
 app.get("/api/v1/administrative-areas/well-documented", async (c) => {
