@@ -616,7 +616,18 @@ export const th = {
     selfNote:
       "ข้อมูลเหล่านี้วัดหรือระบุเองได้จากที่ดินหรือแผนที่ ไม่ต้องขอเอกสารจากหน่วยงาน เมื่อกรอกแล้ววิเคราะห์ใหม่ ระบบจะตรวจข้อกำหนดที่เกี่ยวข้องให้ทันที",
     selfCta: "กรอกข้อมูลเพิ่มแล้ววิเคราะห์ใหม่",
-    obtainHeading: "ต้องขอจากหน่วยงานหรือผู้เชี่ยวชาญ",
+    /* Grouped by when a reader needs the item, not by which discipline owns it. Someone still
+       deciding whether to look at the land does not need an architect's checklist yet. */
+    stage: {
+      SCREENING: "ก่อนตัดสินใจซื้อที่ดิน",
+      DESIGN: "ตอนออกแบบอาคาร",
+      PERMIT: "ตอนยื่นขออนุญาตก่อสร้าง",
+    },
+    stageNote: {
+      SCREENING: "ข้อเหล่านี้อาจทำให้ล้มดีลได้ ควรตรวจก่อนวางเงิน",
+      DESIGN: "ต้องใช้ตัวเลขจากแบบสถาปัตยกรรมหรือแบบผังบริเวณ ซึ่งจะมีก็ต่อเมื่อเริ่มออกแบบอาคารแล้ว",
+      PERMIT: "เป็นเรื่องที่ต้องดำเนินการกับหน่วยงานตอนยื่นขออนุญาต",
+    },
     /* The reasoning, one click from the step it belongs to. Printing it on every one of twenty-odd
        rows turned the list into four fifths of the overview screen, in small grey type. */
     actionWhyToggle: "ทำไมต้องตรวจข้อนี้",

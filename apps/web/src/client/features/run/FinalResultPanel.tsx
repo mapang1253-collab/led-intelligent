@@ -14,16 +14,34 @@ import type { FinalAnalysisView } from "./useAnalysisRun.js";
  */
 
 const STATUS_LABELS = th.finalStatus as Record<string, string>;
-const DOMAIN_LABELS = th.verificationDomain as Record<string, string>;
 const PRIORITY_LABELS = th.verificationPriority as Record<string, string>;
+const STAGE_LABELS = th.finalResult.stage as Record<string, string>;
+const STAGE_NOTES = th.finalResult.stageNote as Record<string, string>;
 
-const DOMAIN_ORDER = [
-  "TITLE_AND_IDENTITY",
-  "LAW_AND_PLANNING",
-  "SURVEY_AND_SITE",
-  "MARKET_AND_FINANCE",
-  "SOURCE_CURRENCY",
-] as const;
+type Action = FinalAnalysisView["verification_actions"][number];
+
+/**
+ * When a reader needs each item, which is not the same question as which discipline it belongs to.
+ *
+ * Grouped by domain, the list put "measure the open space on the site plan" beside "check the
+ * zoning" and showed all twenty-two at once. But most of them are a construction checklist, and
+ * the person reading is usually still deciding whether to look at the land at all. Ordered by
+ * stage, the nine that bear on that decision come first and the thirteen that do not fold away —
+ * nothing is removed, and the reader stops being handed an architect's to-do list on day one.
+ *
+ * Derived from the action's own domain and id prefix, so a new action lands somewhere sensible
+ * without this mapping being updated: anything about the site or a drawing is design-stage, an
+ * approval is permit-stage, and everything else bears on the decision to buy.
+ */
+type Stage = "SCREENING" | "DESIGN" | "PERMIT";
+
+const STAGE_ORDER: readonly Stage[] = ["SCREENING", "DESIGN", "PERMIT"];
+
+function stageOf(action: Action): Stage {
+  if (action.action_id.startsWith("approval.")) return "PERMIT";
+  if (action.domain === "SURVEY_AND_SITE") return "DESIGN";
+  return "SCREENING";
+}
 
 /**
  * Actions the reader can discharge on the intake form, rather than at a government office.
@@ -54,8 +72,6 @@ function thaiDate(iso: string): string {
   }
   return parsed.toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" });
 }
-
-type Action = FinalAnalysisView["verification_actions"][number];
 
 /**
  * One item of work: what to get, and — folded — why it matters.
@@ -109,6 +125,16 @@ function ActionItem({ action }: { action: Action }) {
   );
 }
 
+function ActionList({ actions }: { actions: readonly Action[] }) {
+  return (
+    <ul className="mt-2">
+      {actions.map((action) => (
+        <ActionItem key={action.action_id} action={action} />
+      ))}
+    </ul>
+  );
+}
+
 /** What this run actually did, counted from what it produced. */
 export interface WorkDone {
   readonly evidenceItems: number;
@@ -136,9 +162,9 @@ export function FinalResultPanel({
   const selfServe = final.verification_actions.filter((a) => ANSWERABLE_ON_FORM.has(a.action_id));
   const rest = final.verification_actions.filter((a) => !ANSWERABLE_ON_FORM.has(a.action_id));
 
-  const byDomain = DOMAIN_ORDER.map((domain) => ({
-    domain,
-    actions: rest.filter((action) => action.domain === domain),
+  const byStage = STAGE_ORDER.map((stage) => ({
+    stage,
+    actions: rest.filter((action) => stageOf(action) === stage),
   })).filter((group) => group.actions.length > 0);
 
   return (
@@ -272,21 +298,38 @@ export function FinalResultPanel({
           </div>
         )}
 
-        {byDomain.length > 0 && (
-          <h4 className="mt-5 font-semibold text-sm">{th.finalResult.obtainHeading}</h4>
-        )}
-        {byDomain.map((group) => (
-          <div key={group.domain} className="mt-4">
-            <h5 className="font-medium text-ink-muted text-sm">
-              {DOMAIN_LABELS[group.domain] ?? group.domain}
-            </h5>
-            <ul className="mt-2">
-              {group.actions.map((action) => (
-                <ActionItem key={action.action_id} action={action} />
-              ))}
-            </ul>
-          </div>
-        ))}
+        {/*
+          The screening stage is open; design and permit fold away.
+
+          Someone deciding whether this land is worth a second look needs the zoning, the local
+          bylaws and the title — items that can end the question. They do not yet need the eight
+          figures that come off an architectural drawing for a building nobody has designed. Both
+          are still here, and the count on each fold says how many are inside, so folding hides
+          nothing: it puts thirteen construction-stage items behind one line instead of in front of
+          a reader who has not bought anything.
+        */}
+        {byStage.map((group) => {
+          const label = STAGE_LABELS[group.stage];
+          return group.stage === "SCREENING" ? (
+            <div key={group.stage} className="mt-5">
+              <h4 className="font-semibold text-sm">{label}</h4>
+              <p className="mt-0.5 text-ink-muted text-xs leading-relaxed">
+                {STAGE_NOTES[group.stage]}
+              </p>
+              <ActionList actions={group.actions} />
+            </div>
+          ) : (
+            <details key={group.stage} className="mt-4">
+              <summary className="cursor-pointer font-medium text-signature-text text-sm">
+                {label} ({group.actions.length.toLocaleString("th-TH")})
+              </summary>
+              <p className="mt-0.5 text-ink-muted text-xs leading-relaxed">
+                {STAGE_NOTES[group.stage]}
+              </p>
+              <ActionList actions={group.actions} />
+            </details>
+          );
+        })}
       </section>
 
       <p className="mt-5 text-ink-muted text-xs">
