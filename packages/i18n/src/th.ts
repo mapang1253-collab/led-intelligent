@@ -188,9 +188,11 @@ export const th = {
     /* Which place a figure is about. Printed on every tile, not only the borrowed ones, because
        "this subdistrict" is the fact a reader relies on when they read the number. */
     summaryLevelOwn: "ข้อมูลของตำบลนี้",
-    summaryLevelContext: "ข้อมูลระดับอำเภอ ใช้เป็นบริบท",
+    /* {area} is the area the figures actually describe. It was hardcoded to "อำเภอ", which
+       printed a provincial population under the word for district. */
+    summaryLevelContext: "ข้อมูลของ{area} ใช้เป็นบริบท",
     summaryBorrowedNote:
-      "ตัวเลขที่ระบุว่าเป็นระดับอำเภอ เป็นของอำเภอที่ครอบคลุมตำบลนี้ เพราะหน่วยงานยังไม่ได้ประกาศตัวเลขรายตำบล ใช้เป็นบริบทได้ แต่ไม่ใช่ตัวเลขของตำบลนี้โดยตรง",
+      "ตัวเลขที่กำกับว่า “ใช้เป็นบริบท” เป็นของพื้นที่ที่ครอบคลุมตำบลนี้ เช่น อำเภอหรือจังหวัด เพราะหน่วยงานยังไม่ได้ประกาศตัวเลขรายตำบล ใช้ประกอบการพิจารณาได้ แต่ไม่ใช่ตัวเลขของตำบลนี้โดยตรง",
     stageHeading: "ขั้นตอนการทำงาน",
     stageIntro: "รายการนี้บอกว่าระบบทำอะไรให้แล้วบ้าง และขั้นไหนยังให้คำตอบไม่ได้ พร้อมเหตุผล",
     stageSucceeded: "เสร็จแล้ว",

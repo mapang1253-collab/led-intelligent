@@ -53,7 +53,7 @@ describe("spanFor", () => {
       ],
       LAND,
     );
-    expect(span).toEqual({ low: 500, high: 900, count: 2, unit: "บาท/ตร.ว.", ownArea: true });
+    expect(span).toMatchObject({ low: 500, high: 900, count: 2, unit: "บาท/ตร.ว.", ownArea: true });
   });
 
   it("reads both ends of a published band, not just the midpoint it never gave", () => {
@@ -85,6 +85,14 @@ describe("spanFor", () => {
     );
     // A range spanning 500–84,600 would describe neither the subdistrict nor the district.
     expect(span).toMatchObject({ low: 11700, high: 84600, count: 2, ownArea: true });
+  });
+
+  it("names the area a borrowed figure actually describes", () => {
+    // ต.หนองปรือ borrows its population from จ.ชลบุรี. Labelling that "ระดับอำเภอ" put a province
+    // of 1.6 million under the word for district; two levels up is not one level up.
+    const province = group("CONTEXT_ONLY", [["1645985", null, null]], "demand.resident_population");
+    const span = spanFor([{ ...province, area_label_th: "จ.ชลบุรี" }], "demand.resident_population");
+    expect(span).toMatchObject({ ownArea: false, areaLabel: "จ.ชลบุรี" });
   });
 
   it("returns null rather than a zero when nothing was published", () => {

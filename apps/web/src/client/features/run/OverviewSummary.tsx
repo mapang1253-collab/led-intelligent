@@ -33,12 +33,21 @@ interface Span {
   readonly high: number;
   readonly count: number;
   readonly unit: string;
-  /** False when the figures describe the containing district rather than this subdistrict. */
+  /** False when the figures describe a containing area rather than this subdistrict. */
   readonly ownArea: boolean;
+  /**
+   * The containing area's own name, when one was borrowed from.
+   *
+   * Named rather than assumed. The label used to read "ข้อมูลระดับอำเภอ" for every borrowed
+   * figure, and ต.หนองปรือ borrows its population from จ.ชลบุรี — a province of 1.6 million
+   * printed under the word "อำเภอ". Two levels up is not one level up, and the difference is the
+   * whole reason the label exists.
+   */
+  readonly areaLabel: string;
 }
 
 /** The low and high of every figure in one set of groups, or null when the set holds none. */
-function extent(groups: readonly EvidenceGroup[]): Omit<Span, "ownArea"> | null {
+function extent(groups: readonly EvidenceGroup[]): Omit<Span, "ownArea" | "areaLabel"> | null {
   const values: number[] = [];
   let unit = "";
   for (const group of groups) {
@@ -68,12 +77,16 @@ function extent(groups: readonly EvidenceGroup[]): Omit<Span, "ownArea"> | null 
  */
 export function spanFor(groups: readonly EvidenceGroup[], requirementId: string): Span | null {
   const forRequirement = groups.filter((group) => group.requirement_id === requirementId);
-  const own = extent(forRequirement.filter((g) => ABOUT_THIS_AREA.has(g.purpose_fitness)));
+  const ownGroups = forRequirement.filter((g) => ABOUT_THIS_AREA.has(g.purpose_fitness));
+  const own = extent(ownGroups);
   if (own) {
-    return { ...own, ownArea: true };
+    return { ...own, ownArea: true, areaLabel: ownGroups[0]?.area_label_th ?? "" };
   }
-  const context = extent(forRequirement.filter((g) => !ABOUT_THIS_AREA.has(g.purpose_fitness)));
-  return context ? { ...context, ownArea: false } : null;
+  const contextGroups = forRequirement.filter((g) => !ABOUT_THIS_AREA.has(g.purpose_fitness));
+  const context = extent(contextGroups);
+  return context
+    ? { ...context, ownArea: false, areaLabel: contextGroups[0]?.area_label_th ?? "" }
+    : null;
 }
 
 const thNumber = (value: number) => value.toLocaleString("th-TH", { maximumFractionDigits: 0 });
@@ -84,6 +97,7 @@ function Tile({
   value,
   note,
   ownArea,
+  areaLabel,
 }: {
   icon: typeof Coins;
   label: string;
@@ -91,6 +105,8 @@ function Tile({
   note?: string;
   /** Omitted for figures that have no level to speak of, such as the concept count. */
   ownArea?: boolean;
+  /** The area the figures actually describe, printed when it is not this subdistrict. */
+  areaLabel?: string;
 }) {
   return (
     <div className="rounded-card bg-surface-sunken p-4">
@@ -105,7 +121,9 @@ function Tile({
           className="mt-0.5 text-xs"
           style={{ color: ownArea ? "var(--color-ink-muted)" : "var(--color-partial)" }}
         >
-          {ownArea ? th.progress.summaryLevelOwn : th.progress.summaryLevelContext}
+          {ownArea
+            ? th.progress.summaryLevelOwn
+            : th.progress.summaryLevelContext.replace("{area}", areaLabel ?? "")}
         </p>
       )}
     </div>
@@ -139,6 +157,7 @@ export function OverviewSummary({
         value={`${thNumber(condo.low)}–${thNumber(condo.high)} ${condo.unit}`}
         note={fromItems(condo.count)}
         ownArea={condo.ownArea}
+        areaLabel={condo.areaLabel}
       />,
     );
   }
@@ -151,6 +170,7 @@ export function OverviewSummary({
         value={`${thNumber(land.low)}–${thNumber(land.high)} ${land.unit}`}
         note={fromItems(land.count)}
         ownArea={land.ownArea}
+        areaLabel={land.areaLabel}
       />,
     );
   }
@@ -164,6 +184,7 @@ export function OverviewSummary({
         label={th.progress.summaryPopulation}
         value={`${thNumber(population.high)} ${population.unit}`}
         ownArea={population.ownArea}
+        areaLabel={population.areaLabel}
       />,
     );
   }
