@@ -127,3 +127,13 @@ thing in the product that could locate a target more precisely than a subdistric
 goes the only route to a distance, and ADR 0004's dependency chain closes again at the same
 link. A future increment that wants "ห่างจากถนนกี่เมตร" still needs a location first, and the
 map pin is still the only open way to get one.
+
+## Correction, 2026-09-19
+
+This ADR states that the Land Department publishes no public API. That is wrong.
+`mapland-parcel` on data.go.th documents a nationwide deed-number lookup behind a
+written permission request and department-issued credentials, and five provinces
+publish parcel geometry outright under CC-BY. Neither is activated and neither was
+available to this increment, so nothing decided here changes — but the reason is that
+the permission was never requested, not that the door does not exist. See
+[`docs/data-sources/dol-parcel.md`](../data-sources/dol-parcel.md).

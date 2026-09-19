@@ -132,8 +132,12 @@ export const th = {
      * working around that is neither permitted nor necessary for a link.
      */
     parcelHeading: "อยากดูรูปแปลงที่ดินและเลขโฉนด",
+    /* Corrected on 2026-09-19. This said the Land Department publishes no API, which is wrong:
+       `mapland-parcel` on data.go.th documents one, gated behind a written permission request and
+       department-issued credentials. The reason this product cannot search by deed is that it
+       holds no such permission — a different and more accurate statement. */
     parcelBody:
-      "ระบบนี้ยังค้นข้อมูลรายแปลงไม่ได้ เพราะกรมที่ดินไม่ได้เปิด API สาธารณะให้ค้นด้วยเลขโฉนด การกรอกเลขโฉนดจึงไม่ได้ทำให้ผลวิเคราะห์ละเอียดขึ้น ระบบจึงไม่ขอ",
+      "ระบบนี้ยังค้นข้อมูลรายแปลงไม่ได้ กรมที่ดินมีบริการ API สำหรับค้นรูปแปลงตามเลขโฉนด แต่ต้องทำหนังสือขออนุญาตและรับรหัสเข้าใช้งานจากกรมที่ดินก่อน ซึ่งโครงการนี้ยังไม่ได้ขอ การกรอกเลขโฉนดตอนนี้จึงไม่ได้ทำให้ผลวิเคราะห์ละเอียดขึ้น ระบบจึงไม่ขอ",
     parcelLinkIntro: "ดูรูปแปลง ระวาง และเลขที่ดินได้ที่แผนที่ของกรมที่ดินโดยตรง แล้วกลับมาวิเคราะห์ต่อที่นี่ได้เลย",
     parcelLinkLabel: "เปิดแผนที่แปลงที่ดิน กรมที่ดิน (LandsMaps)",
     parcelLinkNote: "เปิดในแท็บใหม่ เป็นเว็บของกรมที่ดิน ไม่ใช่ส่วนหนึ่งของระบบนี้",

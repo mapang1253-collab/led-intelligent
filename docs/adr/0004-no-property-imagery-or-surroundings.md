@@ -73,3 +73,13 @@ Shipping district-level surroundings counts labelled as if they described the ta
 subdistrict. The counts would be real and the label would be true, but the screen would
 imply a locality the evidence does not describe — the failure mode this whole system is
 built to avoid.
+
+## Correction, 2026-09-19
+
+This ADR states that the Land Department publishes no public API. That is wrong.
+`mapland-parcel` on data.go.th documents a nationwide deed-number lookup behind a
+written permission request and department-issued credentials, and five provinces
+publish parcel geometry outright under CC-BY. Neither is activated and neither was
+available to this increment, so nothing decided here changes — but the reason is that
+the permission was never requested, not that the door does not exist. See
+[`docs/data-sources/dol-parcel.md`](../data-sources/dol-parcel.md).
