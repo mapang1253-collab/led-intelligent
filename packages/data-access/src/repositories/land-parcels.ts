@@ -22,6 +22,17 @@ export interface LandParcel {
   readonly area_sqm: string | null;
   readonly latitude: number | null;
   readonly longitude: number | null;
+  /**
+   * The administrative area this parcel sits in, as ids the picker can select.
+   *
+   * Resolved here so a reader who found their parcel is not then asked where it is: the lookup
+   * already knows, and asking twice was the single loudest complaint about this form. Null when
+   * DOL's names do not match the reference table, which is the honest outcome for roughly three
+   * percent of parcels and leaves the reader picking the area by hand as before.
+   */
+  readonly province_id: string | null;
+  readonly district_id: string | null;
+  readonly subdistrict_id: string | null;
 }
 
 export interface ParcelCoverage {
@@ -72,17 +83,31 @@ export async function findParcel(
   if (!sheet) return null;
 
   const { rows } = await db.executeQuery<LandParcel>({
-    sql: `SELECT land_no,
-                 utm_map_1 || ' ' ||
-                   (ARRAY['','I','II','III','IV'])[utm_map_2 + 1] || ' ' ||
-                   utm_map_3 || '-' || utm_map_4 AS map_sheet,
-                 province_name_th, district_name_th, subdistrict_name_th,
-                 area_sqm::text AS area_sqm,
-                 ST_Y(centroid::geometry) AS latitude,
-                 ST_X(centroid::geometry) AS longitude
-            FROM reference.land_parcel
-           WHERE utm_map_1 = $1 AND utm_map_2 = $2 AND utm_map_3 = $3 AND utm_map_4 = $4
-             AND land_no = $5
+    sql: `SELECT lp.land_no,
+                 lp.utm_map_1 || ' ' ||
+                   (ARRAY['','I','II','III','IV'])[lp.utm_map_2 + 1] || ' ' ||
+                   lp.utm_map_3 || '-' || lp.utm_map_4 AS map_sheet,
+                 lp.province_name_th, lp.district_name_th, lp.subdistrict_name_th,
+                 lp.area_sqm::text AS area_sqm,
+                 ST_Y(lp.centroid::geometry) AS latitude,
+                 ST_X(lp.centroid::geometry) AS longitude,
+                 pv.id AS province_id, d.id AS district_id, sd.id AS subdistrict_id
+            FROM reference.land_parcel lp
+            -- DOL annotates a district with the branch office that covers it, as
+            -- "ลำลูกกา(หนองจอก)". The reference table knows the district, not the branch, so the
+            -- annotation is stripped before matching; without this, one parcel in thirty resolves
+            -- to nothing for a reason that has nothing to do with the parcel.
+            LEFT JOIN reference.administrative_area pv
+                   ON pv.level = 'PROVINCE' AND pv.valid_to IS NULL
+                  AND pv.name_th = lp.province_name_th
+            LEFT JOIN reference.administrative_area d
+                   ON d.level = 'DISTRICT' AND d.valid_to IS NULL AND d.parent_id = pv.id
+                  AND d.name_th = split_part(lp.district_name_th, '(', 1)
+            LEFT JOIN reference.administrative_area sd
+                   ON sd.level = 'SUBDISTRICT' AND sd.valid_to IS NULL AND sd.parent_id = d.id
+                  AND sd.name_th = lp.subdistrict_name_th
+           WHERE lp.utm_map_1 = $1 AND lp.utm_map_2 = $2 AND lp.utm_map_3 = $3
+             AND lp.utm_map_4 = $4 AND lp.land_no = $5
            LIMIT 1`,
     parameters: [sheet.map1, sheet.map2, sheet.map3, sheet.map4, landNo.trim()],
     query: { kind: "SelectQueryNode" } as never,

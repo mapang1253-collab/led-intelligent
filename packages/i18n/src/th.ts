@@ -189,39 +189,16 @@ export const th = {
     waterWidthHelp:
       "กรอกเมื่อที่ดินติดคลอง ลำราง หรือลำน้ำสาธารณะ วัดความกว้างของลำน้ำ ถ้าที่ดินไม่ติดแหล่งน้ำให้เว้นว่างไว้",
     nearLargeWaterLabel: "ที่ดินอยู่ติดหรือใกล้บึง ทะเลสาบ หรือทะเล",
-    /* Said immediately under the area picker, because the commonest reason someone abandons this
-       form is believing the optional sections below are part of it. */
-    enoughAlready:
-      "เลือกพื้นที่แล้วกดเริ่มวิเคราะห์ได้เลย ส่วนด้านล่างเป็นตัวเลือกเสริมทั้งหมด ไม่รู้ก็ข้ามได้ ไม่กระทบการวิเคราะห์",
+    /* Two numbered steps, because the form had grown three ways to answer one question with
+       nothing saying they were alternatives, and readers were filling in all of them. */
+    stepOne: "1. ที่ดินอยู่ที่ไหน",
+    modeArea: "เลือกจากรายการพื้นที่",
+    modeParcel: "มีระวางและเลขที่ดิน",
+    stepTwo: "2. รายละเอียดเพิ่มเติม",
+    stepTwoNote: "ทั้งหมดนี้ไม่บังคับ ไม่รู้ก็ข้ามได้ กดเริ่มวิเคราะห์ได้เลย แต่ถ้ากรอก ระบบจะตรวจข้อกำหนดให้ได้มากขึ้น",
     areaToggle: "รู้เนื้อที่ดินไหม (ไม่บังคับ)",
     areaHelp: "กรอกตามที่ระบุไว้ในโฉนด ระบบจะเติมให้อัตโนมัติในเครื่องคำนวณมูลค่าที่ดินในหน้าผลลัพธ์ จะได้ไม่ต้องกรอกซ้ำ",
     areaConversion: "เท่ากับ",
-
-    /**
-     * The parcel block, after the four fields that did nothing were taken out.
-     *
-     * The form used to ask for address, deed number, ระวาง and เลขที่ดิน, and told the reader that
-     * supplying them moved the result from area level to preliminary-property level. That was not
-     * true: they set `requested_scope` and the permitted scope stayed AREA, because nothing in the
-     * product can look a parcel up — the Land Department publishes no public API and OSM holds zero
-     * Thai cadastral parcels. Four inputs that changed nothing, under a sentence promising they
-     * changed something, is the "ใช้งานไม่ได้จริง" the feedback named.
-     *
-     * What replaces them is the thing the reader actually wanted: a link to the Land Department's
-     * own parcel map, where the shape and the numbers are authoritative. It is an ordinary outbound
-     * link the reader clicks. Nothing is fetched from it — the site sits behind bot protection, and
-     * working around that is neither permitted nor necessary for a link.
-     */
-    parcelHeading: "อยากดูรูปแปลงที่ดินและเลขโฉนด",
-    /* Corrected on 2026-09-19. This said the Land Department publishes no API, which is wrong:
-       `mapland-parcel` on data.go.th documents one, gated behind a written permission request and
-       department-issued credentials. The reason this product cannot search by deed is that it
-       holds no such permission — a different and more accurate statement. */
-    parcelBody:
-      "ค้นด้วยเลขที่ดินและระวางได้แล้วในจังหวัดที่กรมที่ดินเปิดข้อมูลไว้ (ดูช่องค้นหาด้านบน) ส่วนการค้นด้วยเลขที่โฉนดยังทำไม่ได้ เพราะต้องใช้บริการ API ที่ต้องทำหนังสือขออนุญาตจากกรมที่ดินก่อน ซึ่งโครงการนี้ยังไม่ได้ขอ",
-    parcelLinkIntro: "ดูรูปแปลง ระวาง และเลขที่ดินได้ที่แผนที่ของกรมที่ดินโดยตรง แล้วกลับมาวิเคราะห์ต่อที่นี่ได้เลย",
-    parcelLinkLabel: "เปิดแผนที่แปลงที่ดิน กรมที่ดิน (LandsMaps)",
-    parcelLinkNote: "เปิดในแท็บใหม่ เป็นเว็บของกรมที่ดิน ไม่ใช่ส่วนหนึ่งของระบบนี้",
 
     landAreaLabel: "เนื้อที่",
     raiUnit: "ไร่",

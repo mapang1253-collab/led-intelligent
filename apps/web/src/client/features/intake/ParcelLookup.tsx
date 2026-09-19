@@ -30,6 +30,9 @@ interface Parcel {
   area_sqm: string | null;
   latitude: number | null;
   longitude: number | null;
+  province_id: string | null;
+  district_id: string | null;
+  subdistrict_id: string | null;
 }
 
 interface Coverage {
@@ -51,8 +54,16 @@ function areaInThaiUnits(sqm: number): { rai: number; ngan: number; wa: number; 
 export function ParcelLookup({
   onFound,
 }: {
-  /** Called when the reader accepts a hit: the pin, and the area in Thai units. */
+  /**
+   * Called when the reader accepts a hit: the administrative area, the pin, and the size.
+   *
+   * The ids matter most. Without them the form asked where the land was immediately after being
+   * told exactly where it was, which is the duplication readers complained about loudest.
+   */
   onFound: (found: {
+    provinceId: string | null;
+    districtId: string | null;
+    subdistrictId: string | null;
     point: PinnedPoint | null;
     rai: string;
     ngan: string;
@@ -198,6 +209,9 @@ export function ParcelLookup({
             type="button"
             onClick={() =>
               onFound({
+                provinceId: parcel.province_id,
+                districtId: parcel.district_id,
+                subdistrictId: parcel.subdistrict_id,
                 point:
                   parcel.latitude !== null && parcel.longitude !== null
                     ? { latitude: parcel.latitude, longitude: parcel.longitude }

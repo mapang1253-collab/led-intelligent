@@ -1,5 +1,5 @@
 import { th } from "@reis/i18n";
-import { ArrowRight, ChevronDown, ExternalLink, Info, Plus } from "lucide-react";
+import { ArrowRight, ChevronDown, Info, Plus } from "lucide-react";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useCreateRun } from "../run/useAnalysisRun.js";
@@ -111,6 +111,10 @@ export function PropertyIntakeForm() {
     const lon = Number(prefill.longitude);
     return Number.isFinite(lat) && Number.isFinite(lon) ? { latitude: lat, longitude: lon } : null;
   });
+  /** Which way the reader is answering "where": the area lists, or a parcel number. */
+  const [locateMode, setLocateMode] = useState<"area" | "parcel">("area");
+  /** The map is folded by default; a parcel hit opens it, because it has something to show. */
+  const [showMap, setShowMap] = useState(() => Number.isFinite(Number(prefill.latitude)));
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const navigate = useNavigate();
@@ -187,248 +191,287 @@ export function PropertyIntakeForm() {
       <h2 className="font-bold text-xl tracking-tight">{th.intake.heading}</h2>
       <p className="mt-2 text-ink-muted text-sm">{th.intake.description}</p>
 
-      <div className="mt-6">
-        <AreaPicker
-          selected={selectedArea}
-          onPick={(choice) => {
-            setPicked(choice);
-            setAreaCleared(false);
-            setProvinceId(choice.province_id);
-            setDistrictId(choice.district_id);
-            setSubdistrictId(choice.subdistrict_id);
-            setErrors((current) => ({ ...current, subdistrict_id: "" }));
-          }}
-          onClear={() => {
-            setPicked(null);
-            setAreaCleared(true);
-            setProvinceId("");
-            setDistrictId("");
-            setSubdistrictId("");
-          }}
-          {...(errors.subdistrict_id ? { errorMessage: errors.subdistrict_id } : {})}
-          fallback={
-            <div className="grid gap-4 md:grid-cols-3">
-              <AreaSelect
-                label={th.intake.provinceLabel}
-                placeholder={th.intake.provincePlaceholder}
-                options={provinces.data}
-                value={provinceId}
-                onChange={selectProvince}
-                isLoading={provinces.isLoading}
-                isError={provinces.isError}
-                onRetry={() => provinces.refetch()}
-                errorMessage={errors.province_id}
-              />
+      {/*
+        Step one: where, asked once.
 
-              <AreaSelect
-                label={th.intake.districtLabel}
-                placeholder={th.intake.districtPlaceholder}
-                disabledHint={th.intake.districtDisabledHint}
-                options={districts.data}
-                value={districtId}
-                onChange={selectDistrict}
-                disabled={!provinceId}
-                isLoading={districts.isLoading && Boolean(provinceId)}
-                isError={districts.isError}
-                onRetry={() => districts.refetch()}
-                errorMessage={errors.district_id}
-              />
+        The form grew three ways to answer that question — pick an area, look a parcel up, drop a
+        pin — sitting one under another with nothing saying they were alternatives. Readers filled
+        in all three. They are now two labelled choices, and a successful parcel lookup fills the
+        area itself, so the question is answered once however it is reached.
+      */}
+      <section className="mt-6">
+        <h3 className="font-semibold text-sm">{th.intake.stepOne}</h3>
 
-              <AreaSelect
-                label={th.intake.subdistrictLabel}
-                placeholder={th.intake.subdistrictPlaceholder}
-                disabledHint={th.intake.subdistrictDisabledHint}
-                options={subdistricts.data}
-                value={subdistrictId}
-                onChange={setSubdistrictId}
-                disabled={!districtId}
-                isLoading={subdistricts.isLoading && Boolean(districtId)}
-                isError={subdistricts.isError}
-                onRetry={() => subdistricts.refetch()}
-                errorMessage={errors.subdistrict_id}
-              />
-            </div>
-          }
-        />
-      </div>
-
-      {/* The form is finished at this line. Said here rather than left to be inferred, because the
-          optional sections below read as required to anyone who does not know they are not. */}
-      <p className="mt-3 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
-        <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
-        {th.intake.enoughAlready}
-      </p>
-
-      <div className="mt-6">
-        <button
-          type="button"
-          onClick={() => setShowSite((open) => !open)}
-          aria-expanded={showSite}
-          className="flex items-center gap-2 font-medium text-signature-text text-sm"
-        >
-          {showSite ? <ChevronDown size={16} /> : <Plus size={16} />}
-          {th.intake.siteToggle}
-        </button>
-
-        {showSite && (
-          <div className="mt-4 rounded-card bg-surface-sunken p-5">
-            <p className="mb-4 flex items-start gap-2 text-ink-muted text-sm">
-              <Info size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
-              {th.intake.siteHelp}
-            </p>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="flex flex-col gap-1.5">
-                <span className="font-medium text-sm">{th.intake.roadWidthLabel}</span>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  min={0}
-                  step="any"
-                  value={site.road_width}
-                  onChange={(e) => setSite((s) => ({ ...s, road_width: e.target.value }))}
-                  className="rounded-card border border-border-strong bg-surface px-4 py-3 text-base text-ink"
-                />
-                <span className="text-ink-muted text-xs">{th.intake.roadWidthHelp}</span>
-              </label>
-
-              <label className="flex flex-col gap-1.5">
-                <span className="font-medium text-sm">{th.intake.waterWidthLabel}</span>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  min={0}
-                  step="any"
-                  value={site.water_body_width}
-                  onChange={(e) => setSite((s) => ({ ...s, water_body_width: e.target.value }))}
-                  className="rounded-card border border-border-strong bg-surface px-4 py-3 text-base text-ink"
-                />
-                <span className="text-ink-muted text-xs">{th.intake.waterWidthHelp}</span>
-              </label>
-            </div>
-
-            <label className="mt-4 flex items-center gap-2.5 text-sm">
-              <input
-                type="checkbox"
-                checked={nearLargeWater}
-                onChange={(e) => setNearLargeWater(e.target.checked)}
-                className="size-4 accent-[var(--color-signature)]"
-              />
-              {th.intake.nearLargeWaterLabel}
-            </label>
-          </div>
-        )}
-      </div>
-
-      <div className="mt-6">
-        <button
-          type="button"
-          onClick={() => setShowArea((open) => !open)}
-          aria-expanded={showArea}
-          className="flex items-center gap-2 font-medium text-signature-text text-sm"
-        >
-          {showArea ? <ChevronDown size={16} /> : <Plus size={16} />}
-          {th.intake.areaToggle}
-        </button>
-
-        {showArea && (
-          <div className="mt-4 rounded-card bg-surface-sunken p-5">
-            <p className="mb-4 flex items-start gap-2 text-ink-muted text-sm">
-              <Info size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
-              {th.intake.areaHelp}
-            </p>
-            <fieldset>
-              <legend className="mb-1.5 font-medium text-sm">{th.intake.landAreaLabel}</legend>
-              <div className="grid grid-cols-3 gap-3">
-                {(
-                  [
-                    ["land_area_rai", th.intake.raiUnit],
-                    ["land_area_ngan", th.intake.nganUnit],
-                    ["land_area_wa", th.intake.waUnit],
-                  ] as const
-                ).map(([key, unit]) => (
-                  <label key={key} className="flex flex-col gap-1">
-                    <span className="text-ink-muted text-xs">{unit}</span>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      min={0}
-                      step="any"
-                      value={optional[key]}
-                      onChange={(e) => setOptional((o) => ({ ...o, [key]: e.target.value }))}
-                      className="rounded-card border border-border-strong bg-surface px-3 py-2.5 text-base text-ink"
-                    />
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-            {/* The statutory conversion, shown as it is typed, so the number is checkable. */}
-            {areaSummary && <p className="mt-2 text-ink-muted text-sm">{areaSummary}</p>}
-          </div>
-        )}
-      </div>
-
-      {/* Before the map, because a reader who has a deed in hand should not have to find their
-          land by eye first: the lookup places the pin and fills the area for them. */}
-      <ParcelLookup
-        onFound={(found) => {
-          if (found.point) {
-            setPin(found.point);
-          }
-          setOptional((current) => ({
-            ...current,
-            land_area_rai: found.rai,
-            land_area_ngan: found.ngan,
-            land_area_wa: found.wa,
-          }));
-          setShowArea(true);
-        }}
-      />
-
-      {/* The pin, and what it buys. It sits after the site facts because it is the heaviest thing
-          on the form, and before the parcel link because both answer "where exactly". */}
-      <div className="mt-6">
-        <p className="font-medium text-sm">{th.map.heading}</p>
-        <p className="mt-1 text-ink-muted text-xs leading-relaxed">{th.map.intro}</p>
-        <div className="mt-3">
-          <LandPinMap centre={areaCentre} value={pin} onChange={setPin} />
+        <div className="mt-2 inline-flex rounded-pill bg-surface-sunken p-1">
+          {(
+            [
+              ["area", th.intake.modeArea],
+              ["parcel", th.intake.modeParcel],
+            ] as const
+          ).map(([mode, label]) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setLocateMode(mode)}
+              aria-pressed={locateMode === mode}
+              className="rounded-pill px-4 py-1.5 font-medium text-sm"
+              style={
+                locateMode === mode
+                  ? {
+                      backgroundColor: "var(--color-signature)",
+                      color: "var(--color-signature-on)",
+                    }
+                  : { color: "var(--color-ink-muted)" }
+              }
+            >
+              {label}
+            </button>
+          ))}
         </div>
-        {pin && (
-          <>
-            <p className="mt-2 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
-              <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
-              {th.map.assertedNote}
-            </p>
-            <ProximityPanel point={pin} />
-          </>
-        )}
-      </div>
 
-      {/* Where the four dead parcel inputs used to be. A reader who wants parcel-level detail is
-          sent to the authority that has it, rather than typing four numbers this product ignores. */}
-      <div className="mt-6 rounded-card bg-surface-sunken p-5">
-        <p className="font-semibold text-sm">{th.intake.parcelHeading}</p>
-        <p className="mt-1.5 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
-          <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
-          {th.intake.parcelBody}
-        </p>
-        <p className="mt-2 text-ink-muted text-xs leading-relaxed">{th.intake.parcelLinkIntro}</p>
-        <a
-          href="https://landsmaps.dol.go.th/"
-          target="_blank"
-          rel="noreferrer noopener"
-          className="mt-3 inline-flex items-center gap-1.5 rounded-pill border border-border-strong px-4 py-2 font-medium text-sm"
-          style={{ color: "var(--color-signature-text)" }}
-        >
-          <ExternalLink size={14} aria-hidden="true" />
-          {th.intake.parcelLinkLabel}
-        </a>
-        <p className="mt-1.5 text-ink-muted text-xs">{th.intake.parcelLinkNote}</p>
-      </div>
+        {locateMode === "parcel" && (
+          <ParcelLookup
+            onFound={(found) => {
+              // The lookup knows the area, so the reader is not asked for it again.
+              if (found.provinceId && found.districtId && found.subdistrictId) {
+                setProvinceId(found.provinceId);
+                setDistrictId(found.districtId);
+                setSubdistrictId(found.subdistrictId);
+                setPicked(null);
+                setAreaCleared(false);
+                setErrors((current) => ({ ...current, subdistrict_id: "" }));
+              }
+              if (found.point) {
+                setPin(found.point);
+                setShowMap(true);
+              }
+              setOptional((current) => ({
+                ...current,
+                land_area_rai: found.rai,
+                land_area_ngan: found.ngan,
+                land_area_wa: found.wa,
+              }));
+              setShowArea(true);
+            }}
+          />
+        )}
+
+        {/* Shown in both modes: in area mode it is the picker, and after a parcel hit it is the
+            confirmation of what the lookup filled in, which the reader can still change. */}
+        <div className={locateMode === "parcel" ? "mt-4" : "mt-3"}>
+          <AreaPicker
+            selected={selectedArea}
+            onPick={(choice) => {
+              setPicked(choice);
+              setAreaCleared(false);
+              setProvinceId(choice.province_id);
+              setDistrictId(choice.district_id);
+              setSubdistrictId(choice.subdistrict_id);
+              setErrors((current) => ({ ...current, subdistrict_id: "" }));
+            }}
+            onClear={() => {
+              setPicked(null);
+              setAreaCleared(true);
+              setProvinceId("");
+              setDistrictId("");
+              setSubdistrictId("");
+            }}
+            {...(errors.subdistrict_id ? { errorMessage: errors.subdistrict_id } : {})}
+            fallback={
+              <div className="grid gap-4 md:grid-cols-3">
+                <AreaSelect
+                  label={th.intake.provinceLabel}
+                  placeholder={th.intake.provincePlaceholder}
+                  options={provinces.data}
+                  value={provinceId}
+                  onChange={selectProvince}
+                  isLoading={provinces.isLoading}
+                  isError={provinces.isError}
+                  onRetry={() => provinces.refetch()}
+                  errorMessage={errors.province_id}
+                />
+
+                <AreaSelect
+                  label={th.intake.districtLabel}
+                  placeholder={th.intake.districtPlaceholder}
+                  disabledHint={th.intake.districtDisabledHint}
+                  options={districts.data}
+                  value={districtId}
+                  onChange={selectDistrict}
+                  disabled={!provinceId}
+                  isLoading={districts.isLoading && Boolean(provinceId)}
+                  isError={districts.isError}
+                  onRetry={() => districts.refetch()}
+                  errorMessage={errors.district_id}
+                />
+
+                <AreaSelect
+                  label={th.intake.subdistrictLabel}
+                  placeholder={th.intake.subdistrictPlaceholder}
+                  disabledHint={th.intake.subdistrictDisabledHint}
+                  options={subdistricts.data}
+                  value={subdistrictId}
+                  onChange={setSubdistrictId}
+                  disabled={!districtId}
+                  isLoading={subdistricts.isLoading && Boolean(districtId)}
+                  isError={subdistricts.isError}
+                  onRetry={() => subdistricts.refetch()}
+                  errorMessage={errors.subdistrict_id}
+                />
+              </div>
+            }
+          />
+        </div>
+      </section>
+
+      {/* Step two: everything optional, said so in the heading rather than three times over. */}
+      <section className="mt-8 border-border border-t pt-6">
+        <h3 className="font-semibold text-sm">{th.intake.stepTwo}</h3>
+        <p className="mt-1 text-ink-muted text-xs leading-relaxed">{th.intake.stepTwoNote}</p>
+
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => setShowSite((open) => !open)}
+            aria-expanded={showSite}
+            className="flex items-center gap-2 font-medium text-signature-text text-sm"
+          >
+            {showSite ? <ChevronDown size={16} /> : <Plus size={16} />}
+            {th.intake.siteToggle}
+          </button>
+
+          {showSite && (
+            <div className="mt-4 rounded-card bg-surface-sunken p-5">
+              <p className="mb-4 flex items-start gap-2 text-ink-muted text-sm">
+                <Info size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+                {th.intake.siteHelp}
+              </p>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="flex flex-col gap-1.5">
+                  <span className="font-medium text-sm">{th.intake.roadWidthLabel}</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    min={0}
+                    step="any"
+                    value={site.road_width}
+                    onChange={(e) => setSite((s) => ({ ...s, road_width: e.target.value }))}
+                    className="rounded-card border border-border-strong bg-surface px-4 py-3 text-base text-ink"
+                  />
+                  <span className="text-ink-muted text-xs">{th.intake.roadWidthHelp}</span>
+                </label>
+
+                <label className="flex flex-col gap-1.5">
+                  <span className="font-medium text-sm">{th.intake.waterWidthLabel}</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    min={0}
+                    step="any"
+                    value={site.water_body_width}
+                    onChange={(e) => setSite((s) => ({ ...s, water_body_width: e.target.value }))}
+                    className="rounded-card border border-border-strong bg-surface px-4 py-3 text-base text-ink"
+                  />
+                  <span className="text-ink-muted text-xs">{th.intake.waterWidthHelp}</span>
+                </label>
+              </div>
+
+              <label className="mt-4 flex items-center gap-2.5 text-sm">
+                <input
+                  type="checkbox"
+                  checked={nearLargeWater}
+                  onChange={(e) => setNearLargeWater(e.target.checked)}
+                  className="size-4 accent-[var(--color-signature)]"
+                />
+                {th.intake.nearLargeWaterLabel}
+              </label>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-5">
+          <button
+            type="button"
+            onClick={() => setShowArea((open) => !open)}
+            aria-expanded={showArea}
+            className="flex items-center gap-2 font-medium text-signature-text text-sm"
+          >
+            {showArea ? <ChevronDown size={16} /> : <Plus size={16} />}
+            {th.intake.areaToggle}
+          </button>
+
+          {showArea && (
+            <div className="mt-4 rounded-card bg-surface-sunken p-5">
+              <p className="mb-4 flex items-start gap-2 text-ink-muted text-sm">
+                <Info size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+                {th.intake.areaHelp}
+              </p>
+              <fieldset>
+                <legend className="mb-1.5 font-medium text-sm">{th.intake.landAreaLabel}</legend>
+                <div className="grid grid-cols-3 gap-3">
+                  {(
+                    [
+                      ["land_area_rai", th.intake.raiUnit],
+                      ["land_area_ngan", th.intake.nganUnit],
+                      ["land_area_wa", th.intake.waUnit],
+                    ] as const
+                  ).map(([key, unit]) => (
+                    <label key={key} className="flex flex-col gap-1">
+                      <span className="text-ink-muted text-xs">{unit}</span>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        min={0}
+                        step="any"
+                        value={optional[key]}
+                        onChange={(e) => setOptional((o) => ({ ...o, [key]: e.target.value }))}
+                        className="rounded-card border border-border-strong bg-surface px-3 py-2.5 text-base text-ink"
+                      />
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              {/* The statutory conversion, shown as it is typed, so the number is checkable. */}
+              {areaSummary && <p className="mt-2 text-ink-muted text-sm">{areaSummary}</p>}
+            </div>
+          )}
+        </div>
+
+        {/* The map folds away too. It is the heaviest thing on the page and most readers never
+            need it: a parcel lookup places the pin for them, and an area-level run needs none. */}
+        <div className="mt-5">
+          <button
+            type="button"
+            onClick={() => setShowMap((open) => !open)}
+            aria-expanded={showMap}
+            className="flex items-center gap-2 font-medium text-signature-text text-sm"
+          >
+            {showMap ? <ChevronDown size={16} /> : <Plus size={16} />}
+            {th.map.heading}
+          </button>
+
+          {showMap && (
+            <div className="mt-4 rounded-card bg-surface-sunken p-5">
+              <p className="mb-3 text-ink-muted text-xs leading-relaxed">{th.map.intro}</p>
+              <LandPinMap centre={areaCentre} value={pin} onChange={setPin} />
+              {pin && (
+                <>
+                  <p className="mt-2 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
+                    <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
+                    {th.map.assertedNote}
+                  </p>
+                  <ProximityPanel point={pin} />
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Scope is set by the evidence available, so say up front what the answer can claim. */}
       <div
-        className="mt-6 rounded-card p-4 text-sm"
+        className="mt-8 rounded-card p-4 text-sm"
         style={{
           backgroundColor: "var(--color-signature-wash)",
           color: "var(--color-signature-text)",
