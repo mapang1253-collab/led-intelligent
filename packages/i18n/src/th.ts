@@ -621,9 +621,24 @@ export const th = {
   },
 
   finalStatus: {
+    /**
+     * What each status means for the reader, not what it is called internally.
+     *
+     * "หลักฐานยังไม่เพียงพอ" was read — by the project owners, twice — as "the system found no
+     * data", which is the opposite of what a run holds: seven hundred published figures, a
+     * population, ten building-control rules checked. The status is narrower than that. It means
+     * one thing only: there is no common basis on which to say which use is worth most, because
+     * Thailand publishes no construction-cost dataset to compare them with.
+     *
+     * docs/output-policy.md §5 fixes what an INSUFFICIENT_EVIDENCE screen must do — name no
+     * leading use, list the missing basis and the minimum verification — and the full status
+     * sentence that does it is unchanged. The short label is this product's own words, so it now
+     * says the narrow thing it actually means instead of a broad one that frightened readers away
+     * from a page full of findings.
+     */
     CLEAR_RECOMMENDATION: "มีข้อเสนอที่ชัดเจน",
     INCONCLUSIVE: "ยังสรุปไม่ได้",
-    INSUFFICIENT_EVIDENCE: "หลักฐานยังไม่เพียงพอ",
+    INSUFFICIENT_EVIDENCE: "ยังชี้ไม่ได้ว่าใช้ทำอะไรคุ้มที่สุด",
   },
 
   verificationDomain: {
