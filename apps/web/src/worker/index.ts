@@ -301,13 +301,21 @@ app.get("/api/v1/zoning", async (c) => {
    * version used the 20-second default across three attempts, and a เชียงใหม่ pin sat loading for
    * a minute before showing its retry button.
    *
-   * Seven seconds and two attempts put the worst case near fifteen, with the retry button and a
-   * hard edge cache behind it: a reader who presses it a moment later is usually answered at once.
+   * Seven seconds, three attempts. Two was not enough: during one of those busy spells the same
+   * pin failed five times running in the browser while the retry button was pressed, and a traced
+   * request showed why — the first attempt returned nothing at all for its full seven seconds and
+   * the second answered in four and a half. The failures are silence, not slowness, so another
+   * attempt buys more than a longer one would.
+   *
+   * Worst case is about twenty-two seconds of spinner on a panel that blocks nothing: the form can
+   * still be submitted while it resolves. Against that, an unnecessary error the reader has to
+   * click through is worse, and a success is cached at the edge for a month, so a coordinate that
+   * has been answered once is answered instantly from then on — measured at 0.2s against 11.7s.
    */
   const attempt = () => fetchZoning(provinceCode, lat, lon, { timeoutMs: 7_000 });
   let result = await attempt();
-  if (result.outcome === "FAILED" && result.retryable) {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+  for (let retry = 0; retry < 2 && result.outcome === "FAILED" && result.retryable; retry++) {
+    await new Promise((resolve) => setTimeout(resolve, 500 + retry * 700));
     result = await attempt();
   }
   if (result.outcome === "FAILED") {
