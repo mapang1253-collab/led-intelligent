@@ -290,7 +290,19 @@ app.get("/api/v1/zoning", async (c) => {
     return cached;
   }
 
-  const result = await fetchZoning(provinceCode, lat, lon);
+  /**
+   * Retried here, not in the adapter, which leaves the decision to its caller (see `http.ts`).
+   *
+   * Measured on the preview deployment, 2026-09-26: the same ชลบุรี lookup failed once as a
+   * retryable timeout and then succeeded three times running. DPT's ArcGIS is occasionally slow
+   * rather than down, and one attempt makes a working feature look broken at random. Only a
+   * retryable failure is retried, with a gap, so a genuinely missing service still fails at once.
+   */
+  let result = await fetchZoning(provinceCode, lat, lon);
+  for (let attempt = 1; attempt < 3 && result.outcome === "FAILED" && result.retryable; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 600 * attempt));
+    result = await fetchZoning(provinceCode, lat, lon);
+  }
   if (result.outcome === "FAILED") {
     // 502 rather than 500: the upstream did not answer, and the screen offers a retry.
     return c.json({ error: "ZONING_LOOKUP_FAILED", retryable: result.retryable }, 502);
