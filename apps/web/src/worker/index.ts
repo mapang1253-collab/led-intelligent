@@ -293,15 +293,22 @@ app.get("/api/v1/zoning", async (c) => {
   /**
    * Retried here, not in the adapter, which leaves the decision to its caller (see `http.ts`).
    *
-   * Measured on the preview deployment, 2026-09-26: the same ชลบุรี lookup failed once as a
-   * retryable timeout and then succeeded three times running. DPT's ArcGIS is occasionally slow
-   * rather than down, and one attempt makes a working feature look broken at random. Only a
-   * retryable failure is retried, with a gap, so a genuinely missing service still fails at once.
+   * Both numbers were measured against the deployed Worker on 2026-09-26, and both are about the
+   * reader's wait rather than about DPT. When DPT answers at all it answers in well under a
+   * second, from Bangkok and from Cloudflare alike; when it refuses it refuses a short burst of
+   * requests and then serves normally again. So a long timeout buys nothing — it only decides how
+   * long someone stares at a spinner before the screen admits the lookup failed. The first
+   * version used the 20-second default across three attempts, and a เชียงใหม่ pin sat loading for
+   * a minute before showing its retry button.
+   *
+   * Seven seconds and two attempts put the worst case near fifteen, with the retry button and a
+   * hard edge cache behind it: a reader who presses it a moment later is usually answered at once.
    */
-  let result = await fetchZoning(provinceCode, lat, lon);
-  for (let attempt = 1; attempt < 3 && result.outcome === "FAILED" && result.retryable; attempt++) {
-    await new Promise((resolve) => setTimeout(resolve, 600 * attempt));
-    result = await fetchZoning(provinceCode, lat, lon);
+  const attempt = () => fetchZoning(provinceCode, lat, lon, { timeoutMs: 7_000 });
+  let result = await attempt();
+  if (result.outcome === "FAILED" && result.retryable) {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    result = await attempt();
   }
   if (result.outcome === "FAILED") {
     // 502 rather than 500: the upstream did not answer, and the screen offers a retry.
