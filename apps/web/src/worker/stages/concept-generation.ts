@@ -235,28 +235,10 @@ function buildVerificationInput(
 ): VerificationInput {
   const inputsById = new Map<
     string,
-    {
-      input_id: string;
-      label_th: string;
-      obtained_from_th: string;
-      rule_ids: string[];
-      clauses_th: string[];
-      instrument_th: string | null;
-      source_url: string | null;
-    }
+    { input_id: string; label_th: string; obtained_from_th: string; rule_ids: string[] }
   >();
   const approvals = new Map<string, { title_th: string; clause_th: string }>();
-  const unresolvedApplicability = new Map<
-    string,
-    {
-      rule_id: string;
-      title_th: string;
-      clause_th: string;
-      instrument_th: string;
-      statement_th: string;
-      source_url: string | null;
-    }
-  >();
+  const unresolvedApplicability = new Map<string, { rule_id: string; title_th: string }>();
 
   for (const validation of validations) {
     for (const outcome of validation.outcomes) {
@@ -265,10 +247,6 @@ function buildVerificationInput(
         if (existing) {
           if (!existing.rule_ids.includes(outcome.rule_id)) {
             existing.rule_ids.push(outcome.rule_id);
-            // Clauses are what the screen prints; ids are what it links back to.
-            if (!existing.clauses_th.includes(outcome.source.clause_th)) {
-              existing.clauses_th.push(outcome.source.clause_th);
-            }
           }
         } else {
           inputsById.set(missing.input_id, {
@@ -276,9 +254,6 @@ function buildVerificationInput(
             label_th: missing.label_th,
             obtained_from_th: missing.obtained_from_th,
             rule_ids: [outcome.rule_id],
-            clauses_th: [outcome.source.clause_th],
-            instrument_th: outcome.source.instrument_th,
-            source_url: outcome.source.source_url ?? null,
           });
         }
       }
@@ -286,12 +261,6 @@ function buildVerificationInput(
         unresolvedApplicability.set(outcome.rule_id, {
           rule_id: outcome.rule_id,
           title_th: outcome.title_th,
-          // Carried so the screen can cite the instrument and quote the rule rather than print
-          // an internal id nobody can look up.
-          clause_th: outcome.source.clause_th,
-          instrument_th: outcome.source.instrument_th,
-          statement_th: outcome.requirement_th ?? outcome.explanation_th,
-          source_url: outcome.source.source_url ?? null,
         });
       }
     }

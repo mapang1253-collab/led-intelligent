@@ -58,10 +58,6 @@ export interface VerificationInput {
     readonly label_th: string;
     readonly obtained_from_th: string;
     readonly rule_ids: readonly string[];
-    /** The clauses that need it, worded as a reader would cite them: "ข้อ 41 วรรคหนึ่ง". */
-    readonly clauses_th: readonly string[];
-    readonly instrument_th: string | null;
-    readonly source_url: string | null;
   }[];
   /** Approvals the pack identified, with the clause that requires them. */
   readonly approvals: readonly { readonly title_th: string; readonly clause_th: string }[];
@@ -69,11 +65,6 @@ export interface VerificationInput {
   readonly unresolved_applicability: readonly {
     readonly rule_id: string;
     readonly title_th: string;
-    /** The law behind the rule, so the screen can name it instead of printing an internal id. */
-    readonly clause_th: string;
-    readonly instrument_th: string;
-    readonly statement_th: string;
-    readonly source_url: string | null;
   }[];
   /** Measures whose evidence describes a containing area rather than the target. */
   readonly area_level_measures_th: readonly string[];
@@ -128,21 +119,15 @@ export function buildVerificationActions(input: VerificationInput): Verification
   }
 
   for (const item of input.unresolved_legal_inputs) {
-    // Clauses, not rule ids. "mr55.c41.1, mr55.c41.2.1" is a database key printed at a reader;
-    // "ข้อ 41 วรรคหนึ่ง, ข้อ 41(2)(ก)" is something they can find in the instrument.
-    const clauses =
-      item.clauses_th.length > 0 ? item.clauses_th.join(", ") : item.rule_ids.join(", ");
     actions.push({
       action_id: `legal-input.${item.input_id}`,
       domain: "SURVEY_AND_SITE",
       priority: "MATERIAL",
       target_th: item.label_th,
-      why_th: `เป็นตัวเลขที่ ${clauses} ต้องใช้ในการตรวจ จึงยังสรุปข้อเหล่านั้นไม่ได้`,
+      why_th: `เป็นข้อมูลที่ข้อกำหนด ${item.rule_ids.join(", ")} ต้องใช้ จึงยังสรุปข้อเหล่านั้นไม่ได้`,
       suggested_source_th: item.obtained_from_th,
       related_ids: item.rule_ids,
       could_change_th: "ทำให้ข้อกำหนดที่เกี่ยวข้องเปลี่ยนจาก 'ยังสรุปไม่ได้' เป็นผ่านหรือไม่ผ่าน",
-      ...(item.instrument_th ? { legal_basis_th: `${item.instrument_th} ${clauses}` } : {}),
-      ...(item.source_url ? { legal_url: item.source_url } : {}),
     });
   }
 
@@ -156,11 +141,6 @@ export function buildVerificationActions(input: VerificationInput): Verification
       suggested_source_th: "สำรวจหน้างาน หรือข้อมูลจากองค์กรปกครองส่วนท้องถิ่น",
       related_ids: [item.rule_id],
       could_change_th: "ทำให้ข้อกำหนดนี้ถูกนำมาตรวจจริง หรือถูกตัดออกอย่างมีเหตุผล",
-      legal_basis_th: `${item.instrument_th} ${item.clause_th}`,
-      // The rule in the instrument's own words, so a reader can judge the summary above it rather
-      // than take this product's paraphrase on trust.
-      legal_text_th: item.statement_th,
-      ...(item.source_url ? { legal_url: item.source_url } : {}),
     });
   }
 
