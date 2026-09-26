@@ -132,6 +132,48 @@ export const th = {
   },
 
   /**
+   * The city plan covering the pin (docs/adr/0008).
+   *
+   * The wording carries a distinction the reader will not make for themselves. The plan says what
+   * a zone is *for*; it does not say that a given building is lawful on a given plot. บัญชีท้าย
+   * กฎกระทรวง qualifies the permission, other instruments apply on top, and the parcel's own
+   * frontage decides much of the rest. So "ทำอะไรได้" is never printed as a verdict — the
+   * regulation is quoted, named as a quotation, and followed by where to confirm it.
+   */
+  zoning: {
+    heading: "ผังเมืองรวมที่ครอบคลุมจุดนี้",
+    intro: "ปักหมุดบนแผนที่แล้วระบบจะบอกว่าจุดนั้นอยู่ในที่ดินประเภทใดของผังเมืองรวม พร้อมสีและข้อความตามกฎกระทรวง",
+    loading: "กำลังตรวจสอบผังเมือง",
+    failed: "ดึงข้อมูลผังเมืองไม่สำเร็จ บริการของกรมโยธาธิการและผังเมืองอาจไม่ว่าง ลองใหม่อีกครั้งได้",
+    retry: "ลองใหม่",
+    /* Three different silences, told apart. A reader who gets "ไม่พบ" when the real answer is
+       "จังหวัดนี้ยังไม่เผยแพร่" will conclude their land is unzoned, which is a different and
+       wrong belief. */
+    outsideCoverage:
+      "กรมโยธาธิการและผังเมืองยังไม่ได้เผยแพร่ผังเมืองรวมของจังหวัดนี้ในระบบแผนที่ออนไลน์ จึงตรวจให้ไม่ได้",
+    noPlanAtPoint:
+      "จุดที่ปักไม่อยู่ในขอบเขตผังเมืองรวมที่เผยแพร่ของจังหวัดนี้ อาจอยู่นอกเขตผังหรืออยู่ในผังเฉพาะที่ยังไม่เผยแพร่",
+    zoneLabel: "ที่ดินประเภท",
+    blockLabel: "บริเวณหมายเลข",
+    planLabel: "รหัสผัง",
+    permittedHeading: "ข้อกำหนดการใช้ประโยชน์ที่ดิน",
+    prohibitedHeading: "ข้อห้ามการใช้ประโยชน์ที่ดิน",
+    noPermitted: "กรมโยธาธิการและผังเมืองไม่ได้เผยแพร่ข้อกำหนดของที่ดินประเภทนี้ในระบบ",
+    noProhibited: "ไม่พบรายการข้อห้ามที่เผยแพร่สำหรับที่ดินประเภทนี้ ไม่ได้แปลว่าไม่มีข้อห้าม",
+    quoteNote: "ข้อความข้างต้นคัดมาจากที่กรมโยธาธิการและผังเมืองเผยแพร่ ไม่ได้เรียบเรียงใหม่",
+    /* The load-bearing sentence on this panel. Without it the zone name reads as clearance. */
+    notClearance:
+      "ผังเมืองบอกว่าที่ดินประเภทนี้มีไว้เพื่ออะไร ไม่ได้แปลว่าสิ่งที่ท่านจะสร้างทำได้จริงบนแปลงนี้ ยังต้องดูบัญชีท้ายกฎกระทรวง กฎหมายควบคุมอาคาร และสภาพแปลงประกอบด้วย",
+    contextOnly:
+      "ข้อมูลส่วนนี้แสดงเพื่อประกอบการพิจารณาเท่านั้น ยังไม่ได้ถูกนำเข้าสู่ขั้นตอนตรวจสอบของระบบ จึงไม่มีผลต่อผลตรวจข้อกำหนดหรือข้อสรุปสุดท้าย",
+    multiplePlans: "จุดนี้อยู่ในผังมากกว่าหนึ่งผัง ระบบแสดงทุกผังที่ครอบคลุม ไม่ได้เลือกให้ว่าผังใดมีผลบังคับเหนือกว่า",
+    verifyAt: "ตรวจสอบกับระบบของกรมโยธาธิการและผังเมือง",
+    showLayer: "แสดงสีผังเมืองบนแผนที่",
+    hideLayer: "ซ่อนสีผังเมือง",
+    legendHeading: "สีที่แสดงบนแผนที่เป็นสีตามที่กรมโยธาธิการและผังเมืองกำหนด",
+  },
+
+  /**
    * Parcel lookup by ระวาง and เลขที่ดิน (docs/adr/0007).
    *
    * Every string here holds one of three lines. Coverage is five provinces, said before the inputs

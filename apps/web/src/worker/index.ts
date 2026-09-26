@@ -14,7 +14,15 @@ import {
   sourceStatuses,
   wellDocumentedAreas,
 } from "@reis/data-access";
-import { fetchProximity, geocodeArea, searchPlaces } from "@reis/source-adapters";
+import {
+  ZONING_ATTRIBUTION_TH,
+  ZONING_PUBLISHER_URL,
+  fetchProximity,
+  fetchZoning,
+  geocodeArea,
+  searchPlaces,
+  zoningTileTemplate,
+} from "@reis/source-adapters";
 import { Hono } from "hono";
 import mr55Pack from "../../../../database/reviewed-packs/th-cba-mr55-v1.json" with {
   type: "json",
@@ -239,6 +247,66 @@ app.get("/api/v1/proximity", async (c) => {
   // kept: a pin that worked once keeps working. Only successes are cached — a 502 is never
   // stored, or a bad minute would outlive itself.
   response.headers.set("Cache-Control", "public, max-age=604800");
+  c.executionCtx.waitUntil(cache.put(cacheKey, response.clone()));
+  return response;
+});
+
+/**
+ * The city plan covering the pin (docs/adr/0008).
+ *
+ * Same standing as proximity above, and for the same reasons: the client never reaches DPT itself,
+ * nothing is stored, no run id is involved, and the answer is context for display rather than an
+ * input to any rule. The province code comes from the area the reader already chose, shape-checked
+ * here so a text box can never become a path segment.
+ *
+ * Cached hard. A ministerial regulation does not change between two readers looking at the same
+ * neighbourhood, and DPT's ArcGIS is a government service that should not be asked the same
+ * question repeatedly.
+ */
+app.get("/api/v1/zoning", async (c) => {
+  const lat = Number(c.req.query("lat"));
+  const lon = Number(c.req.query("lon"));
+  const provinceCode = (c.req.query("province_code") ?? "").trim();
+  const inThailand =
+    Number.isFinite(lat) &&
+    Number.isFinite(lon) &&
+    lat >= 5.5 &&
+    lat <= 20.5 &&
+    lon >= 97 &&
+    lon <= 106;
+  if (!inThailand) {
+    return c.json({ error: "COORDINATES_OUT_OF_RANGE" }, 400);
+  }
+  if (!/^\d{2}$/.test(provinceCode)) {
+    return c.json({ error: "MISSING_PROVINCE_CODE" }, 400);
+  }
+
+  const cache = caches.default;
+  const cacheKey = new Request(
+    `https://zoning.invalid/${provinceCode}/${lat.toFixed(4)},${lon.toFixed(4)}`,
+  );
+  const cached = await cache.match(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const result = await fetchZoning(provinceCode, lat, lon);
+  if (result.outcome === "FAILED") {
+    // 502 rather than 500: the upstream did not answer, and the screen offers a retry.
+    return c.json({ error: "ZONING_LOOKUP_FAILED", retryable: result.retryable }, 502);
+  }
+
+  const response = c.json({
+    schema_version: SCHEMA_VERSION,
+    // Distinguished on screen: a province that publishes no plan is a different sentence from a
+    // point that falls outside every plan in a province that does.
+    covered: result.outcome === "SUCCESS",
+    data: result.outcome === "SUCCESS" ? result.plans : [],
+    tile_template: zoningTileTemplate(provinceCode),
+    attribution_th: ZONING_ATTRIBUTION_TH,
+    publisher_url: ZONING_PUBLISHER_URL,
+  });
+  response.headers.set("Cache-Control", "public, max-age=2592000");
   c.executionCtx.waitUntil(cache.put(cacheKey, response.clone()));
   return response;
 });

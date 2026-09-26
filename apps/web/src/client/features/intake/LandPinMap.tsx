@@ -2,7 +2,7 @@ import { th } from "@reis/i18n";
 import { useQuery } from "@tanstack/react-query";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { LoaderCircle, MapPin, RotateCcw, Search } from "lucide-react";
+import { Layers, LoaderCircle, MapPin, RotateCcw, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 /**
@@ -52,15 +52,39 @@ export interface PinnedPoint {
   readonly longitude: number;
 }
 
+/**
+ * DPT's own rendering of the city plan, as tiles (docs/adr/0008).
+ *
+ * Their ArcGIS service draws an arbitrary extent rather than a tile pyramid, so each tile is
+ * requested as the image for its own bounding box in Web Mercator metres. The alternative was to
+ * fetch the polygons and colour them here, which would have meant re-implementing a ministerial
+ * regulation's symbology — and being wrong about it somewhere no one would notice.
+ */
+const ZoningTiles = L.TileLayer.extend({
+  getTileUrl(this: L.TileLayer & { _map: L.Map }, coords: L.Coords) {
+    const size = this.getTileSize();
+    const nw = this._map.unproject(coords.scaleBy(size), coords.z);
+    const se = this._map.unproject(coords.add(new L.Point(1, 1)).scaleBy(size), coords.z);
+    const min = L.CRS.EPSG3857.project(se);
+    const max = L.CRS.EPSG3857.project(nw);
+    return `${ZONING_TILE_ROOT}/PLLU${(this.options as { provinceCode: string }).provinceCode}/MapServer/export?bbox=${min.x},${min.y},${max.x},${max.y}&bboxSR=3857&imageSR=3857&size=256,256&format=png32&transparent=true&f=image`;
+  },
+});
+
+const ZONING_TILE_ROOT = "https://dptgis.dpt.go.th/arcgis/rest/services/dds2";
+
 export function LandPinMap({
   centre,
   value,
   onChange,
+  zoningProvinceCode,
 }: {
   /** Where to open, when an area has been chosen. Null opens on the whole country. */
   centre: PinnedPoint | null;
   value: PinnedPoint | null;
   onChange: (point: PinnedPoint | null) => void;
+  /** Two digits, enabling the city-plan overlay. Null hides the control entirely. */
+  zoningProvinceCode: string | null;
 }) {
   const container = useRef<HTMLDivElement | null>(null);
   const map = useRef<L.Map | null>(null);
@@ -68,7 +92,9 @@ export function LandPinMap({
   // Held in a ref so the click handler, bound once, always calls the current callback.
   const handler = useRef(onChange);
   handler.current = onChange;
+  const zoning = useRef<L.TileLayer | null>(null);
   const [ready, setReady] = useState(false);
+  const [showZoning, setShowZoning] = useState(false);
   const [term, setTerm] = useState("");
   const [debounced, setDebounced] = useState("");
 
@@ -135,6 +161,33 @@ export function LandPinMap({
     }
     map.current.setView([centre.latitude, centre.longitude], AREA_ZOOM);
   }, [ready, centre, value]);
+
+  // The overlay is opt-in and provincial, so it is rebuilt whenever either changes rather than
+  // toggled in place: a layer left behind from the previous province would draw another
+  // province's plan over this one.
+  useEffect(() => {
+    if (!ready || !map.current) {
+      return;
+    }
+    zoning.current?.remove();
+    zoning.current = null;
+    if (!showZoning || !zoningProvinceCode) {
+      return;
+    }
+    const layer = new (
+      ZoningTiles as unknown as new (
+        url: string,
+        options: L.TileLayerOptions & { provinceCode: string },
+      ) => L.TileLayer
+    )("", {
+      provinceCode: zoningProvinceCode,
+      opacity: 0.55,
+      maxZoom: 19,
+      attribution: "กรมโยธาธิการและผังเมือง",
+    });
+    layer.addTo(map.current);
+    zoning.current = layer;
+  }, [ready, showZoning, zoningProvinceCode]);
 
   useEffect(() => {
     if (!ready || !map.current) {
@@ -216,6 +269,26 @@ export function LandPinMap({
         role="application"
         aria-label={th.map.ariaLabel}
       />
+      {zoningProvinceCode && (
+        <div className="mt-2">
+          <button
+            type="button"
+            onClick={() => setShowZoning((shown) => !shown)}
+            aria-pressed={showZoning}
+            className="inline-flex items-center gap-1.5 rounded-pill border border-border-strong px-3 py-1.5 font-medium text-xs"
+            style={showZoning ? { borderColor: "var(--color-signature)" } : undefined}
+          >
+            <Layers size={13} aria-hidden="true" />
+            {showZoning ? th.zoning.hideLayer : th.zoning.showLayer}
+          </button>
+          {showZoning && (
+            <p className="mt-1.5 text-ink-muted text-xs leading-relaxed">
+              {th.zoning.legendHeading}
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
         <p className="flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
           <MapPin size={13} className="mt-0.5 shrink-0" aria-hidden="true" />

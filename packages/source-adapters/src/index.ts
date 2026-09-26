@@ -88,3 +88,19 @@ export {
   geocodeArea,
   searchPlaces,
 } from "./osm/geocode.js";
+
+/**
+ * DPT city plan zoning (docs/adr/0008). Like proximity above, context for display with a citation
+ * — never an Observation, and never a legal clearance.
+ */
+export {
+  ZONING_ATTRIBUTION_TH,
+  ZONING_PUBLISHER_URL,
+  ZONING_SOURCE_ID,
+  type ZoningPlan,
+  type ZoningResult,
+  extractConditionText,
+  fetchZoning,
+  toHexColour,
+  zoningTileTemplate,
+} from "./dpt/zoning.js";

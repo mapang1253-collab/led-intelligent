@@ -8,6 +8,7 @@ import { AreaSelect } from "./AreaSelect.js";
 import { LandPinMap, type PinnedPoint } from "./LandPinMap.js";
 import { ParcelLookup } from "./ParcelLookup.js";
 import { ProximityPanel } from "./ProximityPanel.js";
+import { ZoningPanel } from "./ZoningPanel.js";
 import {
   useAreaChoice,
   useDistricts,
@@ -120,6 +121,16 @@ export function PropertyIntakeForm() {
   const navigate = useNavigate();
   const createRun = useCreateRun();
   const provinces = useProvinces();
+  /**
+   * The two-digit province code DPT keys its city plans by (docs/adr/0008). Taken from the area
+   * the reader already chose rather than from the pin: the pin can land across a boundary, and a
+   * neighbouring province's plan shown under their own land would be worse than none.
+   */
+  const zoningProvinceCode =
+    provinces.data
+      ?.find((province) => province.id === provinceId)
+      ?.code.toString()
+      .padStart(2, "0") ?? null;
   const districts = useDistricts(provinceId || undefined);
   const subdistricts = useSubdistricts(districtId || undefined);
 
@@ -454,13 +465,19 @@ export function PropertyIntakeForm() {
           {showMap && (
             <div className="mt-4 rounded-card bg-surface-sunken p-5">
               <p className="mb-3 text-ink-muted text-xs leading-relaxed">{th.map.intro}</p>
-              <LandPinMap centre={areaCentre} value={pin} onChange={setPin} />
+              <LandPinMap
+                centre={areaCentre}
+                value={pin}
+                onChange={setPin}
+                zoningProvinceCode={zoningProvinceCode}
+              />
               {pin && (
                 <>
                   <p className="mt-2 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
                     <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
                     {th.map.assertedNote}
                   </p>
+                  <ZoningPanel point={pin} provinceCode={zoningProvinceCode} />
                   <ProximityPanel point={pin} />
                 </>
               )}
