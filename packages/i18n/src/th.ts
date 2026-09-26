@@ -705,6 +705,9 @@ export const th = {
     /* The reasoning, one click from the step it belongs to. Printing it on every one of twenty-odd
        rows turned the list into four fifths of the overview screen, in small grey type. */
     actionWhyToggle: "ทำไมต้องตรวจข้อนี้",
+    /* The law a step comes from, named the way a reader could find it. */
+    legalBasisLabel: "อ้างอิงกฎหมาย",
+    legalTextLink: "เปิดตัวบท",
     whyLabel: "เหตุผล",
     sourceLabel: "แหล่งที่ควรตรวจสอบ",
     couldChangeLabel: "ถ้าตรวจสอบแล้วจะเปลี่ยนอะไร",

@@ -120,6 +120,33 @@ function ActionItem({ action }: { action: Action }) {
         <p className="mt-0.5 text-ink-muted text-xs leading-relaxed">
           {th.finalResult.couldChangeLabel}: {action.could_change_th}
         </p>
+        {/* The law, named so it can be looked up. The pack has carried the instrument, the clause
+            and a link to the text all along; the screen was printing "mr55.c41.1" instead, which
+            is a database key and tells a reader nothing they can check. */}
+        {action.legal_basis_th && (
+          <p className="mt-1.5 text-ink-muted text-xs leading-relaxed">
+            <span className="font-medium">{th.finalResult.legalBasisLabel}: </span>
+            {action.legal_basis_th}
+            {action.legal_url && (
+              <>
+                {" · "}
+                <a
+                  href={action.legal_url}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  style={{ color: "var(--color-signature-text)" }}
+                >
+                  {th.finalResult.legalTextLink}
+                </a>
+              </>
+            )}
+          </p>
+        )}
+        {action.legal_text_th && (
+          <p className="mt-1 border-border border-l-2 pl-2.5 text-ink-muted text-xs leading-relaxed">
+            {action.legal_text_th}
+          </p>
+        )}
       </details>
     </li>
   );
