@@ -715,11 +715,29 @@ export const th = {
     workEvidence: "หลักฐานที่อ่านจากแหล่งข้อมูลรัฐ",
     workConcepts: "แนวคิดการใช้ประโยชน์ที่ประเมิน",
     workRules: "ข้อกำหนดที่นำมาตรวจต่อแนวคิด",
+    /**
+     * One plain sentence before anything else, because the owners read this screen as a reader
+     * would and could not tell what it was for: three bare counts in the product's own vocabulary,
+     * then three paragraphs of what the analysis could not do, and the two ideas it did produce
+     * reduced to a pair of names. "ถ้าเป็นคนใช้งานก็คงไม่เข้าใจว่าหน้านี้บอกอะไร" was the verdict,
+     * and it was right.
+     *
+     * The numbers are the same ones the tiles below show. Saying them in a sentence first is what
+     * makes them mean anything: "110" is not an answer to any question a reader arrived with,
+     * and "อ่านข้อมูลที่หน่วยงานรัฐเผยแพร่ 110 รายการ" is.
+     */
+    leadSentence:
+      "ระบบอ่านข้อมูลที่หน่วยงานรัฐเผยแพร่ {evidence} รายการ คิดแนวคิดการใช้ที่ดินได้ {concepts} แบบ แล้วเอาข้อกำหนดกฎหมาย {rules} ข้อมาตรวจกับทุกแนวคิด",
+    leadStatus: "ข้อสรุปตอนนี้: {status} เหตุผลและสิ่งที่ต้องตรวจต่ออยู่ด้านล่าง",
     statusLabel: "ระดับข้อสรุป",
     scopeLabel: "ขอบเขตของผลลัพธ์",
     missingHeading: "สิ่งที่ยังขาดจึงจะสรุปได้",
     evaluatedHeading: "แนวคิดที่ประเมินแล้ว",
     evaluatedNote: "แสดงตามลำดับที่เสนอ ไม่ได้เรียงตามความเหมาะสม",
+    /* The names alone told a reader nothing, and everything that explains them — what the idea is,
+       why this area suggested it, what is uncertain about it — was one tab away with nothing on
+       this screen saying so. */
+    evaluatedOpen: "ดูรายละเอียดแต่ละแนวคิด",
     verificationHeading: "ขั้นตอนต่อไปที่ทำให้สรุปได้",
     /* Read as a plan of work, not as a list of faults. Every line below was derived from something
        this run actually could not settle, and each one names what settling it would change. */

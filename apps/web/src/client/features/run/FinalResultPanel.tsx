@@ -1,6 +1,6 @@
 import { th } from "@reis/i18n";
 import { ArrowRight, ClipboardCheck, PencilLine, TriangleAlert } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import type { FinalAnalysisView } from "./useAnalysisRun.js";
 
 /**
@@ -180,6 +180,14 @@ export function FinalResultPanel({
   /** Counted by the caller, which is the only place that holds the partial artefacts. */
   work?: WorkDone | undefined;
 }) {
+  const [params] = useSearchParams();
+  // Keep whatever else the URL carries; only the open topic changes.
+  const conceptsSearch = (() => {
+    const next = new URLSearchParams(params);
+    next.set("view", "concepts");
+    return next.toString();
+  })();
+
   if (!final) {
     return null;
   }
@@ -212,6 +220,18 @@ export function FinalResultPanel({
         size, and §3's rule about emphasis is about the academic disclaimer, which is not here.
       */}
       {work && (
+        <p className="mt-2 text-sm leading-relaxed">
+          {th.finalResult.leadSentence
+            .replace("{evidence}", work.evidenceItems.toLocaleString("th-TH"))
+            .replace("{concepts}", work.concepts.toLocaleString("th-TH"))
+            .replace("{rules}", work.rulesChecked.toLocaleString("th-TH"))}
+        </p>
+      )}
+      <p className="mt-1 text-ink-muted text-sm leading-relaxed">
+        {th.finalResult.leadStatus.replace("{status}", STATUS_LABELS[final.status] ?? final.status)}
+      </p>
+
+      {work && (
         <dl className="mt-3 grid gap-3 sm:grid-cols-3">
           {[
             [th.finalResult.workEvidence, work.evidenceItems],
@@ -230,30 +250,31 @@ export function FinalResultPanel({
         </dl>
       )}
 
-      <p className="mt-4 text-sm leading-relaxed">
-        <span className="font-semibold">{th.finalResult.statusLabel}: </span>
-        <span style={{ color: "var(--color-partial)" }}>
-          {STATUS_LABELS[final.status] ?? final.status}
-        </span>
-      </p>
       <p className="mt-1 text-ink-muted text-sm">
         {th.finalResult.analysedOn} {thaiDate(final.analysed_on)}
       </p>
 
-      {/* The academic disclaimer is NOT repeated here. §3 requires it above anything quotable and
-          never only in a collapsed area, and the page prints it above the topic panels, where it
-          stays on screen whichever topic is open — which the e2e suite asserts on every tab and at
-          both widths. Printing the same seven dense lines a second time, a screen apart, taught a
-          reader to skip them, which is the one outcome the rule exists to prevent. */}
-      <p className="mt-4 text-sm leading-relaxed">
-        <span className="font-semibold">{th.finalResult.scopeLabel}: </span>
-        {final.scope_statement_th}
-      </p>
-
-      <p className="mt-3 flex items-start gap-2 text-sm leading-relaxed">
-        <TriangleAlert size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
-        {final.status_statement_th}
-      </p>
+      {final.evaluated_concepts_th.length > 0 && (
+        <section className="mt-5">
+          <h3 className="font-semibold">{th.finalResult.evaluatedHeading}</h3>
+          <p className="text-ink-muted text-xs">{th.finalResult.evaluatedNote}</p>
+          <ul className="mt-2 list-disc pl-5 text-sm">
+            {final.evaluated_concepts_th.map((label) => (
+              <li key={label}>{label}</li>
+            ))}
+          </ul>
+          {/* The topic is owned by the URL, so this is a link rather than a handler: it works from
+              the rail, the tab strip and here, and a reader can go back to the overview. */}
+          <Link
+            to={{ search: conceptsSearch }}
+            replace
+            className="mt-2 inline-flex items-center gap-1.5 rounded-pill border border-border-strong px-3 py-1.5 font-medium text-xs"
+          >
+            <ArrowRight size={13} aria-hidden="true" />
+            {th.finalResult.evaluatedOpen}
+          </Link>
+        </section>
+      )}
 
       {final.missing_basis_th.length > 0 && (
         <section className="mt-5">
@@ -266,17 +287,26 @@ export function FinalResultPanel({
         </section>
       )}
 
-      {final.evaluated_concepts_th.length > 0 && (
-        <section className="mt-5">
-          <h3 className="font-semibold">{th.finalResult.evaluatedHeading}</h3>
-          <p className="text-ink-muted text-xs">{th.finalResult.evaluatedNote}</p>
-          <ul className="mt-2 list-disc pl-5 text-sm">
-            {final.evaluated_concepts_th.map((label) => (
-              <li key={label}>{label}</li>
-            ))}
-          </ul>
-        </section>
-      )}
+      {/*
+        The scope and status statements, after the work rather than before it.
+
+        Both are required verbatim and both are still here at full size, unfolded — docs/output-
+        policy.md §4 and §5 fix their wording, not their position, and §3's placement rule is about
+        the academic disclaimer, which the page prints above the topic panels and which the e2e
+        suite asserts on every tab at both widths. What changed is the order: three paragraphs of
+        what the analysis could not do used to come before the two ideas it did produce, so the
+        screen opened on its own limits and a reader never reached the content. The statements read
+        as the qualification they are once there is something to qualify.
+      */}
+      <p className="mt-6 text-sm leading-relaxed">
+        <span className="font-semibold">{th.finalResult.scopeLabel}: </span>
+        {final.scope_statement_th}
+      </p>
+
+      <p className="mt-3 flex items-start gap-2 text-sm leading-relaxed">
+        <TriangleAlert size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+        {final.status_statement_th}
+      </p>
 
       <section className="mt-6">
         <h3 className="flex items-center gap-2 font-semibold">
