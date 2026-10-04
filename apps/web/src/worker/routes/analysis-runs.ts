@@ -197,19 +197,26 @@ async function completeRun(
      * blamed an AI nobody had switched off. The evidence was there the whole time: 416 links,
      * written by this very function moments earlier.
      *
-     * So when acquisition reports that it wrote links, an empty read is not an answer — it is a
-     * read that arrived too early, and it is worth waiting for. Three tries over about a second.
-     * When acquisition genuinely wrote nothing, the first read stands and the run goes on to say
-     * so honestly.
+     * So an empty read is not an answer — it is a read that may have arrived too early, and it is
+     * worth waiting for: five tries over about four seconds, backing off. The wait costs nothing
+     * on the ordinary path, where the first read succeeds, and it is bounded.
+     *
+     * Widened from three tries over one second after a run right after a deploy failed anyway:
+     * these connections are coldest when the deployment is new, which is exactly when someone is
+     * most likely to be watching.
      */
     let links = await loadRunEvidence(db, run.run_id);
-    for (
-      let attempt = 0;
-      attempt < 2 && links.length === 0 && acquisition.linkCount > 0;
-      attempt++
-    ) {
-      await new Promise((resolve) => setTimeout(resolve, 250 + attempt * 250));
+    for (let attempt = 0; attempt < 4 && links.length === 0; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 250 * 2 ** attempt));
       links = await loadRunEvidence(db, run.run_id);
+    }
+    if (links.length === 0 && acquisition.linkCount > 0) {
+      // Acquisition says it wrote links and five reads disagree. Rather than go on to call this
+      // place unknown, stop and let the run report that it did not finish, which is true and
+      // which the screen already offers a retry for.
+      throw new Error(
+        `evidence written (${acquisition.linkCount}) but not readable for run ${runId}`,
+      );
     }
     const concepts = await runConceptGeneration({
       mode: aiMode(env),
