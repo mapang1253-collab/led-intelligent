@@ -18,6 +18,28 @@ describe("concept stage", () => {
     });
   });
 
+  it("says a run stopped mid-way when the stage recorded nothing at all", () => {
+    /**
+     * Measured on the deployed site, 4 October 2026: about one run in five stored no concepts, no
+     * search record and no reason, and the screen filled the gap with "AI_DISABLED" — on a
+     * deployment whose model is a stored fixture that cannot be unavailable. The reader was told
+     * to wait for a feature when the run had simply stopped and needed starting again.
+     */
+    expect(conceptStageRecord({ concepts: [], failure_code: null, record: null })).toEqual({
+      state: "FAILED",
+      reason: "ANALYSIS_INCOMPLETE",
+      retryable: true,
+    });
+  });
+
+  it("still reports a genuinely disabled AI as disabled", () => {
+    // The stage ran and wrote its account; AI_DISABLED there is the stage's own word, not a guess.
+    expect(conceptStageRecord({ concepts: [], failure_code: "AI_DISABLED", record: {} })).toEqual({
+      state: "SKIPPED",
+      reason: "AI_DISABLED",
+    });
+  });
+
   it("reports a provider outage as failed, not as not-activated", () => {
     expect(conceptStageRecord({ concepts: [], failure_code: "AI_PROVIDER_BUSY" })).toEqual({
       state: "FAILED",

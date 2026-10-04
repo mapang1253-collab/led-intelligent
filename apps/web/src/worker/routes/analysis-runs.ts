@@ -74,9 +74,20 @@ const RETRYABLE_REASONS = new Set([
 export function conceptStageRecord(set: {
   concepts: readonly unknown[];
   failure_code: string | null;
+  /** The search record the stage writes whatever the outcome. Null means it never got that far. */
+  record?: unknown;
 }): { state: string; reason?: string; retryable?: boolean } {
   if (set.concepts.length > 0) {
     return { state: "SUCCEEDED" };
+  }
+  /**
+   * No concepts and no account of the search means the stage did not finish — not that an AI was
+   * switched off. The old `?? "AI_DISABLED"` said the opposite, and said it on a deployment
+   * running RECORDED_AI, where the model is a stored fixture that cannot be unavailable. A reader
+   * was told to wait for a feature when what they needed was to press the button again.
+   */
+  if (set.record === null) {
+    return { state: "FAILED", reason: "ANALYSIS_INCOMPLETE", retryable: true };
   }
   const reason = set.failure_code ?? "AI_DISABLED";
   return NOT_ACTIVATED_REASONS.has(reason)
@@ -169,12 +180,37 @@ async function completeRun(
 
     // Acquisition is a database read plus run-scoped writes; bulk source fetching happens off the
     // interactive path (tools/ingestion/).
-    await runEvidenceAcquisition(db, run);
+    const acquisition = await runEvidenceAcquisition(db, run);
 
     // Concepts are proposed once and persisted. Polling the progress screen re-reads them and
     // never re-invokes the model.
     const areas = await loadRunAreaNames(db, run);
-    const links = await loadRunEvidence(db, run.run_id);
+
+    /**
+     * Read back what acquisition just wrote — and insist on seeing it.
+     *
+     * The write and this read do not share a connection. Hyperdrive hands each query a pooled
+     * one, so a commit that has landed for the writer is not always visible to the next reader in
+     * the same instant. About one run in five came back with nothing here, took the "we know
+     * nothing about this place" branch of concept generation, and stored no concepts, no search
+     * record and no reason — leaving a screen that said "กำลังทำงาน" forever and a stage that
+     * blamed an AI nobody had switched off. The evidence was there the whole time: 416 links,
+     * written by this very function moments earlier.
+     *
+     * So when acquisition reports that it wrote links, an empty read is not an answer — it is a
+     * read that arrived too early, and it is worth waiting for. Three tries over about a second.
+     * When acquisition genuinely wrote nothing, the first read stands and the run goes on to say
+     * so honestly.
+     */
+    let links = await loadRunEvidence(db, run.run_id);
+    for (
+      let attempt = 0;
+      attempt < 2 && links.length === 0 && acquisition.linkCount > 0;
+      attempt++
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 250 + attempt * 250));
+      links = await loadRunEvidence(db, run.run_id);
+    }
     const concepts = await runConceptGeneration({
       mode: aiMode(env),
       apiKey: env.GEMINI_API_KEY,
