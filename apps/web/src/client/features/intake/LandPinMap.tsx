@@ -37,6 +37,9 @@ const THAILAND: L.LatLngBoundsExpression = [
 
 const AREA_ZOOM = 12;
 
+/** Close enough to see the plot and the city-plan colours around it, not just the district. */
+const PARCEL_ZOOM = 17;
+
 /** Leaflet ships its marker icons as separate files that a bundler will not find on its own. */
 const PIN_ICON = L.divIcon({
   className: "",
@@ -161,6 +164,29 @@ export function LandPinMap({
     }
     map.current.setView([centre.latitude, centre.longitude], AREA_ZOOM);
   }, [ready, centre, value]);
+
+  /**
+   * Open on the plot when the map opens onto a pin that is already placed.
+   *
+   * A pin does not only arrive by clicking any more: a parcel lookup places one while the map is
+   * still folded shut. Opening it then showed the whole of Asia with a dot near Bangkok — the
+   * plot is in frame, technically, and the city-plan colours the map is now mostly for are
+   * invisible at that scale. The effect above does not help, because it steps aside whenever a pin
+   * exists.
+   *
+   * Once per map, deliberately. "Is the pin in view" was the first test here and it was the wrong
+   * one: at country zoom the pin is in view and still unusable. Anything measuring the zoom would
+   * have to decide how far out is too far, and would snap the view back under a reader who had
+   * just zoomed out on purpose. Firing once on open does neither — afterwards the view is theirs.
+   */
+  const centredOnPin = useRef(false);
+  useEffect(() => {
+    if (!ready || !map.current || !value || centredOnPin.current) {
+      return;
+    }
+    centredOnPin.current = true;
+    map.current.setView([value.latitude, value.longitude], PARCEL_ZOOM);
+  }, [ready, value]);
 
   // The overlay is opt-in and provincial, so it is rebuilt whenever either changes rather than
   // toggled in place: a layer left behind from the previous province would draw another
