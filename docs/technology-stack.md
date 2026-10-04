@@ -164,6 +164,20 @@ The server puts the independent run capability in an HttpOnly, SameSite=Lax cook
 
 ## 8. Database, spatial work and object storage
 
+**Hyperdrive query caching is disabled on the `reis-db` configuration** (set 4 October 2026, and
+it must stay off). Hyperdrive caches SQL responses for a minute by default, and this product's
+reads are run-scoped and transactional, which is exactly the shape that caching breaks. The
+failure it caused: the progress screen polls the run while the analysis still runs in the
+background, so a poll read the run's evidence before the write committed, got nothing, and
+Hyperdrive cached that nothing. The background task's own read then hit the cached empty result and
+concluded the area had no evidence at all — storing no concepts, no reason, and leaving a screen
+that said "กำลังทำงาน" until the run expired. About one run in five, and only ever from a browser,
+because only a browser polls. Re-enable it and that returns.
+
+```bash
+wrangler hyperdrive update <id> --caching-disabled
+```
+
 SQL migrations are the schema authority. Kysely provides typed queries; it does not replace explicit migrations, database constraints or reviewed SQL. Worker code connects through Hyperdrive and never exposes the database connection or Supabase service role to the browser.
 
 Use PostgreSQL `numeric` and decimal strings for money, rates, areas and other precision-sensitive values. Use `decimal.js` in deterministic calculations. JavaScript `number` is permitted for coordinates and explicitly approximate values only. PostGIS performs intersection, containment, radius, nearest-neighbor and coverage queries through matching GiST indexes. Application full-table spatial loops fail acceptance.
