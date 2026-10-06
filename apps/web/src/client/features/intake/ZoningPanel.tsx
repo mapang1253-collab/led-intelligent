@@ -26,9 +26,16 @@ interface ZoningPlan {
   prohibited_th: string[];
 }
 
+interface ZoningLegendEntry {
+  zone_code: string;
+  zone_name_th: string;
+  colour: string | null;
+}
+
 interface ZoningResponse {
   covered: boolean;
   data: ZoningPlan[];
+  legend: ZoningLegendEntry[];
   attribution_th: string;
   publisher_url: string;
 }
@@ -162,6 +169,41 @@ export function ZoningPanel({
               <p className="mt-2 text-ink-muted text-xs leading-relaxed">{th.zoning.quoteNote}</p>
             </article>
           ))}
+
+          {/*
+            The key to the overlay, folded.
+
+            The map can be filled with the department's colours, and until now nothing said what
+            any of them meant — pink beside green beside red. It is folded because the zone under
+            this plot is the answer the reader came for and the rest of the plan is context, but it
+            is one click away rather than absent.
+          */}
+          {zoning.data.legend.length > 0 && (
+            <details className="mt-3">
+              <summary className="cursor-pointer font-medium text-sm">
+                {th.zoning.legendOpen}
+              </summary>
+              <p className="mt-1 text-ink-muted text-xs leading-relaxed">{th.zoning.legendNote}</p>
+              <ul className="mt-2">
+                {zoning.data.legend.map((entry) => (
+                  <li
+                    key={entry.zone_code}
+                    className="flex items-center gap-2.5 border-border border-b py-1.5 text-sm last:border-b-0"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="size-4 shrink-0 rounded border border-border-strong"
+                      style={{ background: entry.colour ?? "transparent" }}
+                    />
+                    <span>{entry.zone_name_th}</span>
+                    {entry.colour === null && (
+                      <span className="text-ink-muted text-xs">({th.zoning.legendUnfilled})</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
 
           {/* Under every outcome, including the empty ones: a reader who found no zone still needs
               to know that finding one would not have been permission. */}

@@ -377,6 +377,8 @@ app.get("/api/v1/zoning", async (c) => {
     // point that falls outside every plan in a province that does.
     covered: result.outcome === "SUCCESS",
     data: result.outcome === "SUCCESS" ? result.plans : [],
+    // What every colour on the overlay means, for the plans this point fell in.
+    legend: result.outcome === "SUCCESS" ? result.legend : [],
     tile_template: zoningTileTemplate(provinceCode),
     attribution_th: ZONING_ATTRIBUTION_TH,
     publisher_url: ZONING_PUBLISHER_URL,

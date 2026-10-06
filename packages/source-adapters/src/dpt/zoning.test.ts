@@ -86,8 +86,16 @@ function stubFetch(routes: Record<string, { body: string; status?: number }>): t
   }) as typeof fetch;
 }
 
+/** The plan's own key, as DPT's legend page serves it: a swatch named after the zone code. */
+const CHONBURI_LEGEND = `<table>
+<tr><td>สัญลักษณ์สี</td><td>ประเภท</td><td>ที่ดินหมายเลข</td></tr>
+<tr><td><img src="https://plludds.dpt.go.th/pllu-non/cdn/assets/img/Usecode/2100.png"></td><td>ศูนย์กลางพาณิชยกรรม</td><td>พ.1 - พ.7</td></tr>
+<tr><td><img src="https://plludds.dpt.go.th/pllu-non/cdn/assets/img/Usecode/6700.png"></td><td>เขตทหาร</td><td>ท.1 - ท.41</td></tr>
+</table>`;
+
 const ROUTES = {
   identify: { body: IDENTIFY },
+  get_legend_pllu: { body: CHONBURI_LEGEND },
   "MapServer/0?f=json": { body: LAYER },
   "querydb_landuse.php": { body: PERMITTED },
   querydb_landuse_prohibition: { body: PROHIBITED },
@@ -146,6 +154,25 @@ describe("fetchZoning", () => {
     expect(plan.colour).toBe("#e60000");
     expect(plan.permitted_th).toContain("พาณิชยกรรม");
     expect(plan.prohibited_th).toHaveLength(3);
+  });
+
+  it("explains every colour the plan draws, not only the one under the pin", async () => {
+    // The owners turned the overlay on and saw pink beside green beside red with nothing saying
+    // which was which. The renderer already carries every colour and the legend page every name,
+    // so the key costs no extra request on a point that was going to be looked up anyway.
+    const result = await fetchZoning("20", 12.9276, 100.8909, { fetchImpl: stubFetch(ROUTES) });
+    if (result.outcome !== "SUCCESS") throw new Error("expected success");
+
+    const codes = result.legend.map((entry) => entry.zone_code);
+    expect(codes).toContain("2100");
+    // 6700 is in the renderer too, and is drawn unfilled.
+    const unfilled = result.legend.find((entry) => entry.zone_code === "6700");
+    expect(unfilled?.colour).toBeNull();
+    expect(result.legend.find((entry) => entry.zone_code === "2100")?.colour).toBe("#e60000");
+    // Every row can be read: a swatch beside a bare code explains nothing.
+    for (const entry of result.legend) {
+      expect(entry.zone_name_th.length).toBeGreaterThan(0);
+    }
   });
 
   it("ignores the planned-road layer in the same service", async () => {

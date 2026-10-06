@@ -87,10 +87,20 @@ export interface ZoningOptions extends FetchJsonOptions {
 /** The key both sides of a `ZoneStore` agree on. */
 export const zoneKey = (planId: string, zoneCode: string) => `${planId}\u0000${zoneCode}`;
 
+/** One row of the map's key: a colour on the overlay and what the plan calls it. */
+export interface ZoningLegendEntry {
+  readonly zone_code: string;
+  readonly zone_name_th: string;
+  /** Null where the plan draws the zone unfilled, which the screen renders as an outline. */
+  readonly colour: string | null;
+}
+
 export type ZoningResult =
   | {
       readonly outcome: "SUCCESS";
       readonly plans: readonly ZoningPlan[];
+      /** What every colour on the overlay means, for the plans covering this point. */
+      readonly legend: readonly ZoningLegendEntry[];
       readonly attribution_th: string;
     }
   /** The province publishes no plan service. Distinct from "found nothing at this point". */
@@ -175,34 +185,39 @@ function readIdentify(payload: unknown): IdentifyResult[] {
   });
 }
 
-/** The colour the publisher draws this zone code in, read from the layer's own renderer. */
-async function zoneColour(
+/**
+ * Every zone code this layer draws, with the colour it draws it in.
+ *
+ * The whole renderer rather than one lookup, because the same request answers two questions: what
+ * colour this plot's zone is, and what all the other colours on the map mean. The owners asked for
+ * the second — "ช่วยใส่อธิบายสีผังเมืองแต่ละสีได้มั้ย" — after turning the overlay on and seeing
+ * pink beside green beside red with nothing to say which was which.
+ */
+async function layerColours(
   provinceCode: string,
   layerId: number,
-  zoneCode: string,
   options: FetchJsonOptions,
-): Promise<string | null> {
+): Promise<Map<string, string | null>> {
+  const colours = new Map<string, string | null>();
   const result = await fetchJson(
     `${ARCGIS_ROOT}/PLLU${provinceCode}/MapServer/${layerId}?f=json`,
     options,
   );
   if (result.outcome !== "SUCCESS") {
-    return null;
+    return colours;
   }
-  const renderer = (
-    result.payload as { drawingInfo?: { renderer?: { uniqueValueInfos?: unknown } } }
-  ).drawingInfo?.renderer;
-  const infos = renderer?.uniqueValueInfos;
+  const infos = (result.payload as { drawingInfo?: { renderer?: { uniqueValueInfos?: unknown } } })
+    .drawingInfo?.renderer?.uniqueValueInfos;
   if (!Array.isArray(infos)) {
-    return null;
+    return colours;
   }
   for (const info of infos) {
     const entry = info as { value?: unknown; symbol?: { color?: unknown } };
-    if (String(entry.value) === zoneCode) {
-      return toHexColour(entry.symbol?.color);
+    if (entry.value !== undefined && entry.value !== null) {
+      colours.set(String(entry.value), toHexColour(entry.symbol?.color));
     }
   }
-  return null;
+  return colours;
 }
 
 /**
@@ -340,12 +355,18 @@ export async function fetchZoning(
     ? await options.store.load(hits.map((hit) => ({ planId: hit.planId, zoneCode: hit.zoneCode })))
     : new Map<string, ZoneReference>();
 
-  // One legend per plan covering the point, fetched once and shared: several hits in the same
-  // plan must not each ask for the same page.
+  // One legend per plan, and one renderer per layer, each fetched once and shared: several hits in
+  // the same plan must not ask for the same page twice.
   const legends = new Map<string, Promise<Map<string, string>>>();
   const legendFor = (planId: string) => {
     const pending = legends.get(planId) ?? legendNames(planId, options);
     legends.set(planId, pending);
+    return pending;
+  };
+  const renderers = new Map<number, Promise<Map<string, string | null>>>();
+  const coloursFor = (layerId: number) => {
+    const pending = renderers.get(layerId) ?? layerColours(provinceCode, layerId, options);
+    renderers.set(layerId, pending);
     return pending;
   };
 
@@ -373,11 +394,12 @@ export async function fetchZoning(
       if (!zoneName) {
         return null;
       }
-      const [colour, permitted, prohibited] = await Promise.all([
-        zoneColour(provinceCode, hit.layerId, zoneCode, options),
+      const [colours, permitted, prohibited] = await Promise.all([
+        coloursFor(hit.layerId),
         conditions("querydb_landuse.php", planId, zoneCode, options),
         conditions("querydb_landuse_prohibition.php", planId, zoneCode, options),
       ]);
+      const colour = colours.get(zoneCode) ?? null;
       const zone: ZoneReference = {
         zone_name_th: zoneName,
         colour,
@@ -401,9 +423,32 @@ export async function fetchZoning(
     }),
   );
 
+  /**
+   * The key to the overlay, for the layers this point actually fell in.
+   *
+   * Built from what has already been fetched wherever possible — the renderer carries every
+   * colour, the legend page carries every Thai name — so a point in a known zone costs nothing
+   * extra, and a point in a stored zone costs one renderer request. Entries the plan has a colour
+   * for but no name are dropped: a swatch with a bare code beside it explains nothing.
+   */
+  const legend: ZoningLegendEntry[] = [];
+  const seen = new Set<string>();
+  for (const hit of hits) {
+    const [colours, names] = await Promise.all([coloursFor(hit.layerId), legendFor(hit.planId)]);
+    for (const [zoneCode, colour] of colours) {
+      const name = names.get(zoneCode) ?? (zoneCode === hit.zoneCode ? hit.descriptionTh : "");
+      if (!name || seen.has(zoneCode)) {
+        continue;
+      }
+      seen.add(zoneCode);
+      legend.push({ zone_code: zoneCode, zone_name_th: name, colour });
+    }
+  }
+
   return {
     outcome: "SUCCESS",
     plans: plans.filter((plan): plan is ZoningPlan => plan !== null),
+    legend,
     attribution_th: ZONING_ATTRIBUTION_TH,
   };
 }

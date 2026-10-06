@@ -171,6 +171,11 @@ export const th = {
     showLayer: "แสดงสีผังเมืองบนแผนที่",
     hideLayer: "ซ่อนสีผังเมือง",
     legendHeading: "สีที่แสดงบนแผนที่เป็นสีตามที่กรมโยธาธิการและผังเมืองกำหนด",
+    /* The key to the overlay. Turning the colours on without one shows pink beside green beside
+       red and leaves the reader guessing, which is what the owners asked about. */
+    legendOpen: "สีแต่ละสีบนแผนที่หมายความว่าอะไร",
+    legendNote: "เป็นประเภทการใช้ประโยชน์ที่ดินทั้งหมดของผังที่ครอบคลุมจุดนี้ สีตรงกับที่กรมโยธาธิการและผังเมืองกำหนด",
+    legendUnfilled: "ไม่ถมสี",
   },
 
   /**
