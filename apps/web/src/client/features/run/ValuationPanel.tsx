@@ -103,11 +103,20 @@ function LandValuation({
   groups,
   enabled,
   intakeArea,
+  onValue,
 }: {
   groups: readonly EvidenceGroup[] | undefined;
   enabled: boolean;
   /** The area the reader already typed on the intake form; asking for it twice is rude. */
   intakeArea: { rai?: string | undefined; ngan?: string | undefined; wa?: string | undefined };
+  /**
+   * The land value once it has been worked out, for the feasibility calculator below.
+   *
+   * Its help text has always promised "ระบบเติมให้จากราคาประเมินที่ดินเมื่อคำนวณไว้แล้ว" and nothing
+   * ever filled it — the panel was rendered with no props at all. The reader computed a land
+   * value, scrolled down, and was asked for it again.
+   */
+  onValue?: (baht: string) => void;
 }) {
   const [unitId, setUnitId] = useState("");
   const [rai, setRai] = useState(intakeArea.rai ?? "");
@@ -138,6 +147,15 @@ function LandValuation({
       positionTh: selected.population_th,
     });
   }, [selected, enabled, rai, ngan, wa]);
+
+  // Reported upward, not read across: the calculator owns its own field and the reader may edit
+  // it to a real purchase price, which is exactly what the field's help text invites.
+  const computedValue = result?.outcome === "COMPUTED" ? result.value : null;
+  useEffect(() => {
+    if (computedValue) {
+      onValue?.(computedValue);
+    }
+  }, [computedValue, onValue]);
 
   if (rates.length === 0) {
     return (
@@ -223,9 +241,12 @@ function LandValuation({
 export function ValuationPanel({
   groups,
   intakeArea = {},
+  onLandValue,
 }: {
   groups: readonly EvidenceGroup[] | undefined;
   intakeArea?: { rai?: string | undefined; ngan?: string | undefined; wa?: string | undefined };
+  /** Passed through to the land valuation, for the feasibility calculator below this panel. */
+  onLandValue?: (baht: string) => void;
 }) {
   const [methodOk, setMethodOk] = useState<{ ok: boolean; reason?: string } | null>(null);
   const [typeId, setTypeId] = useState("");
@@ -332,7 +353,12 @@ export function ValuationPanel({
         </>
       )}
 
-      <LandValuation groups={groups} enabled={methodOk?.ok === true} intakeArea={intakeArea} />
+      <LandValuation
+        groups={groups}
+        enabled={methodOk?.ok === true}
+        intakeArea={intakeArea}
+        {...(onLandValue ? { onValue: onLandValue } : {})}
+      />
     </section>
   );
 }

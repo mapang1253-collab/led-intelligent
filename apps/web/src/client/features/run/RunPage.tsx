@@ -17,7 +17,7 @@ import {
   TriangleAlert,
   Users,
 } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { useResultView } from "../../app/AppShell.js";
 import { ZoningPanel } from "../intake/ZoningPanel.js";
@@ -179,6 +179,12 @@ export function RunPage() {
    * unscreened-domain action stays BLOCKING, and the panel says so itself.
    */
   const provinces = useProvinces();
+  /**
+   * The land value the valuation panel worked out, for the feasibility calculator on the same
+   * tab. Held here because the two panels are siblings; the calculator still owns its own field,
+   * so a reader can replace an assessed value with a real purchase price.
+   */
+  const [landValueBaht, setLandValueBaht] = useState<string>();
   const zoningPin =
     Number.isFinite(Number(intake?.latitude)) && Number.isFinite(Number(intake?.longitude))
       ? { latitude: Number(intake?.latitude), longitude: Number(intake?.longitude) }
@@ -326,6 +332,7 @@ export function RunPage() {
       render: () => (
         <>
           <ValuationPanel
+            onLandValue={setLandValueBaht}
             groups={allEvidence}
             // Carried from the intake so the land calculator starts with what was already typed.
             intakeArea={{
@@ -337,7 +344,7 @@ export function RunPage() {
           {/* Below the assessed value, because that is the order of the question: what is the land
               worth on the state's schedule, and then what would happen if something were built on
               it. The second one runs entirely on the reader's own assumptions and says so. */}
-          <FeasibilityPanel />
+          <FeasibilityPanel groups={allEvidence} {...(landValueBaht ? { landValueBaht } : {})} />
           {/* And last, the same method across every concept at once — the comparison the product is
               named after. It comes after the single-concept calculator because a reader needs to
               see one worked example, with its arithmetic, before a table of six of them means

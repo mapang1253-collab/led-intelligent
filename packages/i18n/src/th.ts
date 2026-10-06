@@ -433,6 +433,24 @@ export const th = {
     landValueLabel: "มูลค่าที่ดิน (บาท)",
     landValueHelp: "ระบบเติมให้จากราคาประเมินที่ดินเมื่อคำนวณไว้แล้ว แก้ไขเป็นราคาซื้อขายจริงได้",
     floorAreaLabel: "พื้นที่อาคารรวมทุกชั้น (ตารางเมตร)",
+    /**
+     * The published construction figures, offered beside the field rather than typed into it.
+     *
+     * The run already reads ราคาประเมินสิ่งปลูกสร้าง from the Treasury — 69 figures for ปทุมธานี —
+     * and the system's own evidence model files them under
+     * `economic.construction_cost_reference`. They were on the screen above and the calculator
+     * still asked the reader to find a number themselves, which is what the owners meant by
+     * "ข้อมูลครบแต่แอปไม่ประมวลผลให้".
+     *
+     * Offered, never filled in automatically, and named for what it is. An assessed value is set
+     * for tax purposes from standard cost tables; it is not a builder's quotation, and a reader
+     * choosing it is making that substitution knowingly.
+     */
+    constructionSuggestHeading: "ตัวเลขจากกรมธนารักษ์ที่ใช้แทนได้",
+    constructionSuggestNote:
+      "เป็น “ราคาประเมินสิ่งปลูกสร้าง” ที่กรมธนารักษ์ประกาศไว้ใช้คำนวณภาษี ไม่ใช่ราคาค่าก่อสร้างจริงจากผู้รับเหมา ถ้ามีใบเสนอราคาจริง ควรใช้ตัวเลขนั้นแทน",
+    constructionSuggestPick: "เลือกประเภทสิ่งปลูกสร้าง",
+    constructionSuggestUse: "ใช้ตัวเลขนี้",
     constructionCostLabel: "ต้นทุนค่าก่อสร้างต่อตารางเมตร (บาท)",
     rentLabel: "ค่าเช่าที่คาดว่าจะได้ ต่อตารางเมตรต่อเดือน (บาท)",
     occupancyLabel: "อัตราการปล่อยเช่าได้ที่คาด (ร้อยละ)",

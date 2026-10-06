@@ -5,12 +5,13 @@ import {
   computeFeasibility,
 } from "@reis/scenario-engine";
 import { Calculator, Info, Pencil } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import methodFile from "../../../../../../database/reviewed-packs/th-feasibility-assumption-v1.json" with {
   type: "json",
 };
 import { Caveat } from "./Caveat.js";
 import { Notice } from "./Notice.js";
+import type { EvidenceGroup } from "./useAnalysisRun.js";
 
 /**
  * Preliminary feasibility, from assumptions the reader types in.
@@ -81,14 +82,62 @@ function Field({
   );
 }
 
-export function FeasibilityPanel({ landValueBaht }: { landValueBaht?: string }) {
+/** The measure the evidence model files published construction figures under. */
+const CONSTRUCTION_REQUIREMENT = "economic.construction_cost_reference";
+
+export function FeasibilityPanel({
+  landValueBaht,
+  groups,
+}: {
+  landValueBaht?: string;
+  /**
+   * The run's own evidence, so the published construction figures can be offered beside the field
+   * that wants one. They were already on the screen above this panel and the calculator still
+   * asked the reader to go and find a number.
+   */
+  groups?: readonly EvidenceGroup[] | undefined;
+}) {
   const [land, setLand] = useState(landValueBaht ?? "");
+
+  /**
+   * Take the land value when it arrives, but never over the reader's own number.
+   *
+   * It arrives late by nature: the valuation above this panel cannot produce one until a land
+   * type is chosen, which is long after this component first renders. `useState` reads its
+   * argument once, so the field stayed empty under help text promising it would be filled.
+   *
+   * The guard is what makes this safe to do at all. The field is only overwritten while it still
+   * holds the value this effect last put there — the moment someone types a real purchase price,
+   * which the help text explicitly invites, their number stands.
+   */
+  const applied = useRef<string | undefined>(landValueBaht);
+  useEffect(() => {
+    if (!landValueBaht || landValueBaht === applied.current) {
+      return;
+    }
+    setLand((current) => (current === "" || current === applied.current ? landValueBaht : current));
+    applied.current = landValueBaht;
+  }, [landValueBaht]);
   const [floorArea, setFloorArea] = useState("");
   const [cost, setCost] = useState("");
   const [rent, setRent] = useState("");
   const [occupancy, setOccupancy] = useState("80");
   const [operating, setOperating] = useState("30");
   const [result, setResult] = useState<FeasibilityResult | null>(null);
+  const [suggestionId, setSuggestionId] = useState("");
+
+  /**
+   * Published figures that carry one number rather than a spread.
+   *
+   * A range cannot be dropped into a field that multiplies: the source did not say which of the
+   * two ends applies to this building, and picking one silently would invent the difference. The
+   * same rule the land valuation already follows.
+   */
+  const suggestions = (groups ?? [])
+    .filter((group) => group.requirement_id === CONSTRUCTION_REQUIREMENT)
+    .flatMap((group) => group.items)
+    .filter((item) => item.value);
+  const suggestion = suggestions.find((item) => item.observation_id === suggestionId);
 
   function run() {
     setResult(
@@ -123,7 +172,12 @@ export function FeasibilityPanel({ landValueBaht }: { landValueBaht?: string }) 
           help={th.feasibility.landValueHelp}
         />
         <Field label={th.feasibility.floorAreaLabel} value={floorArea} onChange={setFloorArea} />
-        <Field label={th.feasibility.constructionCostLabel} value={cost} onChange={setCost} />
+        <Field
+          label={th.feasibility.constructionCostLabel}
+          value={cost}
+          onChange={setCost}
+          fromEvidence={Boolean(suggestion?.value) && cost === suggestion?.value}
+        />
         <Field label={th.feasibility.rentLabel} value={rent} onChange={setRent} />
         <Field
           label={th.feasibility.occupancyLabel}
@@ -138,6 +192,43 @@ export function FeasibilityPanel({ landValueBaht }: { landValueBaht?: string }) 
           suffix="%"
         />
       </div>
+
+      {suggestions.length > 0 && (
+        <div className="mt-4 rounded-card bg-surface-sunken p-4">
+          <h3 className="font-semibold text-sm">{th.feasibility.constructionSuggestHeading}</h3>
+          <p className="mt-1 text-ink-muted text-xs leading-relaxed">
+            {th.feasibility.constructionSuggestNote}
+          </p>
+          <div className="mt-3 flex flex-wrap items-end gap-3">
+            <label className="block flex-1" style={{ minWidth: "16rem" }}>
+              <span className="block text-ink-muted text-xs">
+                {th.feasibility.constructionSuggestPick}
+              </span>
+              <select
+                value={suggestionId}
+                onChange={(event) => setSuggestionId(event.target.value)}
+                className="mt-1 w-full rounded-card border border-border-strong bg-surface px-3 py-2 text-sm"
+              >
+                <option value="">{th.feasibility.constructionSuggestPick}</option>
+                {suggestions.map((item) => (
+                  <option key={item.observation_id} value={item.observation_id}>
+                    {item.population_th} · {Number(item.value).toLocaleString("th-TH")}{" "}
+                    {item.unit_name_th}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              disabled={!suggestion?.value}
+              onClick={() => suggestion?.value && setCost(suggestion.value)}
+              className="rounded-pill border border-border-strong px-4 py-2 font-medium text-xs disabled:opacity-40"
+            >
+              {th.feasibility.constructionSuggestUse}
+            </button>
+          </div>
+        </div>
+      )}
 
       <button
         type="button"
