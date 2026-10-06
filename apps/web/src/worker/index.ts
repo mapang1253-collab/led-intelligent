@@ -298,8 +298,17 @@ app.get("/api/v1/zoning", async (c) => {
   }
 
   const cache = caches.default;
+  /**
+   * The shape version is part of the key.
+   *
+   * These answers are kept for a month, so a deployment that adds a field to the response meets
+   * entries written before it existed. Adding `legend` and reading its length cost a blank page
+   * until the client was taught to tolerate its absence — the client is now defensive, and this
+   * makes sure nobody has to wait out a month-old cache to see a new field at all. Bump it
+   * whenever this response grows or loses a field.
+   */
   const cacheKey = new Request(
-    `https://zoning.invalid/${provinceCode}/${lat.toFixed(4)},${lon.toFixed(4)}`,
+    `https://zoning.invalid/v2/${provinceCode}/${lat.toFixed(4)},${lon.toFixed(4)}`,
   );
   const cached = await cache.match(cacheKey);
   if (cached) {

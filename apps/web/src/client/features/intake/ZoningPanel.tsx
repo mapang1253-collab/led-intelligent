@@ -35,10 +35,27 @@ interface ZoningLegendEntry {
 interface ZoningResponse {
   covered: boolean;
   data: ZoningPlan[];
-  legend: ZoningLegendEntry[];
+  /**
+   * Optional on purpose. Answers are cached at the edge for a month, so a deployment that adds a
+   * field meets responses stored before it existed — and reading `.length` off one of those took
+   * the whole page down to a blank screen, not just this panel. Every field this component reads
+   * from the envelope has to survive being absent.
+   */
+  legend?: ZoningLegendEntry[];
   attribution_th: string;
   publisher_url: string;
 }
+
+/**
+ * The response shape this component expects, carried in the URL.
+ *
+ * Answers are cached for a month in three places — the edge, the browser's own HTTP cache, and
+ * TanStack Query — and a URL that does not change cannot shake any of them. Adding `legend` and
+ * deploying was not enough: the server returned it, and the screen kept showing a month-old copy
+ * without it. Bumping this is what actually reaches a reader. Raise it whenever the response
+ * grows or loses a field.
+ */
+const ZONING_SHAPE = 2;
 
 export function ZoningPanel({
   point,
@@ -49,14 +66,14 @@ export function ZoningPanel({
   provinceCode: string | null;
 }) {
   const zoning = useQuery({
-    queryKey: ["zoning", provinceCode, point?.latitude, point?.longitude],
+    queryKey: ["zoning", ZONING_SHAPE, provinceCode, point?.latitude, point?.longitude],
     enabled: point !== null && provinceCode !== null,
     // A ministerial regulation does not change while a form is open.
     staleTime: Number.POSITIVE_INFINITY,
     retry: false,
     queryFn: async (): Promise<ZoningResponse> => {
       const response = await fetch(
-        `/api/v1/zoning?lat=${point?.latitude}&lon=${point?.longitude}&province_code=${provinceCode}`,
+        `/api/v1/zoning?lat=${point?.latitude}&lon=${point?.longitude}&province_code=${provinceCode}&v=${ZONING_SHAPE}`,
         { headers: { Accept: "application/json" } },
       );
       if (!response.ok) {
@@ -111,15 +128,15 @@ export function ZoningPanel({
             </p>
           )}
 
-          {zoning.data.covered && zoning.data.data.length === 0 && (
+          {zoning.data.covered && (zoning.data.data?.length ?? 0) === 0 && (
             <p className="mt-2 text-ink-muted text-xs leading-relaxed">{th.zoning.noPlanAtPoint}</p>
           )}
 
-          {zoning.data.data.length > 1 && (
+          {(zoning.data.data?.length ?? 0) > 1 && (
             <p className="mt-2 text-ink-muted text-xs leading-relaxed">{th.zoning.multiplePlans}</p>
           )}
 
-          {zoning.data.data.map((plan) => (
+          {(zoning.data.data ?? []).map((plan) => (
             <article
               key={`${plan.plan_id}-${plan.zone_code}-${plan.block_th ?? ""}`}
               className="mt-3 rounded-card border border-border bg-surface p-3"
@@ -178,14 +195,14 @@ export function ZoningPanel({
             this plot is the answer the reader came for and the rest of the plan is context, but it
             is one click away rather than absent.
           */}
-          {zoning.data.legend.length > 0 && (
+          {(zoning.data.legend?.length ?? 0) > 0 && (
             <details className="mt-3">
               <summary className="cursor-pointer font-medium text-sm">
                 {th.zoning.legendOpen}
               </summary>
               <p className="mt-1 text-ink-muted text-xs leading-relaxed">{th.zoning.legendNote}</p>
               <ul className="mt-2">
-                {zoning.data.legend.map((entry) => (
+                {(zoning.data.legend ?? []).map((entry) => (
                   <li
                     key={entry.zone_code}
                     className="flex items-center gap-2.5 border-border border-b py-1.5 text-sm last:border-b-0"
