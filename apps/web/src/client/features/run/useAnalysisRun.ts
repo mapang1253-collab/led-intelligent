@@ -128,6 +128,8 @@ export interface RunEnvelope {
   created_at?: string;
   expires_at?: string;
   stage_records?: StageRecord[];
+  /** What the reader typed, returned by the server so a reload does not lose it. */
+  intake?: Record<string, unknown>;
   final_analysis: FinalAnalysisView | null;
   partial_artifacts?: {
     resolved_target?: {

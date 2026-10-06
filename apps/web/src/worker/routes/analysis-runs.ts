@@ -416,6 +416,19 @@ analysisRuns.get("/:run_id", async (c) => {
       // Reading never extends expiry; this is the value fixed at creation.
       expires_at: run.expires_at,
       replay_status: "COMPLETE",
+      /**
+       * What the reader typed, handed back to them.
+       *
+       * It was only ever in the browser's navigation state, so a reload — or opening the result
+       * link again the next morning, which is exactly how someone prepares for a presentation —
+       * lost it. The land calculator then asked for an area the reader had already given, and the
+       * city plan could not be shown beside the result at all, because that needs the coordinates.
+       *
+       * Returned to the capability holder only: this is the same run-scoped intake the POST
+       * stored, read back by the one cookie that can reach this run, and it is deleted with the
+       * run at expiry. It never enters a URL.
+       */
+      intake: run.intake,
       stage_records: [
         { stage: "TARGET_RESOLUTION", version: "1.0.0", state: "SUCCEEDED" },
         {

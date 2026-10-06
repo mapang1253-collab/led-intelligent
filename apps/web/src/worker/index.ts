@@ -70,6 +70,15 @@ app.get("/healthz", (c) => c.json({ status: "ok" }));
 
 const SCHEMA_VERSION = "1.0.0";
 
+/**
+ * How long a zoning lookup may spend before the screen is told it failed.
+ *
+ * DPT answers in well under a second when it answers at all, so this is never the cost of a
+ * success — it is the ceiling on a reader's wait when the service is in one of its refusing
+ * spells, and it buys roughly two attempts.
+ */
+const ZONING_BUDGET_MS = 12_000;
+
 app.get("/api/v1/administrative-areas/provinces", async (c) => {
   const db = createDb(c.env.HYPERDRIVE.connectionString);
   try {
@@ -312,10 +321,21 @@ app.get("/api/v1/zoning", async (c) => {
    * click through is worse, and a success is cached at the edge for a month, so a coordinate that
    * has been answered once is answered instantly from then on — measured at 0.2s against 11.7s.
    */
-  const attempt = () => fetchZoning(provinceCode, lat, lon, { timeoutMs: 7_000 });
+  const startedAt = Date.now();
+  const attempt = () => fetchZoning(provinceCode, lat, lon, { timeoutMs: 5_000 });
   let result = await attempt();
-  for (let retry = 0; retry < 2 && result.outcome === "FAILED" && result.retryable; retry++) {
-    await new Promise((resolve) => setTimeout(resolve, 500 + retry * 700));
+  // A whole-operation budget, not a per-request one. One lookup is two waves of requests — the
+  // identify, then the colour and the regulation text for each plan it hit — so three attempts at
+  // a seven-second timeout was never the twenty-two seconds that number suggests. Measured from
+  // the browser against a refusing DPT: 43 seconds before the screen admitted anything. The
+  // reader waits for a panel that blocks nothing and has a retry button under it, so the budget
+  // is what matters and the attempt count follows from it.
+  while (
+    result.outcome === "FAILED" &&
+    result.retryable &&
+    Date.now() - startedAt < ZONING_BUDGET_MS
+  ) {
+    await new Promise((resolve) => setTimeout(resolve, 500));
     result = await attempt();
   }
   if (result.outcome === "FAILED") {

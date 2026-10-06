@@ -20,6 +20,8 @@ import {
 import { useRef } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { useResultView } from "../../app/AppShell.js";
+import { ZoningPanel } from "../intake/ZoningPanel.js";
+import { useProvinces } from "../intake/useAdministrativeAreas.js";
 import { ConceptComparison } from "./ConceptComparison.js";
 import { ConceptPanel } from "./ConceptPanel.js";
 import { EvidencePanel } from "./EvidencePanel.js";
@@ -151,11 +153,42 @@ export function RunPage() {
   const cancel = useCancelRun(runId);
   const retry = useCreateRun();
 
-  // The request that produced this run, carried by the navigation that opened it. Absent after a
-  // page reload or a pasted link, and a retry is simply not offered then.
-  const intake = (location.state as { intake?: Record<string, unknown> } | null)?.intake;
-
   const envelope = run.data;
+
+  /**
+   * The request that produced this run.
+   *
+   * The navigation that opened the page carries it, which is instant and works while the run is
+   * still being created. The server returns it too, which is what survives a reload or a link
+   * opened the next morning — the way anyone preparing for a presentation will use this. Before
+   * the server sent it back, the land calculator asked again for an area the reader had already
+   * typed, and the city plan could not be shown beside the result at all.
+   */
+  const intake =
+    (location.state as { intake?: Record<string, unknown> } | null)?.intake ?? envelope?.intake;
+
+  /**
+   * The city plan, beside the result rather than only on the form that produced it.
+   *
+   * The concepts screen used to tell a reader to go and look the plan up at the provincial office,
+   * on a product that had already shown it to them one screen earlier. Showing it here closes
+   * that, and it belongs on this topic: the plan is the thing that decides what a piece of land
+   * may be used for, which is what the whole tab is about.
+   *
+   * Still context, not a validation input (ADR 0008). The rule pack does not read it, the
+   * unscreened-domain action stays BLOCKING, and the panel says so itself.
+   */
+  const provinces = useProvinces();
+  const zoningPin =
+    Number.isFinite(Number(intake?.latitude)) && Number.isFinite(Number(intake?.longitude))
+      ? { latitude: Number(intake?.latitude), longitude: Number(intake?.longitude) }
+      : null;
+  const zoningProvinceCode =
+    provinces.data
+      ?.find((province) => province.id === String(intake?.province_id ?? ""))
+      ?.code.toString()
+      .padStart(2, "0") ?? null;
+
   const state = envelope?.run_state;
   const target = envelope?.partial_artifacts?.resolved_target;
   const final = envelope?.final_analysis;
@@ -319,11 +352,14 @@ export function RunPage() {
       icon: Lightbulb,
       count: envelope?.partial_artifacts?.concepts?.length ?? 0,
       render: () => (
-        <ConceptPanel
-          concepts={envelope?.partial_artifacts?.concepts}
-          stageReason={conceptStage?.reason}
-          mode={envelope?.partial_artifacts?.candidate_search?.mode}
-        />
+        <>
+          <ZoningPanel point={zoningPin} provinceCode={zoningProvinceCode} />
+          <ConceptPanel
+            concepts={envelope?.partial_artifacts?.concepts}
+            stageReason={conceptStage?.reason}
+            mode={envelope?.partial_artifacts?.candidate_search?.mode}
+          />
+        </>
       ),
     },
   ];

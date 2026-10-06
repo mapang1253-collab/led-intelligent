@@ -651,12 +651,14 @@ export const th = {
     legalHeading: "ผลตรวจข้อกำหนดตามกฎหมายควบคุมอาคาร",
     /* The one legal caveat with real money behind a misreading. "ตรวจกฎหมายแล้ว" is easy to hear as
        "สร้างได้แน่นอน", when what was actually checked is one narrow rule about setback distance.
-       Zoning decides what may be built at all, and this system does not read it — so the gap is
-       named, explained as a different question from setback, and pointed at the office that can
-       answer it. Carries the Notice treatment rather than a quiet Caveat, the same tier as
-       "assessed is not a market price". */
+       Zoning decides what may be built at all, and the rule pack still does not read it.
+
+       What changed is what the sentence can honestly say next. It used to send the reader to the
+       provincial planning office to look the plan up, and by the time ADR 0008 landed the app was
+       showing them that plan on the same result — the system was telling someone to go and find
+       what it had just handed them. The gap is the same and still named; the errand is not. */
     legalDisclaimer:
-      "ผลนี้ตรวจเฉพาะระยะร่นอาคารตามกฎกระทรวงฉบับที่ 55 เท่านั้น ยังไม่ได้ตรวจสีผังเมือง (ผังเมืองรวม) ซึ่งเป็นคนละเรื่องกับระยะร่น — ผังเมืองเป็นตัวกำหนดว่าที่ดินแปลงนี้ใช้ประโยชน์ประเภทใดได้บ้าง เช่น ที่อยู่อาศัย พาณิชยกรรม หรืออุตสาหกรรม และจำกัดความสูงอาคารกับสัดส่วนพื้นที่ก่อสร้างต่อขนาดที่ดิน ก่อนตัดสินใจลงทุนจริง ต้องตรวจสอบสีผังเมืองของแปลงนี้เองที่สำนักงานโยธาธิการและผังเมืองจังหวัด หรือเว็บไซต์กรมโยธาธิการและผังเมือง ผลตรวจนี้ไม่ใช่การรับรองทางกฎหมาย และไม่ครอบคลุมข้อบัญญัติท้องถิ่น",
+      "ผลนี้ตรวจเฉพาะระยะร่นอาคารตามกฎกระทรวงฉบับที่ 55 เท่านั้น ไม่ได้นำผังเมืองรวมมาตัดสินด้วย ซึ่งเป็นคนละเรื่องกับระยะร่น — ผังเมืองเป็นตัวกำหนดว่าที่ดินแปลงนี้ใช้ประโยชน์ประเภทใดได้บ้าง และจำกัดความสูงอาคาร ระบบแสดงผังเมืองของจุดที่ปักหมุดไว้ให้ดูแล้ว แต่เป็นข้อมูลประกอบ ไม่ได้ถูกนำเข้าสู่การตรวจข้อกำหนด ก่อนตัดสินใจลงทุนจริงยังต้องยืนยันกับสำนักงานโยธาธิการและผังเมืองจังหวัดอยู่ดี ผลตรวจนี้ไม่ใช่การรับรองทางกฎหมาย และไม่ครอบคลุมข้อบัญญัติท้องถิ่น",
     missingInputsLabel: "ข้อมูลที่ต้องมีเพิ่มจึงจะตรวจข้อนี้ได้",
     requirementLabel: "ข้อกำหนดสำหรับที่ดินแปลงนี้",
     unresolvedApplicability: "ยังระบุไม่ได้ว่ากฎข้อนี้ใช้กับที่ดินแปลงนี้หรือไม่",
