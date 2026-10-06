@@ -236,11 +236,16 @@ app.get("/api/v1/proximity", async (c) => {
    * that around without pressing on a free shared service: only a retryable failure is retried,
    * and a short gap separates them.
    */
-  let result = await fetchProximity(lat, lon);
-  for (let attempt = 1; attempt < 3 && result.outcome === "FAILED" && result.retryable; attempt++) {
-    await new Promise((resolve) => setTimeout(resolve, 600 * attempt));
-    result = await fetchProximity(lat, lon);
-  }
+  /**
+   * One pass, not a loop.
+   *
+   * The adapter walks three Overpass hosts inside a single call now, so what used to be "retry
+   * three times" became nine requests and 36 seconds of spinner. Trying the same exhausted list
+   * again immediately buys nothing a reader would not get faster by pressing the retry button the
+   * screen already offers, and a success is cached at the edge for a week.
+   */
+  const result = await fetchProximity(lat, lon);
+
   if (result.outcome === "FAILED") {
     // 502, not 500: the upstream did not answer. The client tells the reader it can retry.
     return c.json({ error: "PROXIMITY_LOOKUP_FAILED", retryable: result.retryable }, 502);

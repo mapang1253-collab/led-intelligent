@@ -23,6 +23,24 @@ import { type FetchJsonOptions, type FetchJsonResult, fetchJson } from "../http.
 /** Overpass mirrors vary; this is the main endpoint, and the only host this adapter calls. */
 export const OVERPASS_ENDPOINT = "https://overpass-api.de/api/interpreter";
 
+/**
+ * The endpoints this adapter may call, tried in order.
+ *
+ * The main instance does not fail because our query is expensive — measured on 6 October 2026, it
+ * answered HTTP 504 to two of three *identical trivial* queries, a single node lookup inside a
+ * 300-metre circle, while answering the third in under a second. It is simply at capacity, and a
+ * reader asking about their land is competing with the whole world's scripts.
+ *
+ * Retrying the same overloaded host is a coin toss repeated. These are the public mirrors the
+ * Overpass project lists, and they are a fixed operator-configured list, never anything a user
+ * supplies (docs/security-privacy-compliance.md §4).
+ */
+export const OVERPASS_ENDPOINTS = [
+  OVERPASS_ENDPOINT,
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass.private.coffee/api/interpreter",
+] as const;
+
 export const PROXIMITY_SOURCE_ID = "osm.proximity";
 
 /** What a reader standing on a plot actually asks about. Kept short on purpose. */
@@ -234,13 +252,31 @@ export async function fetchProximity(
   lon: number,
   options: FetchJsonOptions = {},
 ): Promise<ProximityResult> {
-  const url = `${OVERPASS_ENDPOINT}?data=${encodeURIComponent(buildQuery(lat, lon))}`;
-  const response: FetchJsonResult = await fetchJson(url, { timeoutMs: 30_000, ...options });
+  const query = encodeURIComponent(buildQuery(lat, lon));
 
-  if (response.outcome !== "SUCCESS") {
+  /**
+   * Each mirror once, rather than one mirror repeatedly.
+   *
+   * Six seconds each, which is a deliberately impatient number. Measured on 6 October 2026 the
+   * main instance refused in eight or nine seconds and the two mirrors did not answer at all, so a
+   * generous per-host timeout bought nothing and cost the reader thirty-six seconds of spinner for
+   * a list that was never going to produce an answer. A mirror that is alive responds in about a
+   * second; one that needs longer than six is not going to save this request.
+   */
+  let response: FetchJsonResult | null = null;
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    response = await fetchJson(`${endpoint}?data=${query}`, { timeoutMs: 6_000, ...options });
+    if (response.outcome === "SUCCESS") {
+      break;
+    }
+  }
+
+  if (!response || response.outcome !== "SUCCESS") {
     // Surfaced, never swallowed and never estimated around: ADR 0006 makes a failed lookup a
     // first-class outcome precisely because this endpoint is known to be unreliable.
-    return { outcome: "FAILED", reason: response.reason, retryable: response.retryable };
+    return response
+      ? { outcome: "FAILED", reason: response.reason, retryable: response.retryable }
+      : { outcome: "FAILED", reason: "no endpoint configured", retryable: false };
   }
 
   return {
