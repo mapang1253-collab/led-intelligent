@@ -57,6 +57,36 @@ export interface ZoningPlan {
   readonly prohibited_th: readonly string[];
 }
 
+/** What a zone is, independently of who looked it up or where they pinned. */
+export interface ZoneReference {
+  readonly zone_name_th: string;
+  readonly colour: string | null;
+  readonly permitted_th: string | null;
+  readonly prohibited_th: readonly string[];
+}
+
+/**
+ * Somewhere to keep what DPT says about a zone, supplied by the caller.
+ *
+ * The adapter does not know what a database is and must not (docs/technology-stack.md §4), so the
+ * store arrives as two functions. Without one it behaves exactly as before: every lookup asks DPT
+ * for everything. With one, four of the five requests disappear on the second reader to land on
+ * the same zone — which is most readers, since `ชุมชน` is zone 4400 of every province plan.
+ */
+export interface ZoneStore {
+  readonly load: (
+    keys: readonly { planId: string; zoneCode: string }[],
+  ) => Promise<Map<string, ZoneReference>>;
+  readonly save: (planId: string, zoneCode: string, zone: ZoneReference) => Promise<void>;
+}
+
+export interface ZoningOptions extends FetchJsonOptions {
+  readonly store?: ZoneStore;
+}
+
+/** The key both sides of a `ZoneStore` agree on. */
+export const zoneKey = (planId: string, zoneCode: string) => `${planId}\u0000${zoneCode}`;
+
 export type ZoningResult =
   | {
       readonly outcome: "SUCCESS";
@@ -244,7 +274,7 @@ export async function fetchZoning(
   provinceCode: string,
   latitude: number,
   longitude: number,
-  options: FetchJsonOptions = {},
+  options: ZoningOptions = {},
 ): Promise<ZoningResult> {
   if (!/^\d{2}$/.test(provinceCode)) {
     return { outcome: "FAILED", reason: "province code must be two digits", retryable: false };
@@ -286,7 +316,29 @@ export async function fetchZoning(
       : { outcome: "FAILED", reason: error.message ?? "identify failed", retryable: false };
   }
 
-  const hits = readIdentify(response.payload);
+  const hits = readIdentify(response.payload).flatMap((hit) => {
+    const planId = hit.attributes.CB_ID?.trim();
+    const zoneCode = hit.attributes.PL_USE?.trim();
+    // A polygon with no zone code cannot be explained or coloured, and a blank row on screen reads
+    // as an answer. DPT's data does contain a few (ชลบุรี has one).
+    if (!planId || !zoneCode) {
+      return [];
+    }
+    return [
+      {
+        layerId: hit.layerId,
+        planId,
+        zoneCode,
+        descriptionTh: hit.attributes.PL_DESC?.trim() ?? "",
+        blockTh: hit.attributes.PL_BLOCK?.trim() ?? "",
+      },
+    ];
+  });
+
+  // What is already known, asked once for every zone the point fell in.
+  const known = options.store
+    ? await options.store.load(hits.map((hit) => ({ planId: hit.planId, zoneCode: hit.zoneCode })))
+    : new Map<string, ZoneReference>();
 
   // One legend per plan covering the point, fetched once and shared: several hits in the same
   // plan must not each ask for the same page.
@@ -299,15 +351,25 @@ export async function fetchZoning(
 
   const plans = await Promise.all(
     hits.map(async (hit): Promise<ZoningPlan | null> => {
-      const planId = hit.attributes.CB_ID?.trim();
-      const zoneCode = hit.attributes.PL_USE?.trim();
-      // A polygon with no zone code cannot be explained or coloured, and a blank row on screen
-      // reads as an answer. DPT's data does contain a few (ชลบุรี has one).
-      if (!planId || !zoneCode) {
-        return null;
+      const { planId, zoneCode } = hit;
+      const block = hit.blockTh;
+
+      // The stored answer, when there is one. This is the whole point of the store: on a hit the
+      // four requests below never happen, so a busy DPT cannot take the zone away from a reader.
+      const stored = known.get(zoneKey(planId, zoneCode));
+      if (stored) {
+        return {
+          plan_id: planId,
+          zone_code: zoneCode,
+          zone_name_th: stored.zone_name_th,
+          block_th: block ? block : null,
+          colour: stored.colour,
+          permitted_th: stored.permitted_th,
+          prohibited_th: stored.prohibited_th,
+        };
       }
-      const zoneName =
-        hit.attributes.PL_DESC?.trim() || (await legendFor(planId)).get(zoneCode) || null;
+
+      const zoneName = hit.descriptionTh || (await legendFor(planId)).get(zoneCode) || null;
       if (!zoneName) {
         return null;
       }
@@ -316,15 +378,25 @@ export async function fetchZoning(
         conditions("querydb_landuse.php", planId, zoneCode, options),
         conditions("querydb_landuse_prohibition.php", planId, zoneCode, options),
       ]);
-      const block = hit.attributes.PL_BLOCK?.trim();
-      return {
-        plan_id: planId,
-        zone_code: zoneCode,
+      const zone: ZoneReference = {
         zone_name_th: zoneName,
-        block_th: block ? block : null,
         colour,
         permitted_th: permitted.length > 0 ? permitted.join(" ") : null,
         prohibited_th: prohibited,
+      };
+      // Kept only when it is worth keeping. A row with no regulation text behind it would be a
+      // bad answer made permanent, and the next reader deserves another attempt at DPT.
+      if (options.store && zone.permitted_th) {
+        await options.store.save(planId, zoneCode, zone);
+      }
+      return {
+        plan_id: planId,
+        zone_code: zoneCode,
+        zone_name_th: zone.zone_name_th,
+        block_th: block ? block : null,
+        colour: zone.colour,
+        permitted_th: zone.permitted_th,
+        prohibited_th: zone.prohibited_th,
       };
     }),
   );

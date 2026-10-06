@@ -8,8 +8,10 @@ import {
   listDistricts,
   listProvinces,
   listSubdistricts,
+  loadZoneReferences,
   parcelCoverage,
   purgeExpiredRuns,
+  saveZoneReference,
   searchAreas,
   sourceStatuses,
   wellDocumentedAreas,
@@ -326,8 +328,27 @@ app.get("/api/v1/zoning", async (c) => {
    * click through is worse, and a success is cached at the edge for a month, so a coordinate that
    * has been answered once is answered instantly from then on — measured at 0.2s against 11.7s.
    */
+  /**
+   * What is already known about a zone, so DPT only has to answer it once (migration 0013).
+   *
+   * Four of the five requests a lookup makes ask the same question every time — what zone 4400 of
+   * plan 1300000 is called, its colour, its ข้อกำหนด and its ข้อห้าม — and that is published
+   * reference data, the same for every reader. Keeping it is what stops a busy department from
+   * taking the city plan away from somebody. The coordinate is never stored: the point-to-zone
+   * step still goes out on every lookup, so nothing here belongs to a reader or a run.
+   *
+   * The edge cache in front of this is still worth having — it answers in milliseconds — but it is
+   * per colo, so a reader in another province starts cold and this is what they land on.
+   */
+  const db = createDb(c.env.HYPERDRIVE.connectionString);
+  const store = {
+    load: (keys: readonly { planId: string; zoneCode: string }[]) => loadZoneReferences(db, keys),
+    save: (planId: string, zoneCode: string, zone: Parameters<typeof saveZoneReference>[3]) =>
+      saveZoneReference(db, planId, zoneCode, zone),
+  };
+
   const startedAt = Date.now();
-  const attempt = () => fetchZoning(provinceCode, lat, lon, { timeoutMs: 5_000 });
+  const attempt = () => fetchZoning(provinceCode, lat, lon, { timeoutMs: 5_000, store });
   let result = await attempt();
   // A whole-operation budget, not a per-request one. One lookup is two waves of requests — the
   // identify, then the colour and the regulation text for each plan it hit — so three attempts at
@@ -343,6 +364,8 @@ app.get("/api/v1/zoning", async (c) => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     result = await attempt();
   }
+  c.executionCtx.waitUntil(db.destroy());
+
   if (result.outcome === "FAILED") {
     // 502 rather than 500: the upstream did not answer, and the screen offers a retry.
     return c.json({ error: "ZONING_LOOKUP_FAILED", retryable: result.retryable }, 502);

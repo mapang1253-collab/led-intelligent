@@ -70,3 +70,11 @@ export {
   parcelCoverage,
   parseMapSheet,
 } from "./repositories/land-parcels.js";
+
+export {
+  type ZoneKey,
+  type ZoneReference,
+  loadZoneReferences,
+  saveZoneReference,
+  zoneReferenceCount,
+} from "./repositories/zoning-zones.js";
