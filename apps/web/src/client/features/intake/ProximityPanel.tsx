@@ -1,6 +1,7 @@
 import { th } from "@reis/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { Info, LoaderCircle, Ruler, TriangleAlert } from "lucide-react";
+import { useState } from "react";
 import type { PinnedPoint } from "./LandPinMap.js";
 
 /**
@@ -32,9 +33,22 @@ interface ProximityResponse {
 }
 
 export function ProximityPanel({ point }: { point: PinnedPoint | null }) {
+  /**
+   * Asked for, not attempted on sight.
+   *
+   * Overpass is a free community service and it refuses under load: on 6 and 7 October 2026 every
+   * public mirror timed out for minutes at a time. A panel that fetched as soon as a pin appeared
+   * met readers with an amber failure they had never asked for, sitting beside a city plan and a
+   * price range that were both perfectly fine — and the whole screen read as broken.
+   *
+   * One click instead. Nothing is lost: these distances are context that never entered the
+   * analysis, so a reader who does not press the button has missed nothing the result depends on.
+   */
+  const [asked, setAsked] = useState(false);
+
   const proximity = useQuery({
     queryKey: ["proximity", point?.latitude, point?.longitude],
-    enabled: point !== null,
+    enabled: point !== null && asked,
     // The pin does not move on its own, and Overpass is a shared public service.
     staleTime: Number.POSITIVE_INFINITY,
     retry: false,
@@ -66,7 +80,21 @@ export function ProximityPanel({ point }: { point: PinnedPoint | null }) {
         {th.map.proximityHeading}
       </h3>
 
-      {proximity.isLoading && (
+      {!asked && (
+        <>
+          <p className="mt-1 text-ink-muted text-xs leading-relaxed">{th.map.proximityAskNote}</p>
+          <button
+            type="button"
+            onClick={() => setAsked(true)}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-pill border border-border-strong px-3 py-1.5 font-medium text-xs"
+          >
+            <Ruler size={13} aria-hidden="true" />
+            {th.map.proximityAsk}
+          </button>
+        </>
+      )}
+
+      {asked && proximity.isLoading && (
         <p className="mt-2 flex items-center gap-2 text-ink-muted text-xs">
           <LoaderCircle size={13} className="animate-spin" aria-hidden="true" />
           {th.map.proximityLoading}

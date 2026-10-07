@@ -107,6 +107,14 @@ export const th = {
       "ตำแหน่งนี้เป็นสิ่งที่ท่านระบุเอง ระบบไม่ได้ตรวจสอบว่าตรงกับแปลงที่ดินจริงหรือไม่ และไม่ได้ทำให้ขอบเขตของผลวิเคราะห์เปลี่ยนจากระดับพื้นที่",
 
     proximityHeading: "ระยะห่างจากจุดสำคัญ",
+    /* Asked for rather than attempted. Overpass is a free community service and it refuses under
+       load — measured on 6–7 October 2026, every public mirror timed out for minutes at a time —
+       so a panel that fetches on sight greeted readers with an amber failure they had not asked
+       for, beside results that were perfectly fine. A button costs one click and never lies about
+       the state of the rest of the screen. */
+    proximityAsk: "วัดระยะห่างจากถนน โรงเรียน โรงพยาบาล ร้านสะดวกซื้อ และสถานีรถไฟ",
+    proximityAskNote:
+      "ใช้ข้อมูล OpenStreetMap ซึ่งเป็นบริการของชุมชนที่บางช่วงไม่ว่าง ถ้าไม่สำเร็จให้กดลองใหม่ได้ และไม่กระทบผลวิเคราะห์ส่วนอื่น",
     proximityLoading: "กำลังวัดระยะห่าง",
     proximityFailed: "ดึงข้อมูลแผนที่ไม่สำเร็จ บริการภายนอกอาจไม่ว่าง ลองใหม่อีกครั้งได้",
     proximityRetry: "ลองใหม่",
