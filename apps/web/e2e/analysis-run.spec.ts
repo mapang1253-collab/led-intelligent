@@ -82,3 +82,57 @@ test("a result URL survives being typed into the address bar", async ({ page }) 
     timeout: RESULT_TIMEOUT,
   });
 });
+
+/**
+ * Pressing start must not throw away what was filled in.
+ *
+ * The owners reported this: the form shows the map, the city plan and the colour key once a place
+ * and a pin are given, and after pressing เริ่มวิเคราะห์ there was no way back to any of it. Back
+ * restores the history entry the reader arrived from, and that entry had been stamped before they
+ * had filled anything in — so both the Back button and the link on the result landed on a blank
+ * first screen.
+ *
+ * Driven through both routes back, because they fail for the same reason and were fixed in two
+ * different places.
+ */
+test("going back from a result reopens the form on the same place", async ({ page }) => {
+  await page.goto("/");
+  await pickAnArea(page);
+  await page.getByRole("button", { name: th.intake.submit }).click();
+  await expect(page).toHaveURL(/\/runs\/[^/?#]+/);
+
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+  // The area, as the form's own confirmation prints it once a place is held.
+  await expect(page.getByText("แสนสุข", { exact: false }).first()).toBeVisible();
+
+  await page.goForward();
+  await expect(page).toHaveURL(/\/runs\/[^/?#]+/);
+  await page.getByRole("link", { name: th.progress.backToIntake }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByText("แสนสุข", { exact: false }).first()).toBeVisible();
+});
+
+/**
+ * And the same when the result was opened cold, from the address bar.
+ *
+ * A reader coming back to a link in the morning has no router state at all, so the back link has
+ * to rebuild the form from the run's own stored intake — the copy the server keeps for 24 hours.
+ */
+test("going back from a reloaded result still reopens the form on the same place", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await pickAnArea(page);
+  await page.getByRole("button", { name: th.intake.submit }).click();
+  await expect(page).toHaveURL(/\/runs\/[^/?#]+/);
+
+  await page.goto(page.url());
+  await expect(page.getByRole("heading", { level: 1, name: RESULT_HEADING })).toBeVisible({
+    timeout: RESULT_TIMEOUT,
+  });
+
+  await page.getByRole("link", { name: th.progress.backToIntake }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByText("แสนสุข", { exact: false }).first()).toBeVisible();
+});

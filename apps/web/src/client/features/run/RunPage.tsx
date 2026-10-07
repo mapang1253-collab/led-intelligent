@@ -380,8 +380,13 @@ export function RunPage() {
   return (
     <div className="text-ink">
       <main className="mx-auto max-w-3xl px-6 py-10 lg:py-12">
+        {/* Carries this run's own intake, so going back reopens the form on the same place with
+            the same answers — and therefore the same map, city-plan colours and key the reader was
+            looking at before they pressed start. Without it this link led to an empty first
+            screen, and everything they had filled in was gone. */}
         <Link
           to="/"
+          state={intake ? { intake } : undefined}
           className="inline-flex items-center gap-2 text-ink-muted text-sm hover:text-ink"
         >
           <ArrowLeft size={16} aria-hidden="true" />

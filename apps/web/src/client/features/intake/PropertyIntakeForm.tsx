@@ -1,6 +1,6 @@
 import { th } from "@reis/i18n";
 import { ArrowRight, ChevronDown, Info, Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useCreateRun } from "../run/useAnalysisRun.js";
 import { type AreaChoice, AreaPicker } from "./AreaPicker.js";
@@ -119,6 +119,20 @@ export function PropertyIntakeForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const navigate = useNavigate();
+  /**
+   * The run to open, once this screen's own history entry has been stamped with the intake.
+   *
+   * Two navigations in one handler would race — the replace that records the form and the push
+   * that leaves it — so the push waits for the replace to commit.
+   */
+  const [startedRun, setStartedRun] = useState<string | null>(null);
+  useEffect(() => {
+    if (startedRun) {
+      navigate(`/runs/${startedRun}`, { state: { intake: lastIntake.current } });
+    }
+  }, [startedRun, navigate]);
+  /** What was submitted, for the navigation that happens a render later. */
+  const lastIntake = useRef<Record<string, unknown>>({});
   const createRun = useCreateRun();
   const provinces = useProvinces();
   /**
@@ -190,10 +204,23 @@ export function PropertyIntakeForm() {
       ...(pin ? { latitude: pin.latitude, longitude: pin.longitude } : {}),
     };
 
+    lastIntake.current = intake;
     createRun.mutate(intake, {
-      // The intake travels in router state, never in storage: it is what a retry has to repeat,
-      // and it lives exactly as long as this navigation does.
-      onSuccess: (run) => navigate(`/runs/${run.run_id}`, { state: { intake } }),
+      /**
+       * The intake travels in router state, never in storage: it is what a retry has to repeat,
+       * and it lives exactly as long as these history entries do.
+       *
+       * It is written onto *this* screen's entry as well as the run's, and that is the whole point
+       * of the two steps. The browser's Back button does not re-run this form — it restores the
+       * entry the reader arrived from, and that entry was stamped before they had filled anything
+       * in. So Back landed on a blank first screen: the area gone, the pin gone, and with the pin
+       * the map, the city-plan colours and the key they had been reading. Stamping the entry first
+       * is what makes Back return the screen they left.
+       */
+      onSuccess: (run) => {
+        navigate(".", { replace: true, state: { intake } });
+        setStartedRun(run.run_id);
+      },
     });
   }
 
