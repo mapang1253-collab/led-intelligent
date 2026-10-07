@@ -60,7 +60,8 @@ Read before deciding, across all 87 possible province codes on 2026-10-07:
 - **The schema is read, not assumed.** `describeParcelLayer` finds the layer and reports how each
   column is stored and quoted; the profile is cached at the edge for a month, because it is
   published metadata about a province, identical for every reader, carrying nothing about anybody's
-  land. Cold costs three requests, warm one.
+  land. Cold costs three requests, warm one; a failed metadata read is retried once inside a
+  ten-second budget, and neither a failure nor an "unsearchable" verdict is ever cached.
 - **The lookup itself is never cached.** It is keyed by a reader's own ระวาง and เลขที่ดิน, and those
   do not belong in a cache that outlives the request.
 - **The database does not grow.** No migration, no ingestion, no rows.
