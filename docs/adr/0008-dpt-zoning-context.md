@@ -90,9 +90,18 @@ reader has left by the time they are reading the result.
 The result's map is **read-only**: no click places a pin, the marker cannot be dragged, and there is
 no place search. The run has already been computed from this point, and offering a correction here
 that silently does not apply to the analysis below it would be worse than offering none. The
-overlay starts **on**, unlike on the form, because showing it is the only reason this map exists,
-and the key below it starts **unfolded**, because a map drawn in those colours with the key folded
-is a page of pink and green.
+overlay starts **on**, because showing it is the only reason this map exists, and the key below it
+starts **unfolded**, because a map drawn in those colours with the key folded is a page of pink and
+green.
+
+The form's map now starts the overlay on too, but only once a pin exists. The two states of that
+map are different tools: with no pin it is something to click on, and a translucent plan over it is
+in the way; with a pin it is the answer to "what is around this land", which is the plan. The
+owners hit this on the way back from a result — the form reopened on their place, and the map was
+grey beside a panel still naming their zone and showing its colour in a swatch. Carrying the switch
+through the navigation would have fixed only that trip, since a reader opening the result link the
+next morning has no such state to carry; deriving it from the pin fixes both. The toggle stays, and
+after the first pin the switch is the reader's.
 
 The tile layer itself is now one module shared by both maps, so the projection arithmetic cannot
 drift between them.

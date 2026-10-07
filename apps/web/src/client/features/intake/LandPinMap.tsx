@@ -77,7 +77,35 @@ export function LandPinMap({
   handler.current = onChange;
   const zoning = useRef<L.TileLayer | null>(null);
   const [ready, setReady] = useState(false);
-  const [showZoning, setShowZoning] = useState(false);
+  /**
+   * Whether the city plan is drawn over the map.
+   *
+   * It follows the pin rather than starting off, because the two states of this map are different
+   * tools. With no pin it is something to click on, and a translucent plan over it is in the way.
+   * With a pin it is the answer to "what is around this land", which is the plan.
+   *
+   * The owners found this the hard way. They placed a pin, switched the colours on, read the zone,
+   * pressed เริ่มวิเคราะห์, came back — and the map was grey again, beside a panel still naming
+   * their zone and showing its colour in a swatch. Carrying the switch itself through the
+   * navigation would have fixed only that trip; a reader opening the result link the next morning
+   * and going back has no such state to carry, and the colours would be gone again.
+   */
+  const [showZoning, setShowZoning] = useState(() => value !== null);
+  /**
+   * Turns the colours on for the first pin, once.
+   *
+   * Once, because after that the switch is the reader's. Re-deriving it from the pin on every
+   * change would turn the colours back on under someone who had just switched them off and then
+   * nudged the marker.
+   */
+  const offeredZoning = useRef(value !== null);
+  useEffect(() => {
+    if (!value || offeredZoning.current) {
+      return;
+    }
+    offeredZoning.current = true;
+    setShowZoning(true);
+  }, [value]);
   const [term, setTerm] = useState("");
   const [debounced, setDebounced] = useState("");
 
