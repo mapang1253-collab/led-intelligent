@@ -66,9 +66,11 @@ export {
 export {
   type LandParcel,
   type ParcelCoverage,
+  type ResolvedAreaIds,
   findParcel,
   parcelCoverage,
   parseMapSheet,
+  resolveAreaIdsByName,
 } from "./repositories/land-parcels.js";
 
 export {

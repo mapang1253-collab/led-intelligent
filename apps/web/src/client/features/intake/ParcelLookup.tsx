@@ -5,20 +5,23 @@ import { useState } from "react";
 import type { PinnedPoint } from "./LandPinMap.js";
 
 /**
- * Looking a parcel up by ระวาง and เลขที่ดิน (docs/adr/0007).
+ * Looking a parcel up by ระวาง and เลขที่ดิน (docs/adr/0007, docs/adr/0009).
  *
- * This is the thing the owners asked for repeatedly and that kept coming back "not possible". It
- * is possible — for five provinces, because those are the only ones the Land Department publishes
- * openly. That limit is the first thing this panel says, before the inputs, so a reader in ชลบุรี
- * learns it in one line instead of by typing a correct deed and being told nothing was found.
+ * This is the thing the owners asked for repeatedly and that kept coming back "not possible". It is
+ * possible for 58 provinces, from two publishers: the Land Department's open shapefiles, held in
+ * the database for the one province that fits in it, and กรมโยธาธิการและผังเมือง's republished
+ * cadastre, searched live for 57 more. The reader picks their province first — the data is held per
+ * province, and choosing is also what lets the screen say "that province is not published" instead
+ * of letting an empty result imply the deed number is wrong.
  *
- * A hit fills the land area and offers the pin; it never submits anything. And it establishes
- * where a parcel is, not whose it is — ownership is not in this data, and the panel says that too,
- * because a screen that resolves your deed number feels like it knows more about you than it does.
+ * A hit fills the land area, the administrative area and the pin; it never submits anything. And it
+ * establishes where a parcel is, not whose it is — ownership is in neither source, and the panel
+ * says so, because a screen that resolves your deed number feels like it knows more about you than
+ * it does.
  *
- * Still not a deed-number search. เลขที่ดิน is the number inside a ระวาง; เลขที่โฉนด is the number
- * on the document and is not published. The label says เลขที่ดิน and the help text says which is
- * which, since the two are confused constantly and are printed side by side on the same page.
+ * Still not a deed-number search. เลขที่ดิน is the number inside a ระวาง; เลขที่โฉนด is the number on
+ * the document and is not published. The label says เลขที่ดิน and the help text says which is which,
+ * since the two are confused constantly and are printed on the same page of the same deed.
  */
 
 interface Parcel {
@@ -33,14 +36,35 @@ interface Parcel {
   province_id: string | null;
   district_id: string | null;
   subdistrict_id: string | null;
+  /** Only the live lookup reports this; a stored parcel is one row by construction. */
+  match_count?: number;
 }
 
-interface Coverage {
+interface StoredCoverage {
   province_code: string;
   province_name_th: string;
   parcels: number;
   published_by: string;
   licence: string;
+}
+
+interface LiveCoverage {
+  province_code: string;
+  province_name_th: string;
+  province_id: string;
+}
+
+interface CoverageResponse {
+  data: StoredCoverage[];
+  /** Optional: an older deployment's response carried only `data`. */
+  live?: LiveCoverage[];
+}
+
+interface SearchResponse {
+  data: Parcel | null;
+  source: "DOL_STORED" | "DPT_LIVE" | null;
+  /** Absent on a stored hit, where coverage is implied by the hit itself. */
+  covered?: boolean;
 }
 
 /** 1 ตารางวา = 4 ตารางเมตร (ประมวลกฎหมายที่ดิน). */
@@ -70,61 +94,102 @@ export function ParcelLookup({
     wa: string;
   }) => void;
 }) {
+  const [provinceCode, setProvinceCode] = useState("");
   const [mapSheet, setMapSheet] = useState("");
   const [landNo, setLandNo] = useState("");
-  const [submitted, setSubmitted] = useState<{ mapSheet: string; landNo: string } | null>(null);
+  const [submitted, setSubmitted] = useState<{
+    provinceCode: string;
+    mapSheet: string;
+    landNo: string;
+  } | null>(null);
 
   const coverage = useQuery({
-    queryKey: ["parcel-coverage"],
+    queryKey: ["parcel-coverage", 2],
     staleTime: Number.POSITIVE_INFINITY,
-    queryFn: async (): Promise<Coverage[]> => {
+    queryFn: async (): Promise<CoverageResponse> => {
       const response = await fetch("/api/v1/parcels/coverage", {
         headers: { Accept: "application/json" },
       });
-      return response.ok ? ((await response.json()) as { data: Coverage[] }).data : [];
+      return response.ok ? ((await response.json()) as CoverageResponse) : { data: [], live: [] };
     },
   });
 
   const lookup = useQuery({
-    queryKey: ["parcel", submitted?.mapSheet, submitted?.landNo],
+    queryKey: ["parcel", submitted?.provinceCode, submitted?.mapSheet, submitted?.landNo],
     enabled: submitted !== null,
     retry: false,
     staleTime: Number.POSITIVE_INFINITY,
-    queryFn: async (): Promise<Parcel | null> => {
+    queryFn: async (): Promise<SearchResponse> => {
       const response = await fetch(
-        `/api/v1/parcels/search?map_sheet=${encodeURIComponent(submitted?.mapSheet ?? "")}&land_no=${encodeURIComponent(submitted?.landNo ?? "")}`,
+        `/api/v1/parcels/search?map_sheet=${encodeURIComponent(submitted?.mapSheet ?? "")}&land_no=${encodeURIComponent(submitted?.landNo ?? "")}&province_code=${encodeURIComponent(submitted?.provinceCode ?? "")}`,
         { headers: { Accept: "application/json" } },
       );
       if (!response.ok) {
         throw new Error(`parcel lookup failed: ${response.status}`);
       }
-      return ((await response.json()) as { data: Parcel | null }).data;
+      return (await response.json()) as SearchResponse;
     },
   });
 
-  const covered = (coverage.data ?? []).filter((c) => c.parcels > 0);
-  const parcel = lookup.data ?? null;
+  const stored = (coverage.data?.data ?? []).filter((province) => province.parcels > 0);
+  const live = coverage.data?.live ?? [];
+  const searchable = stored.length + live.length;
+  const parcel = lookup.data?.data ?? null;
   const area = parcel?.area_sqm ? areaInThaiUnits(Number(parcel.area_sqm)) : null;
+  const matches = parcel?.match_count ?? 1;
+  const covered =
+    stored.some((p) => p.province_code === provinceCode) ||
+    live.some((p) => p.province_code === provinceCode);
 
   return (
     <div className="mt-6 rounded-card bg-surface-sunken p-5">
       <p className="font-semibold text-sm">{th.parcel.heading}</p>
 
-      {/* The coverage limit, before the inputs. A reader outside these provinces should not have
-          to type a correct deed number to discover we hold nothing for them. */}
+      {/* How far the search reaches, before the inputs. A reader in a province nobody publishes
+          should learn it in one line, not by typing a correct deed number and being told nothing. */}
       <p className="mt-1.5 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">
         <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
-        {covered.length > 0
-          ? th.parcel.coverage.replace(
-              "{provinces}",
-              covered
-                .map((c) => `${c.province_name_th} (${c.parcels.toLocaleString("th-TH")})`)
-                .join(" · "),
-            )
+        {searchable > 0
+          ? th.parcel.coverage.replace("{count}", searchable.toLocaleString("th-TH"))
           : th.parcel.coverageLoading}
       </p>
 
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <label className="block">
+          <span className="font-medium text-sm">{th.parcel.provinceLabel}</span>
+          <select
+            value={provinceCode}
+            onChange={(event) => setProvinceCode(event.target.value)}
+            className="mt-1 w-full rounded-card border border-border-strong bg-surface px-3 py-2.5 text-base"
+          >
+            <option value="">{th.parcel.provincePlaceholder}</option>
+            {/* Grouped by publisher, because which one answers changes what the answer is worth:
+                a stored parcel is the Land Department's own row, a live one is a copy of it. */}
+            {stored.length > 0 && (
+              <optgroup label={th.parcel.provinceGroupStored}>
+                {stored.map((province) => (
+                  <option key={province.province_code} value={province.province_code}>
+                    {province.province_name_th}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            {live.length > 0 && (
+              <optgroup label={th.parcel.provinceGroupLive}>
+                {[...live]
+                  .sort((a, b) => a.province_name_th.localeCompare(b.province_name_th, "th-TH"))
+                  .map((province) => (
+                    <option key={province.province_code} value={province.province_code}>
+                      {province.province_name_th}
+                    </option>
+                  ))}
+              </optgroup>
+            )}
+          </select>
+          <span className="mt-1 block text-ink-muted text-xs leading-relaxed">
+            {th.parcel.provinceHelp}
+          </span>
+        </label>
         <label className="block">
           <span className="font-medium text-sm">{th.parcel.mapSheetLabel}</span>
           <input
@@ -155,8 +220,10 @@ export function ParcelLookup({
 
       <button
         type="button"
-        disabled={mapSheet.trim() === "" || landNo.trim() === ""}
-        onClick={() => setSubmitted({ mapSheet: mapSheet.trim(), landNo: landNo.trim() })}
+        disabled={provinceCode === "" || mapSheet.trim() === "" || landNo.trim() === ""}
+        onClick={() =>
+          setSubmitted({ provinceCode, mapSheet: mapSheet.trim(), landNo: landNo.trim() })
+        }
         className="mt-3 inline-flex items-center gap-1.5 rounded-pill px-5 py-2 font-semibold text-sm disabled:opacity-50"
         style={{ backgroundColor: "var(--color-signature)", color: "var(--color-signature-on)" }}
       >
@@ -168,24 +235,46 @@ export function ParcelLookup({
         {th.parcel.lookup}
       </button>
 
+      {/* Three empty answers, three different sentences. The province is not published; the number
+          is not in a province that is; or the lookup itself did not complete. */}
       {submitted && !lookup.isFetching && parcel === null && !lookup.isError && (
         <p
           className="mt-3 flex items-start gap-2 text-xs leading-relaxed"
           style={{ color: "var(--color-partial)" }}
         >
           <TriangleAlert size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
-          {th.parcel.notFound}
+          {lookup.data?.covered === false ? th.parcel.provinceNotCovered : th.parcel.notFound}
         </p>
       )}
       {lookup.isError && (
-        <p className="mt-3 text-xs" style={{ color: "var(--color-partial)" }}>
-          {th.parcel.failed}
-        </p>
+        <div className="mt-3">
+          <p className="text-xs leading-relaxed" style={{ color: "var(--color-partial)" }}>
+            {th.parcel.failed}
+          </p>
+          <button
+            type="button"
+            onClick={() => lookup.refetch()}
+            className="mt-2 rounded-pill border border-border-strong px-3 py-1.5 font-medium text-xs"
+          >
+            {th.parcel.retry}
+          </button>
+        </div>
       )}
 
       {parcel && (
         <div className="mt-4 rounded-card border border-border-strong bg-surface p-4">
           <p className="font-semibold text-sm">{th.parcel.found}</p>
+
+          {matches > 1 && (
+            <p
+              className="mt-1.5 flex items-start gap-2 text-xs leading-relaxed"
+              style={{ color: "var(--color-partial)" }}
+            >
+              <TriangleAlert size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
+              {th.parcel.multipleMatches.replace("{count}", matches.toLocaleString("th-TH"))}
+            </p>
+          )}
+
           <dl className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
             <div>
               <dt className="text-ink-muted text-xs">{th.parcel.foundWhere}</dt>
@@ -196,7 +285,9 @@ export function ParcelLookup({
               </dd>
             </div>
             <div>
-              <dt className="text-ink-muted text-xs">{th.parcel.foundArea}</dt>
+              <dt className="text-ink-muted text-xs">
+                {lookup.data?.source === "DPT_LIVE" ? th.parcel.foundAreaLive : th.parcel.foundArea}
+              </dt>
               <dd className="font-medium tabular-nums">
                 {area
                   ? `${area.rai} ไร่ ${area.ngan} งาน ${area.wa.toLocaleString("th-TH", { maximumFractionDigits: 1 })} ตร.ว.`
@@ -204,6 +295,15 @@ export function ParcelLookup({
               </dd>
             </div>
           </dl>
+
+          {/* Said rather than left as a dash: some provinces publish the outline without the area,
+              and a few publish it without the ตำบล, and both look like a bug otherwise. */}
+          {area === null && (
+            <p className="mt-1.5 text-ink-muted text-xs leading-relaxed">{th.parcel.noArea}</p>
+          )}
+          {parcel.subdistrict_name_th === null && (
+            <p className="mt-1.5 text-ink-muted text-xs leading-relaxed">{th.parcel.noNames}</p>
+          )}
 
           <button
             type="button"
@@ -234,15 +334,15 @@ export function ParcelLookup({
             {th.parcel.notOwnership}
           </p>
           <p className="mt-1 text-ink-muted text-xs">
-            {th.parcel.source.replace("{publisher}", covered[0]?.published_by ?? "กรมที่ดิน")}
+            {lookup.data?.source === "DPT_LIVE" ? th.parcel.sourceLive : th.parcel.sourceStored}
           </p>
         </div>
       )}
 
       {/* The route out for readers this box cannot serve: a deed number instead of a เลขที่ดิน, a
-          province DOL has not opened, or a reader who wants to see the parcel drawn. LandsMaps
+          province neither publisher opens, or a reader who wants to see the parcel drawn. LandsMaps
           answers all three and hands back the two numbers above, so this is a round trip. */}
-      <details className="mt-4">
+      <details className="mt-4" open={provinceCode !== "" && !covered}>
         <summary className="cursor-pointer font-medium text-signature-text text-sm">
           {th.parcel.fallbackHeading}
         </summary>

@@ -115,6 +115,64 @@ export async function findParcel(
   return rows[0] ?? null;
 }
 
+export interface ResolvedAreaIds {
+  /** The chosen province's own name, for the provinces whose parcels carry none. */
+  readonly province_name_th: string | null;
+  readonly province_id: string | null;
+  readonly district_id: string | null;
+  readonly subdistrict_id: string | null;
+}
+
+/**
+ * Turns the names a live parcel lookup returns into ids the area picker can select.
+ *
+ * The stored lookup resolves this in its own query, because the parcel row and the reference table
+ * are in the same database. A parcel located live at กรมโยธาธิการและผังเมือง arrives as three Thai
+ * names and a province code instead, and without this step the form would ask a reader where their
+ * land is immediately after telling them — the duplication that the stored lookup existed to end.
+ *
+ * Nulls are expected and are not failures. Several of DPT's provinces publish the polygons with no
+ * name columns at all, and a few fill them with the import placeholder the adapter strips, so the
+ * province usually resolves from its code and the two narrower levels sometimes do not.
+ */
+export async function resolveAreaIdsByName(
+  db: Db,
+  provinceCode: string,
+  districtName: string | null,
+  subdistrictName: string | null,
+): Promise<ResolvedAreaIds> {
+  if (!/^\d{1,2}$/.test(provinceCode)) {
+    return { province_name_th: null, province_id: null, district_id: null, subdistrict_id: null };
+  }
+
+  const { rows } = await db.executeQuery<ResolvedAreaIds>({
+    sql: `SELECT pv.name_th AS province_name_th, pv.id AS province_id,
+                 d.id AS district_id, sd.id AS subdistrict_id
+            FROM reference.administrative_area pv
+            -- The branch-office annotation DOL writes as "ลำลูกกา(หนองจอก)" is stripped before
+            -- matching, exactly as the stored lookup strips it: the reference table knows the
+            -- district, not the branch that covers it.
+            LEFT JOIN reference.administrative_area d
+                   ON d.level = 'DISTRICT' AND d.valid_to IS NULL AND d.parent_id = pv.id
+                  AND d.name_th = split_part($2, '(', 1)
+            LEFT JOIN reference.administrative_area sd
+                   ON sd.level = 'SUBDISTRICT' AND sd.valid_to IS NULL AND sd.parent_id = d.id
+                  AND sd.name_th = $3
+           WHERE pv.level = 'PROVINCE' AND pv.valid_to IS NULL AND pv.code = $1
+           LIMIT 1`,
+    parameters: [Number(provinceCode), districtName ?? "", subdistrictName ?? ""],
+    query: { kind: "SelectQueryNode" } as never,
+  });
+  return (
+    rows[0] ?? {
+      province_name_th: null,
+      province_id: null,
+      district_id: null,
+      subdistrict_id: null,
+    }
+  );
+}
+
 /**
  * Which provinces can be searched at all, with how many parcels each holds.
  *

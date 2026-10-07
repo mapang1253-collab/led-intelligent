@@ -11,21 +11,28 @@ import {
   loadZoneReferences,
   parcelCoverage,
   purgeExpiredRuns,
+  resolveAreaIdsByName,
   saveZoneReference,
   searchAreas,
   sourceStatuses,
   wellDocumentedAreas,
 } from "@reis/data-access";
 import {
+  DPT_PARCEL_ATTRIBUTION_TH,
+  DPT_PARCEL_PROVINCE_CODES,
+  DPT_PARCEL_PUBLISHER_URL,
+  type DptParcelLayer,
   ZONING_ATTRIBUTION_TH,
   ZONING_PUBLISHER_URL,
+  describeParcelLayer,
   fetchProximity,
   fetchZoning,
+  findDptParcel,
   geocodeArea,
   searchPlaces,
   zoningTileTemplate,
 } from "@reis/source-adapters";
-import { Hono } from "hono";
+import { type Context, Hono } from "hono";
 import mr55Pack from "../../../../database/reviewed-packs/th-cba-mr55-v1.json" with {
   type: "json",
 };
@@ -489,7 +496,29 @@ app.get("/api/v1/place-search", async (c) => {
 app.get("/api/v1/parcels/coverage", async (c) => {
   const db = createDb(c.env.HYPERDRIVE.connectionString);
   try {
-    return c.json({ schema_version: SCHEMA_VERSION, data: await parcelCoverage(db) });
+    const [stored, provinces] = await Promise.all([parcelCoverage(db), listProvinces(db)]);
+    /**
+     * The provinces answerable live, named from the reference table rather than from a list here.
+     *
+     * The adapter knows 57 two-digit codes and nothing else about them; the names and the ids the
+     * area picker selects by are already in the database, so they come from there. A code with no
+     * matching province — which would mean the reference table and the adapter disagree — is left
+     * out rather than shown as a blank option.
+     */
+    const live = DPT_PARCEL_PROVINCE_CODES.map((code) => {
+      const province = provinces.find((row) => String(row.code).padStart(2, "0") === code);
+      return province
+        ? { province_code: code, province_name_th: province.name_th, province_id: province.id }
+        : null;
+    }).filter((row): row is NonNullable<typeof row> => row !== null);
+
+    return c.json({
+      schema_version: SCHEMA_VERSION,
+      // `data` keeps its meaning: the provinces held in the database, with their row counts.
+      data: stored,
+      live,
+      live_publisher: DPT_PARCEL_ATTRIBUTION_TH,
+    });
   } finally {
     await db.destroy();
   }
@@ -498,6 +527,7 @@ app.get("/api/v1/parcels/coverage", async (c) => {
 app.get("/api/v1/parcels/search", async (c) => {
   const mapSheet = (c.req.query("map_sheet") ?? "").trim();
   const landNo = (c.req.query("land_no") ?? "").trim();
+  const provinceCode = (c.req.query("province_code") ?? "").trim();
   if (!mapSheet || !landNo) {
     return c.json({ error: "MISSING_PARCEL_KEY" }, 400);
   }
@@ -505,15 +535,148 @@ app.get("/api/v1/parcels/search", async (c) => {
     // Shape-checked before it reaches a query: these two strings come straight from a text box.
     return c.json({ error: "PARCEL_KEY_NOT_RECOGNISED" }, 400);
   }
+  if (provinceCode !== "" && !/^\d{2}$/.test(provinceCode)) {
+    return c.json({ error: "PARCEL_PROVINCE_NOT_RECOGNISED" }, 400);
+  }
 
   const db = createDb(c.env.HYPERDRIVE.connectionString);
   try {
-    const parcel = await findParcel(db, mapSheet, landNo);
-    return c.json({ schema_version: SCHEMA_VERSION, data: parcel });
+    /**
+     * The stored parcels answer first, then the department's service (docs/adr/0009).
+     *
+     * Order is on purpose rather than for speed. Where the Land Department publishes the parcel
+     * openly we hold their own row, with the area and the centre they computed and the reference
+     * ids already joined; DPT republishes the same cadastre, so asking them for a parcel we already
+     * hold would swap a first-hand figure for a second-hand one. A ระวาง addresses one place in the
+     * country, so the two can never both be right about different land.
+     */
+    const stored = await findParcel(db, mapSheet, landNo);
+    if (stored) {
+      return c.json({ schema_version: SCHEMA_VERSION, data: stored, source: "DOL_STORED" });
+    }
+
+    if (!DPT_PARCEL_PROVINCE_CODES.includes(provinceCode)) {
+      /**
+       * Two different misses, told apart before the screen says anything.
+       *
+       * A province held in the database that simply has no such เลขที่ดิน is "check your numbers".
+       * A province nobody publishes is "we cannot search here at all". Answering the first with the
+       * second tells a reader in ปทุมธานี, whose parcels we hold in full, that their province is not
+       * covered — which is both wrong and the one thing this panel exists to get right.
+       */
+      const held = (await parcelCoverage(db)).some(
+        (province) => province.province_code === provinceCode && province.parcels > 0,
+      );
+      return c.json({
+        schema_version: SCHEMA_VERSION,
+        data: null,
+        source: held ? "DOL_STORED" : null,
+        covered: held,
+      });
+    }
+
+    const layer = await parcelLayerProfile(c, provinceCode);
+    if (!layer) {
+      return c.json({ schema_version: SCHEMA_VERSION, data: null, source: null, covered: false });
+    }
+
+    const found = await findDptParcel(provinceCode, mapSheet, landNo, layer, { timeoutMs: 8_000 });
+    if (found.outcome === "FAILED") {
+      // 502 rather than 500, and retryable: the upstream did not answer, and the screen offers it.
+      return c.json({ error: "PARCEL_LOOKUP_FAILED", retryable: found.retryable }, 502);
+    }
+    if (found.outcome === "OUTSIDE_COVERAGE") {
+      return c.json({ schema_version: SCHEMA_VERSION, data: null, source: null, covered: false });
+    }
+    if (found.outcome === "NOT_FOUND") {
+      return c.json({
+        schema_version: SCHEMA_VERSION,
+        data: null,
+        source: "DPT_LIVE",
+        covered: true,
+      });
+    }
+
+    /**
+     * Shaped like a stored parcel, so one screen renders either.
+     *
+     * The ids are resolved here rather than left out, because the whole point of a lookup is that
+     * the form stops asking where the land is. DPT hands back names; the picker selects by id.
+     */
+    const parcel = found.parcel;
+    const ids = await resolveAreaIdsByName(
+      db,
+      provinceCode,
+      parcel.district_name_th,
+      parcel.subdistrict_name_th,
+    );
+    return c.json({
+      schema_version: SCHEMA_VERSION,
+      source: "DPT_LIVE",
+      covered: true,
+      attribution_th: DPT_PARCEL_ATTRIBUTION_TH,
+      publisher_url: DPT_PARCEL_PUBLISHER_URL,
+      data: {
+        land_no: parcel.land_no,
+        map_sheet: parcel.map_sheet,
+        // Several provinces publish the outline with no name columns at all. The province is still
+        // known — it is the one whose service answered — so it is named from the reference table
+        // rather than left blank, which on screen reads as "we could not tell where this is".
+        province_name_th: parcel.province_name_th ?? ids.province_name_th,
+        district_name_th: parcel.district_name_th,
+        subdistrict_name_th: parcel.subdistrict_name_th,
+        area_sqm: parcel.area_sqm === null ? null : String(parcel.area_sqm),
+        latitude: parcel.latitude,
+        longitude: parcel.longitude,
+        // Spelled out rather than spread: `ids` also carries the province's name, and spreading it
+        // here would quietly replace the publisher's own name for the parcel with ours.
+        province_id: ids.province_id,
+        district_id: ids.district_id,
+        subdistrict_id: ids.subdistrict_id,
+        // One ระวาง and one เลขที่ดิน can address more than one polygon in the department's data.
+        match_count: parcel.match_count,
+      },
+    });
   } finally {
-    await db.destroy();
+    c.executionCtx.waitUntil(db.destroy());
   }
 });
+
+/**
+ * Where a province keeps its parcels and how it spells the columns, cached for a month.
+ *
+ * Discovered rather than listed, because the 57 services do not agree: the layer is numbered 0 in
+ * ภูเก็ต and 26 in พิษณุโลก, นครนายก spells the column `land_no`, and ปัตตานี stores เลขที่ดิน as an
+ * integer. Reading it costs two requests, which is why the answer is kept — it is published
+ * metadata about a province, identical for every reader, and carries nothing about anybody's land.
+ *
+ * The lookup itself is never cached. It is keyed by a reader's own ระวาง and เลขที่ดิน, and those do
+ * not belong in a cache that outlives the request.
+ */
+async function parcelLayerProfile(
+  c: Context<{ Bindings: Env }>,
+  provinceCode: string,
+): Promise<DptParcelLayer | null> {
+  const cache = caches.default;
+  const cacheKey = new Request(`https://dpt-parcel-layer.invalid/v1/${provinceCode}`);
+  const cached = await cache.match(cacheKey);
+  if (cached) {
+    return (await cached.json()) as DptParcelLayer;
+  }
+
+  const layer = await describeParcelLayer(provinceCode, { timeoutMs: 8_000 });
+  if (!layer) {
+    // Not cached. A province that answers nothing today may be a service having one of its spells,
+    // and a month of remembering "unsearchable" would outlast the outage by a long way.
+    return null;
+  }
+
+  const stored = new Response(JSON.stringify(layer), {
+    headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=2592000" },
+  });
+  c.executionCtx.waitUntil(cache.put(cacheKey, stored));
+  return layer;
+}
 
 app.get("/api/v1/administrative-areas/well-documented", async (c) => {
   const db = createDb(c.env.HYPERDRIVE.connectionString);

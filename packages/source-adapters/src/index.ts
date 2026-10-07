@@ -108,3 +108,20 @@ export {
   zoneKey,
   zoningTileTemplate,
 } from "./dpt/zoning.js";
+
+/**
+ * DPT parcel outlines (docs/adr/0009). The same question the stored DOL lookup answers, for the 57
+ * provinces DOL does not publish openly — located live, so the database does not grow by a row.
+ */
+export {
+  DPT_PARCEL_ATTRIBUTION_TH,
+  DPT_PARCEL_PROVINCE_CODES,
+  DPT_PARCEL_PUBLISHER_URL,
+  DPT_PARCEL_SOURCE_ID,
+  type DptParcel,
+  type DptParcelLayer,
+  type DptParcelResult,
+  describeParcelLayer,
+  findDptParcel,
+  parseDptMapSheet,
+} from "./dpt/parcels.js";

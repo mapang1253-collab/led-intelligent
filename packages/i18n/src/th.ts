@@ -197,35 +197,54 @@ export const th = {
   parcel: {
     heading: "รู้ระวางและเลขที่ดินไหม ค้นหาแปลงได้เลย (ไม่บังคับ)",
     coverage:
-      "ขณะนี้ค้นได้เฉพาะจังหวัดที่กรมที่ดินเปิดข้อมูลรูปแปลงไว้ ได้แก่ {provinces} จังหวัดอื่นยังค้นไม่ได้ ไม่ได้แปลว่าเลขที่ท่านกรอกผิด",
+      "ค้นได้ {count} จังหวัด เลือกจังหวัดของที่ดินก่อน แล้วกรอกระวางและเลขที่ดิน · จังหวัดที่ไม่มีในรายการยังค้นไม่ได้ ไม่ได้แปลว่าเลขที่ท่านกรอกผิด",
     coverageLoading: "กำลังตรวจสอบว่าจังหวัดใดค้นได้บ้าง",
+    provinceLabel: "จังหวัดของที่ดิน",
+    provincePlaceholder: "เลือกจังหวัด",
+    provinceHelp: "จำเป็น เพราะข้อมูลรูปแปลงแยกตามจังหวัด ระบบจะค้นจากจังหวัดที่เลือกเท่านั้น",
+    /* Two publishers answer this box, and which one answered changes what the answer is worth. */
+    provinceGroupStored: "เก็บไว้ในระบบแล้ว (ข้อมูลเปิดกรมที่ดิน)",
+    provinceGroupLive: "ค้นสดจากกรมโยธาธิการและผังเมือง",
+    provinceNotCovered:
+      "จังหวัดนี้ยังไม่มีหน่วยงานใดเปิดข้อมูลรูปแปลงให้ค้นด้วยระวาง ท่านยังปักหมุดบนแผนที่และกรอกเนื้อที่เองได้",
+    sourceStored: "ที่มา: ข้อมูลรูปแปลงที่ดินแบบเปิดของกรมที่ดิน ภายใต้ DGA Open Government License",
+    sourceLive: "ที่มา: ค้นสดจากชั้นข้อมูลรูปแปลงที่ดิน กรมโยธาธิการและผังเมือง (DDS Explorer)",
+    /* The department's own data repeats a เลขที่ดิน across split polygons. Shown rather than hidden:
+       the area below is one polygon's, which is not the holding if there are three. */
+    multipleMatches:
+      "ระวางและเลขที่ดินนี้ตรงกับรูปแปลง {count} รูป ด้านล่างแสดงรูปแรก เนื้อที่ที่เห็นจึงอาจเป็นเพียงส่วนหนึ่ง ควรตรวจสอบกับกรมที่ดิน",
+    noArea: "หน่วยงานไม่ได้เผยแพร่เนื้อที่ของแปลงนี้ กรุณากรอกเนื้อที่เอง",
+    noNames: "หน่วยงานไม่ได้เผยแพร่ชื่อตำบลและอำเภอของแปลงนี้ ระบบกรอกให้เท่าที่ทราบ",
     mapSheetLabel: "ระวาง",
     mapSheetPlaceholder: "เช่น 5137 II 9854-09",
     mapSheetHelp: "พิมพ์อยู่บนหัวโฉนดคู่กับคำว่า “ระวาง” ใส่เว้นวรรคหรือขีดอย่างไรก็ได้",
     landNoLabel: "เลขที่ดิน",
     landNoHelp: "เลขประจำแปลงภายในระวางนั้น เป็นคนละเลขกับ “เลขที่โฉนด” ซึ่งระบบยังค้นไม่ได้",
     lookup: "ค้นหาแปลงที่ดิน",
-    notFound: "ไม่พบแปลงที่ตรงกับระวางและเลขที่ดินนี้ ลองตรวจตัวเลขอีกครั้ง หรือที่ดินอาจอยู่นอกจังหวัดที่เปิดข้อมูลไว้",
-    failed: "ค้นหาไม่สำเร็จ ลองใหม่อีกครั้ง",
+    notFound: "ไม่พบแปลงที่ตรงกับระวางและเลขที่ดินนี้ในจังหวัดที่เลือก ลองตรวจตัวเลขอีกครั้ง หรือตรวจว่าเลือกจังหวัดถูกต้อง",
+    failed: "ค้นหาไม่สำเร็จ ระบบของหน่วยงานอาจไม่ตอบในขณะนี้ ลองใหม่อีกครั้ง",
+    retry: "ลองค้นอีกครั้ง",
     found: "พบแปลงที่ดิน",
     foundWhere: "ที่ตั้ง",
     foundArea: "เนื้อที่ตามที่กรมที่ดินคำนวณ",
+    /* The live lookup reads a republished copy of the same cadastre, so the figure is not credited
+       to the department that computed it on a screen that did not get it from them. */
+    foundAreaLive: "เนื้อที่ตามข้อมูลรูปแปลงของหน่วยงาน",
     use: "ใช้เนื้อที่และตำแหน่งนี้",
     notOwnership:
       "ข้อมูลนี้บอกว่าแปลงนี้อยู่ที่ไหนและมีเนื้อที่เท่าไร ไม่ได้บอกว่าใครเป็นเจ้าของ และไม่ได้ยืนยันว่าเป็นแปลงของท่าน ข้อมูลกรรมสิทธิ์ไม่ได้อยู่ในชุดข้อมูลเปิดนี้",
-    source: "ที่มา: ข้อมูลรูปแปลงที่ดินแบบเปิดของ{publisher} ภายใต้ DGA Open Government License",
 
     /**
      * The way out for the readers this lookup cannot serve, and there are three kinds.
      *
      * Someone holding only a เลขที่โฉนด, which this product cannot resolve. Someone in one of the
-     * seventy-two provinces DOL has not published openly. And someone who wants to see the shape
-     * of the parcel rather than a point, which this product does not draw.
+     * provinces neither publisher opens — กรุงเทพฯ and ชลบุรี among them. And someone who
+     * wants to see the shape of the parcel rather than a point, which this product does not draw.
      *
      * LandsMaps serves all three, and it gives back the two numbers this box wants — so the link
      * is a round trip, not a dead end, and the copy says so.
      */
-    fallbackHeading: "ไม่รู้ระวาง หรือมีแต่เลขที่โฉนด",
+    fallbackHeading: "ไม่รู้ระวาง หรือมีแต่เลขที่โฉนด หรือจังหวัดไม่อยู่ในรายการ",
     fallbackBody:
       "เปิดแผนที่ของกรมที่ดิน ค้นด้วยเลขที่โฉนดหรือเลื่อนหาแปลงบนแผนที่ก็ได้ จะเห็นรูปแปลงจริงพร้อมระวางและเลขที่ดิน แล้วนำสองเลขนั้นกลับมากรอกที่ช่องด้านบน · ใช้ได้ทุกจังหวัดทั่วประเทศ ไม่จำกัดเฉพาะจังหวัดที่ระบบนี้มีข้อมูล",
     fallbackLink: "เปิดแผนที่แปลงที่ดิน กรมที่ดิน (LandsMaps)",
