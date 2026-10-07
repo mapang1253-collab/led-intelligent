@@ -164,6 +164,22 @@ The server puts the independent run capability in an HttpOnly, SameSite=Lax cook
 
 ## 8. Database, spatial work and object storage
 
+**Local development connects through Supabase's pooler, not the direct host.** Supabase serves
+`db.<ref>.supabase.co` over IPv6 only — it publishes no A record — and the local Cloudflare runtime
+(`workerd`) fails to resolve it: `DNS lookup failed … nodename nor servname provided`, even on a
+machine with working IPv6. Node is unaffected, which is why migrations kept working while
+`pnpm dev` and `pnpm test:e2e` could not reach the database at all. Deployed Workers are unaffected
+too; Cloudflare resolves it fine. So `WRANGLER_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE` in
+`apps/web/.dev.vars` points at the session pooler, which publishes IPv4:
+
+```text
+postgresql://postgres.<project-ref>@aws-0-<region>.pooler.supabase.com:5432/postgres
+```
+
+The username carries the project ref (`postgres.<ref>`, not `postgres`) and the region is the
+project's own — this project is `ap-northeast-1`. Port 5432 is session mode, which is what `pg`
+needs; 6543 is transaction mode and will not do.
+
 **Hyperdrive query caching is disabled on the `reis-db` configuration** (set 4 October 2026, and
 it must stay off). Hyperdrive caches SQL responses for a minute by default, and this product's
 reads are run-scoped and transactional, which is exactly the shape that caching breaks. The
