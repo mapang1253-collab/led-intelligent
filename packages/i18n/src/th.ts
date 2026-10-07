@@ -194,6 +194,23 @@ export const th = {
    * the two are printed beside each other on the same document. And a hit locates a parcel, never
    * establishes who owns it — ownership is not in this data at all.
    */
+  /**
+   * The map beside the result, which is not the map on the form: this one cannot be moved.
+   *
+   * The copy has to carry that, because a map with a pin on it looks editable, and a reader who
+   * drags this one and sees nothing change would reasonably conclude the page is broken.
+   */
+  zoningMap: {
+    heading: "ที่ตั้งและสีผังเมืองรอบๆ ที่ดินนี้",
+    description:
+      "หมุดคือจุดที่ท่านระบุไว้ตอนสั่งวิเคราะห์ สีที่ทับคือผังเมืองรวมของกรมโยธาธิการและผังเมือง · ความหมายของแต่ละสีดูได้ที่ “คำอธิบายสีผังเมือง” ด้านล่าง",
+    ariaLabel: "แผนที่แสดงตำแหน่งที่ดินและสีผังเมือง ดูอย่างเดียว แก้ไขไม่ได้",
+    showOverlay: "แสดงสีผังเมือง",
+    hideOverlay: "ซ่อนสีผังเมือง",
+    pinIsAsserted:
+      "หมุดนี้มาจากที่ท่านระบุเอง ระบบไม่ได้รังวัดหรือยืนยันขอบเขตแปลง และแก้หมุดที่นี่ไม่ได้ เพราะผลวิเคราะห์ด้านล่างคำนวณจากจุดนี้ไปแล้ว หากต้องแก้ ให้เริ่มวิเคราะห์ใหม่",
+  },
+
   parcel: {
     heading: "รู้ระวางและเลขที่ดินไหม ค้นหาแปลงได้เลย (ไม่บังคับ)",
     coverage:

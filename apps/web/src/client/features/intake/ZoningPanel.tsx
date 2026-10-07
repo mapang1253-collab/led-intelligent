@@ -60,10 +60,19 @@ const ZONING_SHAPE = 2;
 export function ZoningPanel({
   point,
   provinceCode,
+  legendOpen = false,
 }: {
   point: PinnedPoint | null;
   /** Two digits, from the province the reader already chose. */
   provinceCode: string | null;
+  /**
+   * Whether the key starts unfolded.
+   *
+   * Folded is right beside the form, where the zone under the pin is the answer and the rest of
+   * the plan is context. It is wrong under a map drawn in those colours, which without the key is
+   * a page of pink and green.
+   */
+  legendOpen?: boolean;
 }) {
   const zoning = useQuery({
     queryKey: ["zoning", ZONING_SHAPE, provinceCode, point?.latitude, point?.longitude],
@@ -196,7 +205,7 @@ export function ZoningPanel({
             is one click away rather than absent.
           */}
           {(zoning.data.legend?.length ?? 0) > 0 && (
-            <details className="mt-3">
+            <details className="mt-3" open={legendOpen}>
               <summary className="cursor-pointer font-medium text-sm">
                 {th.zoning.legendOpen}
               </summary>

@@ -31,6 +31,7 @@ import { Notice } from "./Notice.js";
 import { OverviewSummary } from "./OverviewSummary.js";
 import { type ResultTab, ResultTabs } from "./ResultTabs.js";
 import { ValuationPanel } from "./ValuationPanel.js";
+import { ZoningMap } from "./ZoningMap.js";
 import {
   type StageRecord,
   isTerminal,
@@ -360,7 +361,12 @@ export function RunPage() {
       count: envelope?.partial_artifacts?.concepts?.length ?? 0,
       render: () => (
         <>
-          <ZoningPanel point={zoningPin} provinceCode={zoningProvinceCode} />
+          {/* The place first, then what the plan says about it. A zone name and a wall of clauses
+              reads as law about somewhere; the colours around the pin say where, how far the zone
+              reaches, and whether this plot sits inside it or on its edge. */}
+          <ZoningMap point={zoningPin} provinceCode={zoningProvinceCode} />
+          {/* The key opens with it, because the map above is a page of colours otherwise. */}
+          <ZoningPanel point={zoningPin} provinceCode={zoningProvinceCode} legendOpen />
           <ConceptPanel
             concepts={envelope?.partial_artifacts?.concepts}
             stageReason={conceptStage?.reason}

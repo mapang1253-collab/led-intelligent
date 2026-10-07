@@ -78,3 +78,21 @@
   และข้อมูลผังเมืองทั้งประเทศใหญ่กว่านั้นมาก อีกทั้งกรมฯ แก้ไขผังตามกฎกระทรวงที่ประกาศใหม่เรื่อย ๆ
   การเรียกสดจึงตรงกับต้นทางเสมอ
 - **วาดสีเอง** — เท่ากับ implement สัญลักษณ์ของกฎกระทรวงขึ้นใหม่ และผิดในจุดที่ไม่มีใครสังเกต
+
+## Addendum, 2026-10-07 — the map moves to the result too
+
+The owners asked for "แผนที่ + สีผังเมือง ไปไว้ในหน้าผลลัพธ์ด้วย". The quoted ข้อกำหนด and ข้อห้าม
+were already there; the colours were not, and they answer a different question from the words —
+what is next to this land, how far the zone reaches, whether the plot sits in the middle of a zone
+or on its boundary. That question was only answerable on the form that produced the run, which the
+reader has left by the time they are reading the result.
+
+The result's map is **read-only**: no click places a pin, the marker cannot be dragged, and there is
+no place search. The run has already been computed from this point, and offering a correction here
+that silently does not apply to the analysis below it would be worse than offering none. The
+overlay starts **on**, unlike on the form, because showing it is the only reason this map exists,
+and the key below it starts **unfolded**, because a map drawn in those colours with the key folded
+is a page of pink and green.
+
+The tile layer itself is now one module shared by both maps, so the projection arithmetic cannot
+drift between them.
