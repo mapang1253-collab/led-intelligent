@@ -110,34 +110,73 @@ describe("parseDptMapSheet", () => {
 
 describe("describeParcelLayer", () => {
   it("finds the parcel layer and reads how its columns are stored", async () => {
-    const layer = await describeParcelLayer("83", {
+    const result = await describeParcelLayer("83", {
       fetchImpl: stubFetch({
         "MapServer/0?f=json": { body: PHUKET_LAYER },
         MapServer: { body: PHUKET_SERVICE },
       }),
     });
-    expect(layer).toEqual(PHUKET_LAYER_PROFILE);
+    expect(result).toEqual({ outcome: "SEARCHABLE", layer: PHUKET_LAYER_PROFILE });
+  });
+
+  it("separates a service it could not reach from a province that publishes nothing", async () => {
+    /**
+     * The bug this exists to stop coming back.
+     *
+     * เชียงใหม่ publishes 18,022 parcels. On the first lookup of the day DPT answered the
+     * metadata request too slowly, the read failed, and because every unreadable answer was one
+     * `null`, the screen told the reader their province publishes no parcels at all — the one
+     * sentence that makes someone stop trying. A failure has to stay a failure all the way to the
+     * retry button.
+     */
+    const unreachable = await describeParcelLayer("50", {
+      fetchImpl: stubFetch({ MapServer: { body: "", status: 503 } }),
+    });
+    expect(unreachable.outcome).toBe("FAILED");
+    if (unreachable.outcome !== "FAILED") return;
+    expect(unreachable.retryable).toBe(true);
+
+    // A stopped service, by contrast, is the department telling us it publishes nothing.
+    const stopped = await describeParcelLayer("50", {
+      fetchImpl: stubFetch({
+        MapServer: { body: JSON.stringify({ error: { code: 500, message: "Service not found" } }) },
+      }),
+    });
+    expect(stopped.outcome).toBe("UNSEARCHABLE");
+  });
+
+  it("keeps a failure to read the layer's columns a failure", async () => {
+    // The service listed the layer, then would not describe it. Nothing about that says the
+    // province is unpublished.
+    const result = await describeParcelLayer("83", {
+      fetchImpl: stubFetch({
+        "MapServer/0?f=json": { body: "", status: 502 },
+        MapServer: { body: PHUKET_SERVICE },
+      }),
+    });
+    expect(result.outcome).toBe("FAILED");
   });
 
   it("notices when เลขที่ดิน is a number, because quoting one is rejected outright", async () => {
     // ปัตตานี answered "Failed to execute query" for every lookup until this was read rather than
     // assumed. An integer column needs LAND_NO=239, not LAND_NO='239'.
-    const layer = await describeParcelLayer("94", {
+    const result = await describeParcelLayer("94", {
       fetchImpl: stubFetch({
         "MapServer/4?f=json": { body: PATTANI_LAYER },
         MapServer: { body: JSON.stringify({ layers: [{ id: 4, name: "PARCEL94" }] }) },
       }),
     });
-    expect(layer?.land_quoted).toBe(false);
-    expect(layer?.province_field).toBe("PROV_NAME");
-    expect(layer?.subdistrict_field).toBe("TBDOL_NAME");
+    if (result.outcome !== "SEARCHABLE") throw new Error("expected a searchable layer");
+    expect(result.layer.land_quoted).toBe(false);
+    expect(result.layer.province_field).toBe("PROV_NAME");
+    expect(result.layer.subdistrict_field).toBe("TBDOL_NAME");
     // No AREA column at all: the department publishes none here, so none is reported.
-    expect(layer?.area_field).toBeNull();
+    expect(result.layer.area_field).toBeNull();
   });
 
   it("reads the department's other spelling of the column", async () => {
     // นครนายก spells it land_no. Every other province spells it LAND_NO.
-    const layer = await describeParcelLayer("38", {
+    const result = await describeParcelLayer("38", {
       fetchImpl: stubFetch({
         "MapServer/0?f=json": {
           body: JSON.stringify({
@@ -153,22 +192,23 @@ describe("describeParcelLayer", () => {
         MapServer: { body: JSON.stringify({ layers: [{ id: 0, name: "PARCEL38" }] }) },
       }),
     });
-    expect(layer?.land_field).toBe("land_no");
+    if (result.outcome !== "SEARCHABLE") throw new Error("expected a searchable layer");
+    expect(result.layer.land_field).toBe("land_no");
   });
 
   it("reports a province with no parcel layer as unsearchable", async () => {
-    const layer = await describeParcelLayer("20", {
+    const result = await describeParcelLayer("20", {
       fetchImpl: stubFetch({
         MapServer: { body: JSON.stringify({ layers: [{ id: 0, name: "PLLU20" }] }) },
       }),
     });
-    expect(layer).toBeNull();
+    expect(result.outcome).toBe("UNSEARCHABLE");
   });
 
   it("reports a parcel layer with no ระวาง columns as unsearchable", async () => {
     // ร้อยเอ็ด, นครพนม, อุตรดิตถ์, แพร่ and พิจิตร publish the polygons without UTMMAP, so a ระวาง cannot
     // address them. Listing them and then failing every lookup would read as a broken app.
-    const layer = await describeParcelLayer("23", {
+    const result = await describeParcelLayer("23", {
       fetchImpl: stubFetch({
         "MapServer/4?f=json": {
           body: JSON.stringify({
@@ -182,7 +222,7 @@ describe("describeParcelLayer", () => {
         MapServer: { body: JSON.stringify({ layers: [{ id: 4, name: "PARCEL23" }] }) },
       }),
     });
-    expect(layer).toBeNull();
+    expect(result.outcome).toBe("UNSEARCHABLE");
   });
 });
 

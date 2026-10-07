@@ -120,6 +120,7 @@ export {
   DPT_PARCEL_SOURCE_ID,
   type DptParcel,
   type DptParcelLayer,
+  type DptParcelLayerResult,
   type DptParcelResult,
   describeParcelLayer,
   findDptParcel,

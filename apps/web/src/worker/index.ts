@@ -22,6 +22,7 @@ import {
   DPT_PARCEL_PROVINCE_CODES,
   DPT_PARCEL_PUBLISHER_URL,
   type DptParcelLayer,
+  type DptParcelLayerResult,
   ZONING_ATTRIBUTION_TH,
   ZONING_PUBLISHER_URL,
   describeParcelLayer,
@@ -575,11 +576,22 @@ app.get("/api/v1/parcels/search", async (c) => {
       });
     }
 
-    const layer = await parcelLayerProfile(c, provinceCode);
-    if (!layer) {
+    const profile = await parcelLayerProfile(c, provinceCode);
+    if (profile.outcome === "FAILED") {
+      /**
+       * Not "your province is not published".
+       *
+       * This is the department failing to answer a question about itself, and saying it with the
+       * sentence reserved for a province nobody publishes sent a reader in เชียงใหม่ away
+       * believing the feature does not cover them — on a first lookup that was only slow.
+       */
+      return c.json({ error: "PARCEL_LOOKUP_FAILED", retryable: profile.retryable }, 502);
+    }
+    if (profile.outcome === "UNSEARCHABLE") {
       return c.json({ schema_version: SCHEMA_VERSION, data: null, source: null, covered: false });
     }
 
+    const layer = profile.layer;
     const found = await findDptParcel(provinceCode, mapSheet, landNo, layer, { timeoutMs: 8_000 });
     if (found.outcome === "FAILED") {
       // 502 rather than 500, and retryable: the upstream did not answer, and the screen offers it.
@@ -656,26 +668,38 @@ app.get("/api/v1/parcels/search", async (c) => {
 async function parcelLayerProfile(
   c: Context<{ Bindings: Env }>,
   provinceCode: string,
-): Promise<DptParcelLayer | null> {
+): Promise<DptParcelLayerResult> {
   const cache = caches.default;
   const cacheKey = new Request(`https://dpt-parcel-layer.invalid/v1/${provinceCode}`);
   const cached = await cache.match(cacheKey);
   if (cached) {
-    return (await cached.json()) as DptParcelLayer;
+    return { outcome: "SEARCHABLE", layer: (await cached.json()) as DptParcelLayer };
   }
 
-  const layer = await describeParcelLayer(provinceCode, { timeoutMs: 8_000 });
-  if (!layer) {
-    // Not cached. A province that answers nothing today may be a service having one of its spells,
-    // and a month of remembering "unsearchable" would outlast the outage by a long way.
-    return null;
+  /**
+   * Two tries within a budget, as the zoning lookup does for the same service.
+   *
+   * DPT's failures are silence rather than slowness, so a second attempt buys more than a longer
+   * timeout would, and this read happens once per province per month — the cost falls on the first
+   * reader of a province and on nobody after them.
+   */
+  const startedAt = Date.now();
+  let result = await describeParcelLayer(provinceCode, { timeoutMs: 7_000 });
+  while (result.outcome === "FAILED" && result.retryable && Date.now() - startedAt < 10_000) {
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    result = await describeParcelLayer(provinceCode, { timeoutMs: 7_000 });
+  }
+  if (result.outcome !== "SEARCHABLE") {
+    // Neither outcome is cached. "Unsearchable" is cheap to re-derive and a month of remembering it
+    // would outlast a department that started publishing; a failure must never be remembered at all.
+    return result;
   }
 
-  const stored = new Response(JSON.stringify(layer), {
+  const stored = new Response(JSON.stringify(result.layer), {
     headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=2592000" },
   });
   c.executionCtx.waitUntil(cache.put(cacheKey, stored));
-  return layer;
+  return result;
 }
 
 app.get("/api/v1/administrative-areas/well-documented", async (c) => {

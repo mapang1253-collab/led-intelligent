@@ -170,34 +170,49 @@ function firstPresent(fields: Map<string, string>, candidates: readonly string[]
 }
 
 /**
- * Reads a province's service and reports how to query its parcels, or null if it cannot be queried.
+ * What reading a province's service produced.
  *
- * Null covers three different situations that all mean the same thing to a reader — no parcel
- * layer, a parcel layer without UTMMAP columns, a service that is switched off — and the caller
- * turns it into OUTSIDE_COVERAGE.
+ * These three were one `null` at first, and that cost a reader in เชียงใหม่ the feature
+ * entirely: DPT took a moment too long on the first lookup of the day, the metadata read failed,
+ * and the screen told them their province publishes no parcels at all — then held that answer for
+ * as long as the page stayed open. "We could not reach the department" and "nobody publishes your
+ * province" are opposite messages to someone holding a deed, and only one of them is worth a retry
+ * button.
  */
+export type DptParcelLayerResult =
+  | { readonly outcome: "SEARCHABLE"; readonly layer: DptParcelLayer }
+  /** The service answered, and holds nothing addressable by a ระวาง. */
+  | { readonly outcome: "UNSEARCHABLE" }
+  | { readonly outcome: "FAILED"; readonly reason: string; readonly retryable: boolean };
+
+/** Reads a province's service and reports how — or whether — its parcels can be queried. */
 export async function describeParcelLayer(
   provinceCode: string,
   options: FetchJsonOptions = {},
-): Promise<DptParcelLayer | null> {
+): Promise<DptParcelLayerResult> {
   if (!/^\d{2}$/.test(provinceCode)) {
-    return null;
+    return { outcome: "UNSEARCHABLE" };
   }
 
   const service = await fetchJson(`${ARCGIS_ROOT}/PLLU${provinceCode}/MapServer?f=json`, options);
   if (service.outcome !== "SUCCESS") {
-    return null;
+    return { outcome: "FAILED", reason: service.reason, retryable: service.retryable };
+  }
+  // ArcGIS answers a stopped or missing service with HTTP 200 and an error body: that is the
+  // service saying it publishes nothing, not a failure to reach it.
+  if ((service.payload as { error?: unknown }).error) {
+    return { outcome: "UNSEARCHABLE" };
   }
   const layers = (service.payload as { layers?: { id?: unknown; name?: unknown }[] }).layers;
   if (!Array.isArray(layers)) {
-    return null;
+    return { outcome: "UNSEARCHABLE" };
   }
   const parcelLayer = layers.find(
     (layer) =>
       typeof layer.id === "number" && typeof layer.name === "string" && /PARCEL/i.test(layer.name),
   );
   if (!parcelLayer || typeof parcelLayer.id !== "number") {
-    return null;
+    return { outcome: "UNSEARCHABLE" };
   }
 
   const layerId = parcelLayer.id;
@@ -206,7 +221,7 @@ export async function describeParcelLayer(
     options,
   );
   if (meta.outcome !== "SUCCESS") {
-    return null;
+    return { outcome: "FAILED", reason: meta.reason, retryable: meta.retryable };
   }
 
   const fields = new Map<string, string>();
@@ -221,18 +236,21 @@ export async function describeParcelLayer(
     fields.has(name),
   );
   if (!landField || !addressable) {
-    return null;
+    return { outcome: "UNSEARCHABLE" };
   }
 
   return {
-    layer_id: layerId,
-    land_field: landField,
-    land_quoted: isTextField(fields, landField),
-    map2_quoted: isTextField(fields, "UTMMAP2"),
-    area_field: fields.has("AREA") ? "AREA" : null,
-    province_field: firstPresent(fields, PROVINCE_FIELDS),
-    district_field: firstPresent(fields, DISTRICT_FIELDS),
-    subdistrict_field: firstPresent(fields, SUBDISTRICT_FIELDS),
+    outcome: "SEARCHABLE",
+    layer: {
+      layer_id: layerId,
+      land_field: landField,
+      land_quoted: isTextField(fields, landField),
+      map2_quoted: isTextField(fields, "UTMMAP2"),
+      area_field: fields.has("AREA") ? "AREA" : null,
+      province_field: firstPresent(fields, PROVINCE_FIELDS),
+      district_field: firstPresent(fields, DISTRICT_FIELDS),
+      subdistrict_field: firstPresent(fields, SUBDISTRICT_FIELDS),
+    },
   };
 }
 
