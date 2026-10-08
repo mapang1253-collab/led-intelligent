@@ -58,10 +58,17 @@ Read before deciding, across all 87 possible province codes on 2026-10-07:
 ## Consequences
 
 - **The schema is read, not assumed.** `describeParcelLayer` finds the layer and reports how each
-  column is stored and quoted; the profile is cached at the edge for a month, because it is
-  published metadata about a province, identical for every reader, carrying nothing about anybody's
-  land. Cold costs three requests, warm one; a failed metadata read is retried once inside a
-  ten-second budget, and neither a failure nor an "unsearchable" verdict is ever cached.
+  column is stored and quoted. The profile is kept twice — at the edge for a month, and in
+  `reference.dpt_parcel_layer` (migration 0014) — because it is published metadata about a
+  province, identical for every reader, carrying nothing about anybody's land. Cold costs three
+  requests, warm one. A failed metadata read is retried once inside a fifteen-second budget, and
+  neither a failure nor an "unsearchable" verdict is ever kept.
+- **A rejected query against a remembered profile throws the profile away.** If the department
+  renumbers a layer or renames a column, every lookup in that province comes back rejected, which
+  reads on screen as "we could not search" — for everyone, for as long as the row stands, since
+  the write is `DO NOTHING`. That one failure, and only that one, drops the row and asks again.
+  Transport failures are left alone: forgetting a good profile because the network blinked would
+  cost every later reader the three slow requests the table exists to avoid.
 - **The lookup itself is never cached.** It is keyed by a reader's own ระวาง and เลขที่ดิน, and those
   do not belong in a cache that outlives the request.
 - **The database does not grow.** No migration, no ingestion, no rows.
@@ -89,3 +96,28 @@ Not a deed-number search. `LAND_NO` is เลขที่ดิน; เลขท
 source. Not ownership. Not the parcel drawn — the outline is fetched to compute a centre and then
 discarded. And not nationwide: `docs/data-sources/dpt-parcel.md` records which provinces answer and
 which do not, and LandsMaps remains the route out for the rest.
+
+## Addendum, 2026-10-08 — the ceiling was measured from the wrong place
+
+Every timeout in this feature, and in the zoning lookup before it, was chosen against a Cloudflare
+colo near Bangkok, where กรมโยธาธิการและผังเมือง answers in about 0.6 seconds. Five and eight seconds
+looked generous.
+
+On 2026-10-08 the owners' own browser was routed through **Singapore** instead, and from there
+every DPT request took **over seven seconds**. Every ceiling cut every request off: the parcel
+lookup failed in 14.7s (two metadata attempts, both abandoned at 7s), the city plan failed in 16.2s
+(three identify attempts, all abandoned at 5s) — while the same lookups answered in a second from a
+terminal on the same desk, whose traffic went to Bangkok. One 22.7s failure gave the shape away: a
+metadata read had finished, at just over seven seconds, and the parcel query was then abandoned at
+eight. Slow, not refused.
+
+Two changes follow:
+
+- **One ceiling, twelve seconds, for every DPT request** (`DPT_REQUEST_TIMEOUT_MS`). It has to
+  clear a slow route, not a fast one; what bounds the reader's wait is the budget around it.
+- **The layer profile moved into the database**, so a cold colo makes one slow request instead of
+  three. That is the change that actually fixes it — three seven-second requests do not fit in any
+  budget a reader will wait out, and one does.
+
+The zoning budget rose to 25 seconds to match. Both screens are non-blocking and carry a retry
+button, so a long wait costs patience; a false "no data" costs the reader the feature.

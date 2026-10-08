@@ -5,13 +5,16 @@ import {
   areasByIds,
   createDb,
   findParcel,
+  forgetParcelLayer,
   listDistricts,
   listProvinces,
   listSubdistricts,
+  loadParcelLayer,
   loadZoneReferences,
   parcelCoverage,
   purgeExpiredRuns,
   resolveAreaIdsByName,
+  saveParcelLayer,
   saveZoneReference,
   searchAreas,
   sourceStatuses,
@@ -87,7 +90,23 @@ const SCHEMA_VERSION = "1.0.0";
  * success — it is the ceiling on a reader's wait when the service is in one of its refusing
  * spells, and it buys roughly two attempts.
  */
-const ZONING_BUDGET_MS = 12_000;
+const ZONING_BUDGET_MS = 25_000;
+
+/**
+ * How long one request to DPT may take before it is abandoned.
+ *
+ * Measured, twice, and the second measurement overturned the first. From a Cloudflare colo near
+ * Bangkok the department answers in about 0.6 seconds, which is where the original five- and
+ * eight-second ceilings came from. On 2026-10-08 the owners' own browser was routed through
+ * Singapore instead, and from there every DPT request took over seven seconds — so every ceiling
+ * cut every request off, and the city plan and the parcel lookup failed for that reader every
+ * time while answering instantly from a terminal on the same desk.
+ *
+ * Slow, not refused: one metadata read did finish, at just over seven seconds. So the ceiling has
+ * to clear a slow route rather than a fast one, and the number that matters is the budget around
+ * it, not this.
+ */
+const DPT_REQUEST_TIMEOUT_MS = 12_000;
 
 app.get("/api/v1/administrative-areas/provinces", async (c) => {
   const db = createDb(c.env.HYPERDRIVE.connectionString);
@@ -365,7 +384,8 @@ app.get("/api/v1/zoning", async (c) => {
   };
 
   const startedAt = Date.now();
-  const attempt = () => fetchZoning(provinceCode, lat, lon, { timeoutMs: 5_000, store });
+  const attempt = () =>
+    fetchZoning(provinceCode, lat, lon, { timeoutMs: DPT_REQUEST_TIMEOUT_MS, store });
   let result = await attempt();
   // A whole-operation budget, not a per-request one. One lookup is two waves of requests — the
   // identify, then the colour and the regulation text for each plan it hit — so three attempts at
@@ -576,7 +596,7 @@ app.get("/api/v1/parcels/search", async (c) => {
       });
     }
 
-    const profile = await parcelLayerProfile(c, provinceCode);
+    const profile = await parcelLayerProfile(c, db, provinceCode);
     if (profile.outcome === "FAILED") {
       /**
        * Not "your province is not published".
@@ -592,7 +612,37 @@ app.get("/api/v1/parcels/search", async (c) => {
     }
 
     const layer = profile.layer;
-    const found = await findDptParcel(provinceCode, mapSheet, landNo, layer, { timeoutMs: 8_000 });
+    let found = await findDptParcel(provinceCode, mapSheet, landNo, layer, {
+      timeoutMs: DPT_REQUEST_TIMEOUT_MS,
+    });
+
+    /**
+     * A rejected query against a remembered layer means what we remembered is wrong.
+     *
+     * The stored profile says which layer holds the parcels and what its columns are called. If
+     * the department renumbers a layer or renames a column, every lookup in that province comes
+     * back rejected — and rejected reads on screen as "we could not search", for everyone, for as
+     * long as the row stands. `DO NOTHING` on write means it would never correct itself either.
+     *
+     * So that one failure, and only that one, throws the row away and asks the department again.
+     * A transport failure is left alone: retrying those is what the budget above is for, and
+     * forgetting a good profile because the network blinked would cost every later reader the
+     * three slow requests this table exists to avoid.
+     */
+    if (found.outcome === "FAILED" && !found.retryable && profile.remembered) {
+      await forgetParcelLayer(db, provinceCode);
+      c.executionCtx.waitUntil(
+        caches.default.delete(new Request(`https://dpt-parcel-layer.invalid/v1/${provinceCode}`)),
+      );
+      const fresh = await describeParcelLayer(provinceCode, { timeoutMs: DPT_REQUEST_TIMEOUT_MS });
+      if (fresh.outcome === "SEARCHABLE") {
+        await saveParcelLayer(db, provinceCode, fresh.layer);
+        found = await findDptParcel(provinceCode, mapSheet, landNo, fresh.layer, {
+          timeoutMs: DPT_REQUEST_TIMEOUT_MS,
+        });
+      }
+    }
+
     if (found.outcome === "FAILED") {
       // 502 rather than 500, and retryable: the upstream did not answer, and the screen offers it.
       return c.json({ error: "PARCEL_LOOKUP_FAILED", retryable: found.retryable }, 502);
@@ -655,50 +705,77 @@ app.get("/api/v1/parcels/search", async (c) => {
 });
 
 /**
- * Where a province keeps its parcels and how it spells the columns, cached for a month.
+ * Where a province keeps its parcels and how it spells the columns.
  *
  * Discovered rather than listed, because the 57 services do not agree: the layer is numbered 0 in
  * ภูเก็ต and 26 in พิษณุโลก, นครนายก spells the column `land_no`, and ปัตตานี stores เลขที่ดิน as an
- * integer. Reading it costs two requests, which is why the answer is kept — it is published
- * metadata about a province, identical for every reader, and carries nothing about anybody's land.
+ * integer. Reading it costs two of the three requests a cold lookup makes, which is why the answer
+ * is kept twice over — at the edge, and in the database (migration 0014).
  *
- * The lookup itself is never cached. It is keyed by a reader's own ระวาง and เลขที่ดิน, and those do
- * not belong in a cache that outlives the request.
+ * The database copy is the one that matters. `caches.default` is per colo, so every colo starts
+ * cold and pays all three requests, and on 2026-10-08 that was the difference between a lookup
+ * that answered in a second and one that failed: the owners' browser was routed through Singapore,
+ * where each DPT request takes over seven seconds. Three of those cannot finish inside a budget a
+ * reader will wait out. One can.
+ *
+ * Neither copy holds anything of a reader's. This is published metadata about a province's own
+ * service; the ระวาง and the เลขที่ดิน they typed are never written anywhere, and the parcel query
+ * itself still goes out live on every lookup.
  */
+type ParcelLayerProfile = DptParcelLayerResult & { readonly remembered?: boolean };
+
 async function parcelLayerProfile(
   c: Context<{ Bindings: Env }>,
+  db: ReturnType<typeof createDb>,
   provinceCode: string,
-): Promise<DptParcelLayerResult> {
+): Promise<ParcelLayerProfile> {
   const cache = caches.default;
   const cacheKey = new Request(`https://dpt-parcel-layer.invalid/v1/${provinceCode}`);
   const cached = await cache.match(cacheKey);
   if (cached) {
-    return { outcome: "SEARCHABLE", layer: (await cached.json()) as DptParcelLayer };
+    return {
+      outcome: "SEARCHABLE",
+      layer: (await cached.json()) as DptParcelLayer,
+      remembered: true,
+    };
+  }
+
+  const remember = (layer: DptParcelLayer) => {
+    const stored = new Response(JSON.stringify(layer), {
+      headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=2592000" },
+    });
+    c.executionCtx.waitUntil(cache.put(cacheKey, stored));
+  };
+
+  const held = await loadParcelLayer(db, provinceCode);
+  if (held) {
+    remember(held);
+    return { outcome: "SEARCHABLE", layer: held, remembered: true };
   }
 
   /**
    * Two tries within a budget, as the zoning lookup does for the same service.
    *
-   * DPT's failures are silence rather than slowness, so a second attempt buys more than a longer
-   * timeout would, and this read happens once per province per month — the cost falls on the first
-   * reader of a province and on nobody after them.
+   * This is the first reader of a province, and only them: everyone after reads the row above.
+   * So the budget is generous — it buys a province that nobody has looked up yet, from a colo the
+   * department answers slowly.
    */
   const startedAt = Date.now();
-  let result = await describeParcelLayer(provinceCode, { timeoutMs: 7_000 });
-  while (result.outcome === "FAILED" && result.retryable && Date.now() - startedAt < 10_000) {
+  let result = await describeParcelLayer(provinceCode, { timeoutMs: DPT_REQUEST_TIMEOUT_MS });
+  while (result.outcome === "FAILED" && result.retryable && Date.now() - startedAt < 15_000) {
     await new Promise((resolve) => setTimeout(resolve, 400));
-    result = await describeParcelLayer(provinceCode, { timeoutMs: 7_000 });
+    result = await describeParcelLayer(provinceCode, { timeoutMs: DPT_REQUEST_TIMEOUT_MS });
   }
   if (result.outcome !== "SEARCHABLE") {
-    // Neither outcome is cached. "Unsearchable" is cheap to re-derive and a month of remembering it
-    // would outlast a department that started publishing; a failure must never be remembered at all.
+    // Neither outcome is kept. "Unsearchable" is cheap to re-derive and a month of remembering it
+    // would outlast a department that started publishing; a failure must never be remembered.
     return result;
   }
 
-  const stored = new Response(JSON.stringify(result.layer), {
-    headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=2592000" },
-  });
-  c.executionCtx.waitUntil(cache.put(cacheKey, stored));
+  remember(result.layer);
+  // Awaited, not deferred: the route closes its pool in a `finally`, and a write still in flight
+  // when that happens is a write that may not land.
+  await saveParcelLayer(db, provinceCode, result.layer);
   return result;
 }
 

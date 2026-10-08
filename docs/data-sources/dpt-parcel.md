@@ -15,9 +15,16 @@ cadastral layer named `PARCEL<code>`, inside
 of the Land Department's parcel polygons: `UTMMAP1`–`UTMMAP4` (ระวาง), `LAND_NO` (เลขที่ดิน),
 `AREA`, and usually the จังหวัด/อำเภอ/ตำบล names.
 
-Queried one parcel at a time with `where` — no bulk download, nothing stored. The product sends one
-`MapServer` request to find the layer, one to read its columns (both cached per province for a
-month), and one query per lookup.
+Queried one parcel at a time with `where` — no bulk download, and nothing of a reader's stored. The
+product sends one `MapServer` request to find the layer and one to read its columns, then one query
+per lookup. The first two are kept per province, at the edge and in `reference.dpt_parcel_layer`,
+so every lookup after the first in a province costs one request.
+
+**Latency depends on which Cloudflare colo answers, by a lot.** Measured 2026-10-08: about 0.6
+seconds per request from a colo near Bangkok, over seven seconds from Singapore. That is why the
+per-request ceiling is twelve seconds and why the layer metadata is kept in the database rather
+than only at the per-colo edge cache — three slow requests do not fit in a wait anyone will sit
+through, and one does.
 
 ## Access
 

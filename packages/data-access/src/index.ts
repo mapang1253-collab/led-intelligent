@@ -74,6 +74,13 @@ export {
 } from "./repositories/land-parcels.js";
 
 export {
+  type ParcelLayerReference,
+  forgetParcelLayer,
+  loadParcelLayer,
+  saveParcelLayer,
+} from "./repositories/parcel-layers.js";
+
+export {
   type ZoneKey,
   type ZoneReference,
   loadZoneReferences,
