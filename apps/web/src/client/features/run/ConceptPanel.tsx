@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Caveat } from "./Caveat.js";
 import { Notice } from "./Notice.js";
 import { PanelHeading } from "./PanelHeading.js";
+import { groupMissingInputs } from "./missingInputs.js";
 import type { ConceptCard, RuleOutcomeView } from "./useAnalysisRun.js";
 
 /**
@@ -98,6 +99,7 @@ function CardSection({ title, children }: { title: string; children: React.React
  */
 function ConceptCardView({ concept }: { concept: ConceptCard }) {
   const [open, setOpen] = useState(false);
+  const missingGroups = groupMissingInputs(concept.legal?.outcomes ?? []);
   return (
     <article className="mt-4 rounded-card bg-surface-sunken p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -155,6 +157,37 @@ function ConceptCardView({ concept }: { concept: ConceptCard }) {
                 .map((item) => `${item.title_th} (${item.clause_th})`)
                 .join(", ")}
             </p>
+          )}
+
+          {/*
+            What is still needed, grouped by where to get it.
+
+            Above the per-rule list rather than inside it, because it answers the question a
+            reader actually has when most rules come back UNKNOWN: is this a gap in the system, or
+            a gap in what exists yet about this plot? Four lines say it is the second, and say
+            which drawing or measurement would settle the most rules at once. The rules keep their
+            own lists below; this takes nothing away from them.
+          */}
+          {missingGroups.length > 0 && (
+            <div className="mt-3 rounded-card border border-border border-l-2 border-l-signature bg-surface-sunken p-3">
+              <p className="font-semibold text-ink text-xs">{th.concepts.missingInputsHeading}</p>
+              <ul className="mt-2 space-y-1.5">
+                {missingGroups.map((group) => (
+                  <li key={group.source_th} className="text-xs leading-relaxed">
+                    <span className="font-medium">{group.source_th}</span>
+                    <span className="text-ink-muted">
+                      {" — "}
+                      {group.rule_count} {th.concepts.missingInputsRuleCount}
+                      {": "}
+                      {group.labels_th.join(", ")}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 max-w-prose text-ink-muted text-xs leading-relaxed">
+                {th.concepts.missingInputsNote}
+              </p>
+            </div>
           )}
 
           {/* Notice, not Caveat. Every other per-item caveat on these screens is a note; this one

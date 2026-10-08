@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  activationNotices,
   comparisonStageRecord,
   conceptStageRecord,
   validationStageRecord,
@@ -135,5 +136,39 @@ describe("comparison stage", () => {
       state: "SKIPPED",
       reason: "NO_CANDIDATES",
     });
+  });
+});
+
+describe("activationNotices", () => {
+  it("says nothing when every stage either ran or stopped for a reason of its own", () => {
+    expect(
+      activationNotices([
+        { state: "SUCCEEDED" },
+        { state: "SUCCEEDED" },
+        { state: "SKIPPED", reason: "NO_CANDIDATES" },
+        { state: "FAILED", reason: "AI_TIMEOUT" },
+      ]),
+    ).toEqual([]);
+  });
+
+  it("raises the notice for a stage waiting on an activation gate", () => {
+    expect(activationNotices([{ state: "SKIPPED", reason: "COMPONENT_NOT_ACTIVATED" }])).toEqual([
+      { code: "ANALYTICAL_STAGES_NOT_ACTIVATED", retryable: false },
+    ]);
+  });
+
+  it("does not call a coverage gap an activation gap", () => {
+    // An activated source that publishes nothing here is not a switch waiting to be thrown.
+    expect(activationNotices([{ state: "SKIPPED", reason: "NO_EVIDENCE" }])).toEqual([]);
+  });
+
+  it("raises it once however many stages are waiting", () => {
+    expect(
+      activationNotices([
+        { state: "SKIPPED", reason: "SOURCE_NOT_ACTIVATED" },
+        { state: "SKIPPED", reason: "PACK_NOT_ACTIVATED" },
+        { state: "SKIPPED", reason: "COMPONENT_NOT_ACTIVATED" },
+      ]),
+    ).toHaveLength(1);
   });
 });

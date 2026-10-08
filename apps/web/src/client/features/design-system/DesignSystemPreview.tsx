@@ -6,16 +6,15 @@ import {
   Check,
   CircleDashed,
   CircleHelp,
-  FileSearch,
   Info,
   MapPin,
   Moon,
   Sun,
-  TrendingUp,
   X,
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { TerrainBackdrop } from "./TerrainBackdrop.js";
+import { SPECIMEN } from "./specimens.js";
 
 /**
  * Living preview of the design tokens. Font and signature colour are switchable here so the
@@ -29,16 +28,26 @@ import { TerrainBackdrop } from "./TerrainBackdrop.js";
 type Status = "PASS" | "FAIL" | "PARTIAL" | "UNKNOWN";
 
 const STATUS: Record<Status, { label: string; Icon: typeof Check; fg: string; bg: string }> = {
-  PASS: { label: "ผ่าน", Icon: Check, fg: "var(--color-pass)", bg: "var(--color-pass-soft)" },
-  FAIL: { label: "ไม่ผ่าน", Icon: X, fg: "var(--color-fail)", bg: "var(--color-fail-soft)" },
+  PASS: {
+    label: SPECIMEN.statusLabels.PASS,
+    Icon: Check,
+    fg: "var(--color-pass)",
+    bg: "var(--color-pass-soft)",
+  },
+  FAIL: {
+    label: SPECIMEN.statusLabels.FAIL,
+    Icon: X,
+    fg: "var(--color-fail)",
+    bg: "var(--color-fail-soft)",
+  },
   PARTIAL: {
-    label: "ผ่านบางส่วน",
+    label: SPECIMEN.statusLabels.PARTIAL,
     Icon: CircleDashed,
     fg: "var(--color-partial)",
     bg: "var(--color-partial-soft)",
   },
   UNKNOWN: {
-    label: "ไม่ทราบ",
+    label: SPECIMEN.statusLabels.UNKNOWN,
     Icon: CircleHelp,
     fg: "var(--color-unknown)",
     bg: "var(--color-unknown-soft)",
@@ -85,28 +94,11 @@ const PALETTES = [
   { id: "berry", name: "Berry", swatch: "linear-gradient(135deg,#EC4899,#A855F7,#6366F1)" },
 ] as const;
 
-const SECTIONS = [
-  "สรุปคำแนะนำ",
-  "หลักฐานสนับสนุน",
-  "หลักฐานแย้ง",
-  "ผลตรวจสอบ",
-  "การเงิน",
-  "ข้อจำกัด",
-  "สิ่งที่ต้องตรวจสอบต่อ",
-];
+const SECTIONS = SPECIMEN.sections;
 
-const METRICS = [
-  { label: "รายได้ครัวเรือน/เดือน", value: "17,019", unit: "บาท", Icon: TrendingUp },
-  { label: "ประชากรในตำบล", value: "22,480", unit: "คน", Icon: Building2 },
-  { label: "หลักฐานที่ใช้ได้", value: "6", unit: "จาก 14 รายการ", Icon: FileSearch },
-];
+const METRICS = SPECIMEN.metrics;
 
-const EVIDENCE_FIELDS: ReadonlyArray<readonly [string, string]> = [
-  ["กลุ่มประชากร", "ผู้ถือครองทำการเกษตร (เจ้าของที่ดิน)"],
-  ["ระดับพื้นที่", "จังหวัดชลบุรี"],
-  ["ปีข้อมูล", "2568 (ค.ศ. 2025)"],
-  ["แหล่งข้อมูล", "สำนักงานสถิติแห่งชาติ"],
-];
+const EVIDENCE_FIELDS = SPECIMEN.evidenceFields;
 
 export function DesignSystemPreview() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
@@ -138,7 +130,7 @@ export function DesignSystemPreview() {
       <div className="glass border-b">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-3 px-6 py-3 text-sm">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-ink-muted">ฟอนต์</span>
+            <span className="text-ink-muted">{SPECIMEN.fontLabel}</span>
             {FONTS.map((f) => (
               <button
                 key={f.id}
@@ -155,7 +147,7 @@ export function DesignSystemPreview() {
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-ink-muted">สีหลัก</span>
+            <span className="text-ink-muted">{SPECIMEN.paletteLabel}</span>
             {PALETTES.map((p) => (
               <button
                 key={p.id}
@@ -182,7 +174,7 @@ export function DesignSystemPreview() {
             className="ml-auto flex items-center gap-2 rounded-pill border border-border px-3 py-1 text-ink-muted"
           >
             {theme === "light" ? <Moon size={15} /> : <Sun size={15} />}
-            {theme === "light" ? "โหมดมืด" : "โหมดสว่าง"}
+            {theme === "light" ? SPECIMEN.toDarkMode : SPECIMEN.toLightMode}
           </button>
         </div>
       </div>
@@ -199,16 +191,14 @@ export function DesignSystemPreview() {
         />
         <div className="relative mx-auto max-w-6xl">
           <span className="glass inline-flex items-center gap-1.5 rounded-pill px-3 py-1 font-semibold text-xs">
-            <Building2 size={14} /> ต้นแบบเชิงวิชาการ
+            <Building2 size={14} /> {SPECIMEN.badge}
           </span>
           <h1 className="mt-5 font-bold text-4xl leading-tight tracking-tight md:text-6xl">
             {th.app.headlineLead}
             <br />
             <span className="headline-gradient">{th.app.headlineAnswer}</span>
           </h1>
-          <p className="mt-3 max-w-xl text-base text-ink-muted">
-            วิเคราะห์จากหลักฐานจริง ครบทุกจังหวัดทั่วประเทศ พร้อมบอกตรง ๆ ว่าอะไรที่ยังไม่รู้
-          </p>
+          <p className="mt-3 max-w-xl text-base text-ink-muted">{SPECIMEN.tagline}</p>
           <button
             type="button"
             className="mt-7 inline-flex items-center gap-2 rounded-pill px-7 py-3.5 font-bold text-base text-white shadow-[0_8px_28px_-8px_rgba(0,0,0,0.6)]"
@@ -217,7 +207,7 @@ export function DesignSystemPreview() {
                 "linear-gradient(120deg, var(--grad-deep-from), var(--grad-deep-via), var(--grad-deep-to))",
             }}
           >
-            เริ่มวิเคราะห์
+            {SPECIMEN.primaryAction}
             <ArrowUpRight size={18} strokeWidth={2.5} />
           </button>
         </div>
@@ -228,9 +218,9 @@ export function DesignSystemPreview() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="flex items-center gap-1.5 text-ink-muted text-sm">
-                <MapPin size={15} /> ต.บางปลาสร้อย อ.เมืองชลบุรี จ.ชลบุรี
+                <MapPin size={15} /> {SPECIMEN.place}
               </p>
-              <p className="mt-1 font-bold text-3xl tracking-tight">ที่พักอาศัยให้เช่า</p>
+              <p className="mt-1 font-bold text-3xl tracking-tight">{SPECIMEN.concept}</p>
             </div>
             <span
               className="rounded-pill px-4 py-2 font-bold text-sm text-white"
@@ -238,7 +228,7 @@ export function DesignSystemPreview() {
                 background: "linear-gradient(120deg, var(--grad-deep-via), var(--grad-deep-to))",
               }}
             >
-              ระดับพื้นที่ (AREA)
+              {SPECIMEN.scopeBadge}
             </span>
           </div>
 
@@ -267,14 +257,12 @@ export function DesignSystemPreview() {
         >
           <AlertTriangle size={20} className="mt-0.5 shrink-0" strokeWidth={2.5} />
           <p>
-            <span className="font-bold">ผลนี้เป็นการศึกษาเบื้องต้นทางวิชาการ</span> —
-            จัดทำโดยระบบต้นแบบสำหรับโครงการมหาวิทยาลัย ไม่ใช่คำรับรองทางกฎหมาย วิศวกรรม การสำรวจ
-            การประเมินราคา หรือคำแนะนำการลงทุน ต้องตรวจสอบกับผู้เชี่ยวชาญก่อนตัดสินใจจริง
+            <span className="font-bold">{SPECIMEN.disclaimerLead}</span> — {SPECIMEN.disclaimerBody}
           </p>
         </div>
 
         <Card>
-          <CardTitle>สถานะการตรวจสอบ</CardTitle>
+          <CardTitle>{SPECIMEN.statusHeading}</CardTitle>
           <div className="flex flex-wrap gap-3">
             <StatusPill status="PASS" />
             <StatusPill status="FAIL" />
@@ -283,13 +271,12 @@ export function DesignSystemPreview() {
           </div>
           <p className="mt-5 flex items-start gap-2 text-ink-muted text-sm">
             <Info size={15} className="mt-0.5 shrink-0" />
-            สีสถานะไม่เปลี่ยนตามสีหลักของแอป เพราะสื่อความหมายเชิงวิเคราะห์ ไม่ใช่การตกแต่ง และ “ไม่ทราบ”
-            ใช้สีเทาไร้สีสันโดยตั้งใจ เพื่อไม่ให้ดูเหมือน “เกือบไม่ผ่าน”
+            {SPECIMEN.statusNote}
           </p>
         </Card>
 
         <Card>
-          <CardTitle>แถบนำทางผลลัพธ์</CardTitle>
+          <CardTitle>{SPECIMEN.navHeading}</CardTitle>
           <nav className="-mx-1 flex flex-wrap gap-1">
             {SECTIONS.map((s) => (
               <button
@@ -311,23 +298,23 @@ export function DesignSystemPreview() {
               </button>
             ))}
           </nav>
-          <p className="mt-5 text-ink-muted text-sm">
-            หน้าตาเหมือนแท็บ แต่กดแล้วเลื่อนไปยังหัวข้อในหน้าเดียวกัน — ข้อจำกัดและหลักฐานแย้งจึงไม่ถูกซ่อน
-          </p>
+          <p className="mt-5 text-ink-muted text-sm">{SPECIMEN.navNote}</p>
         </Card>
 
         <Card>
-          <CardTitle>การ์ดหลักฐาน</CardTitle>
+          <CardTitle>{SPECIMEN.evidenceHeading}</CardTitle>
           <article className="glass rounded-card p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <h3 className="font-bold text-base">รายได้ครัวเรือนเฉลี่ยต่อเดือน</h3>
+              <h3 className="font-bold text-base">{SPECIMEN.evidenceTitle}</h3>
               <span className="rounded-pill border border-border-strong px-3 py-1 font-semibold text-ink-muted text-xs">
-                หลักฐานตรง
+                {SPECIMEN.evidenceBadge}
               </span>
             </div>
             <p className="mt-3 font-bold text-4xl tracking-tight">
-              <span className="headline-gradient">17,019</span>
-              <span className="ml-2 font-medium text-ink-muted text-base">บาท/เดือน</span>
+              <span className="headline-gradient">{SPECIMEN.evidenceValue}</span>
+              <span className="ml-2 font-medium text-ink-muted text-base">
+                {SPECIMEN.evidenceUnit}
+              </span>
             </p>
             <dl className="mt-4 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
               {EVIDENCE_FIELDS.map(([k, v]) => (
@@ -339,7 +326,7 @@ export function DesignSystemPreview() {
             </dl>
             <p className="mt-4 flex items-start gap-2 text-ink-muted text-sm">
               <Info size={15} className="mt-0.5 shrink-0" />
-              แหล่งข้อมูลไม่ได้เผยแพร่ค่าเฉลี่ยรวมทุกครัวเรือน ระบบจึงแสดงแยกตามกลุ่ม และไม่สร้างค่าเฉลี่ยรวมขึ้นเอง
+              {SPECIMEN.evidenceNote}
             </p>
           </article>
         </Card>

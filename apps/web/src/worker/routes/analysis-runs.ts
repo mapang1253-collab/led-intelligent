@@ -58,6 +58,44 @@ const LEGAL_PACK = mr55Pack as unknown as LegalRulePack;
 const NOT_ACTIVATED_REASONS = new Set(["AI_DISABLED", "NO_EVIDENCE"]);
 
 /**
+ * Reasons that mean a stage is waiting on an approval nobody has given yet — a source, a rule
+ * pack or an economic component that has not passed its activation gate
+ * (docs/implementation-plan.md §4).
+ *
+ * `NO_EVIDENCE` and `NO_CANDIDATES` are deliberately absent. An activated source that publishes
+ * nothing for this subdistrict is a coverage gap, and a stage with nothing to work on is a
+ * consequence of the stage before it; neither is a switch waiting to be thrown, and telling the
+ * reader to wait for a feature would send them after the wrong thing.
+ */
+const ACTIVATION_PENDING_REASONS = new Set([
+  "SOURCE_NOT_ACTIVATED",
+  "PACK_NOT_ACTIVATED",
+  "COMPONENT_NOT_ACTIVATED",
+  "AI_DISABLED",
+]);
+
+/**
+ * The activation notice, raised only when a stage actually reports one of those reasons.
+ *
+ * It used to be appended to every envelope unconditionally, so a run that gathered its evidence,
+ * proposed concepts and screened them against the rule pack still declared that its analytical
+ * stages were not activated. The screen happened to hide it, which made the envelope quietly
+ * wrong rather than visibly wrong — and the envelope is the part another reader of this API
+ * would believe.
+ */
+export function activationNotices(
+  stageRecords: readonly { state: string; reason?: string }[],
+): { code: string; retryable: boolean }[] {
+  const pending = stageRecords.some(
+    (record) =>
+      record.state === "SKIPPED" &&
+      record.reason !== undefined &&
+      ACTIVATION_PENDING_REASONS.has(record.reason),
+  );
+  return pending ? [{ code: "ANALYTICAL_STAGES_NOT_ACTIVATED", retryable: false }] : [];
+}
+
+/**
  * Failures a fresh run could plausibly get past: a busy or slow provider, and an answer the
  * validator rejected even after its one repair (the model is sampled, so another run may parse).
  * Everything else — an exhausted allowance, an unconfigured budget, a provider we cannot reach —
@@ -412,6 +450,45 @@ analysisRuns.get("/:run_id", async (c) => {
       conceptSet.validations.map((validation) => [validation.concept_id, validation]),
     );
 
+    const stageRecords = [
+      { stage: "TARGET_RESOLUTION", version: "1.0.0", state: "SUCCEEDED" },
+      {
+        stage: "EVIDENCE_ACQUISITION",
+        version: "1.0.0",
+        state: evidence.state,
+        ...(evidence.reason ? { reason: evidence.reason } : {}),
+      },
+      {
+        stage: "CONCEPT_PROPOSAL",
+        version: "1.0.0",
+        // A stage that tried and failed is not a stage that was never switched on. Reporting a
+        // provider outage as "not activated" tells the reader to wait for a feature, when what
+        // they should do is press the button again.
+        ...(working && conceptSet.concepts.length === 0
+          ? { state: "RUNNING" }
+          : conceptStageRecord(conceptSet)),
+      },
+      {
+        stage: "VALIDATION",
+        version: "1.0.0",
+        // With no concepts there is nothing to validate; that is not the pack's fault, and
+        // saying "pack not activated" would send the reader after the wrong thing. While the run
+        // is still working there are no concepts *yet*, which is a different statement again.
+        ...(working ? { state: "RUNNING" } : validationStageRecord(conceptSet)),
+      },
+      {
+        stage: "SCENARIO",
+        version: "1.0.0",
+        state: "SKIPPED",
+        reason: "COMPONENT_NOT_ACTIVATED",
+      },
+      {
+        stage: "COMPARISON",
+        version: "1.0.0",
+        ...(working ? { state: "RUNNING" } : comparisonStageRecord(conceptSet)),
+      },
+    ];
+
     return c.json({
       schema_version: SCHEMA_VERSION,
       run_id: run.run_id,
@@ -435,44 +512,7 @@ analysisRuns.get("/:run_id", async (c) => {
        * run at expiry. It never enters a URL.
        */
       intake: run.intake,
-      stage_records: [
-        { stage: "TARGET_RESOLUTION", version: "1.0.0", state: "SUCCEEDED" },
-        {
-          stage: "EVIDENCE_ACQUISITION",
-          version: "1.0.0",
-          state: evidence.state,
-          ...(evidence.reason ? { reason: evidence.reason } : {}),
-        },
-        {
-          stage: "CONCEPT_PROPOSAL",
-          version: "1.0.0",
-          // A stage that tried and failed is not a stage that was never switched on. Reporting a
-          // provider outage as "not activated" tells the reader to wait for a feature, when what
-          // they should do is press the button again.
-          ...(working && conceptSet.concepts.length === 0
-            ? { state: "RUNNING" }
-            : conceptStageRecord(conceptSet)),
-        },
-        {
-          stage: "VALIDATION",
-          version: "1.0.0",
-          // With no concepts there is nothing to validate; that is not the pack's fault, and
-          // saying "pack not activated" would send the reader after the wrong thing. While the run
-          // is still working there are no concepts *yet*, which is a different statement again.
-          ...(working ? { state: "RUNNING" } : validationStageRecord(conceptSet)),
-        },
-        {
-          stage: "SCENARIO",
-          version: "1.0.0",
-          state: "SKIPPED",
-          reason: "COMPONENT_NOT_ACTIVATED",
-        },
-        {
-          stage: "COMPARISON",
-          version: "1.0.0",
-          ...(working ? { state: "RUNNING" } : comparisonStageRecord(conceptSet)),
-        },
-      ],
+      stage_records: stageRecords,
       // Present only when a candidate set existed and a decision could be made. A run that never
       // produced one keeps this null and reports an operational state instead.
       final_analysis: conceptSet.final,
@@ -536,7 +576,7 @@ analysisRuns.get("/:run_id", async (c) => {
         candidate_search: conceptSet.record,
       },
       errors: [],
-      notices: [{ code: "ANALYTICAL_STAGES_NOT_ACTIVATED", retryable: false }],
+      notices: activationNotices(stageRecords),
     });
   } finally {
     await db.destroy();

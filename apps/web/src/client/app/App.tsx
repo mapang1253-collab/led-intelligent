@@ -1,6 +1,6 @@
 import { th } from "@reis/i18n";
 import { Building2 } from "lucide-react";
-import { Route, Routes } from "react-router";
+import { Navigate, Route, Routes } from "react-router";
 import { DesignSystemPreview } from "../features/design-system/DesignSystemPreview.js";
 import { LandingSections } from "../features/intake/LandingSections.js";
 import { PropertyIntakeForm } from "../features/intake/PropertyIntakeForm.js";
@@ -42,8 +42,16 @@ function IntakePage() {
 export function App() {
   return (
     <Routes>
-      {/* The design preview stands alone; everything a reader uses lives inside the shell. */}
-      <Route path="/design" element={<DesignSystemPreview />} />
+      {/*
+        The design preview stands alone; everything a reader uses lives inside the shell.
+
+        Development only. The page is a swatch board, and its numbers are invented to show what a
+        figure looks like — on the deployed site a reader who reached it could take them for an
+        analysis, which is the one thing this product must never serve (docs/output-policy.md).
+        Vite replaces import.meta.env.DEV with false in the build, so the component is dropped
+        from the bundle rather than merely hidden behind a route.
+      */}
+      {import.meta.env.DEV && <Route path="/design" element={<DesignSystemPreview />} />}
       <Route
         path="*"
         element={
@@ -53,6 +61,15 @@ export function App() {
               <Route path="/runs/:runId" element={<RunPage />} />
               <Route path="/saved" element={<SavedAreasPage />} />
               <Route path="/status" element={<SystemStatusPage />} />
+              {/*
+                Anything else goes to the front page rather than to a blank shell.
+
+                Without this, an address the router does not know rendered the top bar and nothing
+                under it — which is what /design became the moment the preview stopped shipping,
+                and what any mistyped URL had always done. There are four pages here; sending a
+                reader to the one that starts the work is kinder than a page that looks broken.
+              */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </AppShell>
         }

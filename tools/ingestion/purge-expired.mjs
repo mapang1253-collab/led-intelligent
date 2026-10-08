@@ -62,7 +62,7 @@ try {
   console.log(
     leftover.length === 0
       ? "ตรวจแล้ว: ไม่มีข้อมูลตกค้างที่ไม่มี run เป็นเจ้าของ"
-      : `⚠ พบข้อมูลตกค้าง: ${leftover.map((r) => `${r.t}=${r.n}`).join(", ")}`,
+      : `คำเตือน: พบข้อมูลตกค้าง ${leftover.map((r) => `${r.t}=${r.n}`).join(", ")}`,
   );
 } finally {
   await client.end();

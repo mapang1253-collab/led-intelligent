@@ -8,18 +8,33 @@
 เอกสารสเปก/สถาปัตยกรรมใน `docs/` ยังคงเป็นแหล่งอำนาจสูงสุด และตอนนี้มีโค้ดที่รันได้จริงอยู่ในรีโพแล้ว
 ชลบุรี/EEC เป็นเพียงพื้นที่วิจัยและ fixture สำหรับตรวจสอบความถูกต้องเท่านั้น ไม่ใช่ขอบเขตของผลิตภัณฑ์
 
-**สิ่งที่สร้างแล้ว (ใช้งานได้จริง):** workspace pnpm ครบทุก package ตาม §4 · migration
-`database/migrations/0001` (reference.administrative_area ทั่วประเทศ 77/928/7436) และ `0002`
-(analysis.analysis_run + CHECK หมดอายุ 24 ชม.) · Worker Hono ที่ `/api/v1/administrative-areas` และ
-`/api/v1/analysis-runs` (สร้าง/อ่าน/ยกเลิก run พร้อม capability cookie แบบ HttpOnly เก็บเฉพาะ digest) ·
-SPA React 19 + React Router: หน้ากรอกข้อมูลทรัพย์สิน (`features/intake`), หน้าความคืบหน้า/ผลลัพธ์ของ run
-(`features/run`), ระบบ design token + พื้นหลังแผนที่เคลื่อนไหว (`features/design-system`) ·
-adapter NSO SES income (ยังไม่ activate) · Hyperdrive เชื่อม Supabase
+**สิ่งที่สร้างแล้ว (ใช้งานได้จริง):** workspace pnpm ครบทุก package ตาม §4 · migration `0001`–`0014`
+(เขตการปกครองทั่วประเทศ 77/928/7436 · analysis_run + CHECK หมดอายุ 24 ชม. · source registry และ
+evidence · concept/validation/final_analysis · AI budget · purge log · measure ราคาประเมิน
+สิ่งปลูกสร้าง/ห้องชุด/ที่ดิน · land_parcel · zoning zone · parcel layer) · Worker Hono:
+`/api/v1/administrative-areas` (รวม search/by-ids/compare/well-documented), `/api/v1/analysis-runs`
+(สร้าง/อ่าน/ยกเลิก run พร้อม capability cookie แบบ HttpOnly เก็บเฉพาะ digest), `/api/v1/zoning`,
+`/api/v1/parcels/{coverage,search}`, `/api/v1/proximity`, `/api/v1/system-status` · SPA React 19 +
+React Router: หน้ากรอกข้อมูล (`features/intake`), หน้าผลลัพธ์แบ่งเป็นแท็บ (`features/run`),
+หน้าสถานะระบบ (`features/status`), design token + พื้นหลังแผนที่เคลื่อนไหว (`features/design-system`
+— **dev เท่านั้น** ไม่ขึ้น production) · source adapter: dopa, treasury, nso, osm, dpt ·
+Hyperdrive เชื่อม Supabase · Playwright e2e (`apps/web/e2e/`)
 
-**สิ่งที่ยังไม่ทำ (ตั้งใจ):** stage หลักฐาน/ตรวจสอบ/scenario/AI ยัง **ไม่ activate** ตาม
-[`docs/adr/0001-first-increment-scope.md`](docs/adr/0001-first-increment-scope.md) — run จึงคืน `PARTIAL`
-พร้อม `final_analysis: null` และ notice `ANALYTICAL_STAGES_NOT_ACTIVATED` ซึ่งเป็นพฤติกรรมที่ถูกต้อง
-ไม่ใช่บั๊ก ห้ามเติมผลวิเคราะห์ปลอมเพื่อให้หน้าจอดูสมบูรณ์เด็ดขาด
+**Pipeline ที่รันจริงแล้ว:** รับข้อมูล → ระบุพื้นที่ → รวบรวมหลักฐาน (Observation/EvidenceLink จาก
+แหล่งที่ activate แล้ว) → เสนอแนวคิดด้วย AI (3 โหมด: `LIVE_AI` / `RECORDED_AI` / `AI_DISABLED`;
+production ใช้ `RECORDED_AI`) → ตรวจกฎหมายด้วย pack `th.cba.mr55` → ตัดสินสถานะสุดท้าย
+run จึงคืน `final_analysis` จริง ไม่ใช่ `null` แล้ว
+
+**สิ่งที่ยังไม่ทำ (ตั้งใจ):** **scenario/economic component ยังไม่ activate** —
+`economic_components_available` ยังเป็น `false` สถานะสุดท้ายจึงเป็น `INSUFFICIENT_EVIDENCE`
+(เหตุผล `NO_SUPPORTED_COMMON_BASIS`) เสมอ นี่เป็นพฤติกรรมที่ถูกต้องตาม
+[`docs/adr/0001-first-increment-scope.md`](docs/adr/0001-first-increment-scope.md) ไม่ใช่บั๊ก และ
+**ห้ามแก้ด้วยการเปลี่ยน flag** ต้องทำ economic registry ให้ผ่าน gate ใน `docs/implementation-plan.md` §4
+เท่านั้น · notice `ANALYTICAL_STAGES_NOT_ACTIVATED` ใส่เฉพาะเมื่อมี stage ที่ `SKIPPED`
+ด้วยเหตุผลว่ายังไม่ได้เปิดใช้งานจริง ไม่ได้ใส่ทุก run · ผลตรวจกฎหมายส่วนใหญ่เป็น `UNKNOWN` เพราะ
+`th.cba.mr55` เป็นกฎควบคุม**อาคาร** ที่ต้องใช้ค่าจากแบบผังบริเวณ/แบบสถาปัตยกรรม ซึ่งที่ดินเปล่ายังไม่มี —
+หน้าจอจึงสรุปให้ว่าต้องไปเอาอะไรมาเพิ่มจากที่ไหน การจะให้ค่าที่ผู้ใช้กรอกเองมีผลต่อสถานะได้
+ต้องมี ADR และการอนุมัติของเจ้าของโปรเจกต์ก่อน · ห้ามเติมผลวิเคราะห์ปลอมเพื่อให้หน้าจอดูสมบูรณ์เด็ดขาด
 
 **Architecture Freeze v1.0** ถูกประกาศโดยเจ้าของโปรเจกต์เมื่อ 2026-09-15 (เวลาเอเชีย/กรุงเทพฯ) ดู
 [`ARCHITECTURE-FREEZE.md`](ARCHITECTURE-FREEZE.md) สำหรับ baseline ที่ล็อกไว้และกฎการเปลี่ยนแปลง
