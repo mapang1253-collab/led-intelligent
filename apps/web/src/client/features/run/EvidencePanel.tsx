@@ -75,9 +75,18 @@ function EvidenceRow({
 
   return (
     <li className="border-border border-b py-3 last:border-b-0">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <span className="text-sm">{item.population_th}</span>
-        <span className="font-bold tabular-nums">
+      {/*
+        A grid, not a wrapping flex row.
+
+        The source names its cohorts in full — "ผู้ถือครองทำการเกษตร/เพาะเลี้ยง /
+        ปลูกพืช/เลี้ยงสัตว์/เพาะเลี้ยง_ส่วนใหญ่เช่าที่ดิน/ทำฟรี" is one of them, and shortening it
+        would be editing the evidence. Wrapped, that label pushed its own figure onto the next line
+        and left-aligned it, so a column of numbers became numbers scattered down the page. Two
+        columns keep the label free to wrap and the figure where the eye is already looking.
+      */}
+      <div className="grid grid-cols-[1fr_auto] items-baseline gap-x-4">
+        <span className="text-sm leading-snug">{item.population_th}</span>
+        <span className="whitespace-nowrap text-right font-bold tabular-nums">
           {shown} <span className="font-medium text-ink-muted text-sm">{item.unit_name_th}</span>
         </span>
       </div>
@@ -164,23 +173,34 @@ export function EvidencePanel({
   if (groups && groups.length > 0) {
     return (
       <section className="glass mt-5 rounded-card p-6">
-        <h2 className="flex items-center gap-2 font-bold text-lg">
-          <Database size={19} aria-hidden="true" />
+        <h2 className="flex items-center gap-2 font-bold text-xl tracking-tight">
+          <Database size={20} aria-hidden="true" />
           {th.evidence.heading}
         </h2>
-        <p className="mt-1 text-ink-muted text-sm">{th.evidence.intro}</p>
+        <p className="mt-1.5 text-ink-muted text-sm leading-relaxed">{th.evidence.intro}</p>
 
+        {/*
+          One card per group.
+
+          This was a flat run of sections: a `font-semibold` heading two pixels off the panel's own
+          `text-lg bold`, the area tacked on after a dot, a caveat, then rows — all on one
+          background, repeated. The owners called it ลายตา and they were right; nothing told the eye
+          where one measure ended and the next began. A card does that before a word is read, which
+          then lets the heading be plainly the biggest thing inside it.
+        */}
         {groups.map((group) => (
-          <div key={group.group_id} className="mt-5">
-            <h3 className="font-semibold">
-              {group.measure_name_th}
-              {/* The area is part of the heading: two groups can share a measure and describe
-                  different places. */}
-              <span className="font-medium text-ink-muted text-sm">
-                {" · "}
-                {group.area_label_th}
-              </span>
-            </h3>
+          <article
+            key={group.group_id}
+            className="mt-5 rounded-card bg-surface-sunken p-5 first:mt-4"
+          >
+            <h3 className="font-bold text-base leading-snug">{group.measure_name_th}</h3>
+            {/* The area on its own line, not after a dot. Two groups can share a measure and
+                describe different places, so it has to be read — and a title that runs measure,
+                dot, area, in two weights, is read as neither. */}
+            <p className="mt-1 flex items-center gap-1.5 font-medium text-ink-muted text-xs">
+              <MapPin size={13} className="shrink-0" aria-hidden="true" />
+              {group.area_label_th}
+            </p>
 
             {/* Scope first: what this evidence is about, before any number is read. Quiet, because
                 there is one of these under every group and a screen of amber panels is a screen
@@ -193,10 +213,10 @@ export function EvidencePanel({
 
             <EvidenceItems group={group} />
 
-            <p className="mt-3 text-ink-muted text-xs">
+            <p className="mt-3 border-border border-t pt-3 text-ink-muted text-xs leading-relaxed">
               {th.evidence.sourceLabel}: {group.source_title_th} · {group.attribution_th}
             </p>
-          </div>
+          </article>
         ))}
       </section>
     );
