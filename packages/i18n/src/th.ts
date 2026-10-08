@@ -315,6 +315,17 @@ export const th = {
     stepOne: "1. ที่ดินอยู่ที่ไหน",
     modeArea: "เลือกจากรายการพื้นที่",
     modeParcel: "มีระวางและเลขที่ดิน",
+    /**
+     * One click that fills the form with a real plot, for someone meeting the product cold.
+     *
+     * It is also what makes a live demonstration safe: the parcel lookup it saves goes out to
+     * กรมโยธาธิการและผังเมือง, which has spells of not answering, and nothing is less convincing in
+     * front of a room than a spinner.
+     */
+    tryExample: "ลองด้วยแปลงจริง ต.บางพูน ปทุมธานี",
+    tryExampleHint:
+      "เติมพื้นที่ เนื้อที่ และหมุดของแปลงที่มีอยู่จริงให้ทันที พร้อมวิเคราะห์ได้ทันที · 0 ไร่ 3 งาน 53.34 ตารางวา",
+    tryExampleFailed: "เติมตัวอย่างไม่สำเร็จ เลือกพื้นที่เองได้ตามปกติ",
     stepTwo: "2. รายละเอียดเพิ่มเติม",
     /**
      * One line under each of the three optional cards.

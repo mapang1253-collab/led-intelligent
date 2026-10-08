@@ -1,5 +1,14 @@
 import { th } from "@reis/i18n";
-import { ArrowRight, ChevronDown, Info, MapPin, Maximize2, Plus, Ruler } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronDown,
+  Info,
+  MapPin,
+  Maximize2,
+  Plus,
+  Ruler,
+  Sparkles,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useCreateRun } from "../run/useAnalysisRun.js";
@@ -65,6 +74,29 @@ function areaSummaryTh(rai: string, ngan: string, wa: string): string | null {
 const asField = (value: unknown): string =>
   typeof value === "number" || typeof value === "string" ? String(value) : "";
 
+/**
+ * A real plot in ต.บางพูน, for a reader meeting this form with nothing in mind.
+ *
+ * The figures are the Land Department's own for parcel 310 of ระวาง 5136 IV 7246-05, which the
+ * parcel lookup can find — this fills in what that lookup would have filled, without the lookup.
+ * That matters beyond saving three fields: the lookup goes out to a department whose service has
+ * spells of not answering, and a demonstration should not depend on one.
+ *
+ * The area is resolved by name rather than by id, because the reference table's ids are generated
+ * and a reseed would renumber them, which would leave this button quietly filling in the wrong
+ * place.
+ */
+const EXAMPLE = {
+  query: "บางพูน",
+  provinceName: "ปทุมธานี",
+  districtName: "เมืองปทุมธานี",
+  subdistrictName: "บางพูน",
+  rai: "0",
+  ngan: "3",
+  wa: "53.34",
+  point: { latitude: 13.99092, longitude: 100.59602 },
+} as const;
+
 export function PropertyIntakeForm() {
   const location = useLocation();
   // Read once, on mount. A later render must not reset fields the reader is in the middle of typing.
@@ -126,6 +158,7 @@ export function PropertyIntakeForm() {
    * that leaves it — so the push waits for the replace to commit.
    */
   const [startedRun, setStartedRun] = useState<string | null>(null);
+  const [exampleFailed, setExampleFailed] = useState(false);
   useEffect(() => {
     if (startedRun) {
       navigate(`/runs/${startedRun}`, { state: { intake: lastIntake.current } });
@@ -175,6 +208,44 @@ export function PropertyIntakeForm() {
     optional.land_area_ngan,
     optional.land_area_wa,
   );
+
+  /** Fills the form with EXAMPLE, resolving its ids by name. */
+  async function useExample() {
+    setExampleFailed(false);
+    try {
+      const response = await fetch(
+        `/api/v1/administrative-areas/search?q=${encodeURIComponent(EXAMPLE.query)}`,
+        { headers: { Accept: "application/json" } },
+      );
+      const found = ((await response.json()) as { data: AreaChoice[] }).data.find(
+        (area) =>
+          area.subdistrict_name_th === EXAMPLE.subdistrictName &&
+          area.district_name_th === EXAMPLE.districtName &&
+          area.province_name_th === EXAMPLE.provinceName,
+      );
+      if (!found) {
+        setExampleFailed(true);
+        return;
+      }
+      setPicked(found);
+      setAreaCleared(false);
+      setProvinceId(found.province_id);
+      setDistrictId(found.district_id);
+      setSubdistrictId(found.subdistrict_id);
+      setErrors((current) => ({ ...current, subdistrict_id: "" }));
+      setOptional((current) => ({
+        ...current,
+        land_area_rai: EXAMPLE.rai,
+        land_area_ngan: EXAMPLE.ngan,
+        land_area_wa: EXAMPLE.wa,
+      }));
+      setShowArea(true);
+      setPin(EXAMPLE.point);
+      setShowMap(true);
+    } catch {
+      setExampleFailed(true);
+    }
+  }
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -228,6 +299,25 @@ export function PropertyIntakeForm() {
     <form onSubmit={handleSubmit} className="glass rounded-card p-6 md:p-8" noValidate>
       <h2 className="font-bold text-xl tracking-tight">{th.intake.heading}</h2>
       <p className="mt-2 text-ink-muted text-sm">{th.intake.description}</p>
+
+      {/* Offered before the form rather than after it: someone who does not yet know what this
+          produces should be able to see one, not assemble one first. */}
+      <button
+        type="button"
+        onClick={() => void useExample()}
+        className="mt-4 flex w-full items-start gap-2.5 rounded-card border border-border-strong p-3.5 text-left transition-colors hover:bg-surface-sunken"
+      >
+        <Sparkles size={16} className="mt-0.5 shrink-0 text-signature-text" aria-hidden="true" />
+        <span>
+          <span className="block font-semibold text-signature-text text-sm">
+            {th.intake.tryExample}
+          </span>
+          <span className="mt-0.5 block text-ink-muted text-xs leading-relaxed">
+            {th.intake.tryExampleHint}
+          </span>
+        </span>
+      </button>
+      {exampleFailed && <p className="mt-2 text-fail text-xs">{th.intake.tryExampleFailed}</p>}
 
       {/*
         Step one: where, asked once.

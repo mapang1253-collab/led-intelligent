@@ -56,7 +56,7 @@ test("choosing a suggested area and starting a run reaches a result", async ({ p
   // The confirmation names the place that was chosen, which is what the result heading must echo.
   const chosenArea = "แสนสุข";
 
-  const submit = page.getByRole("button", { name: th.intake.submit });
+  const submit = page.getByRole("button", { name: th.intake.submit, exact: true });
   await expect(submit).toBeEnabled();
   await submit.click();
 
@@ -79,7 +79,7 @@ test("a result URL survives being typed into the address bar", async ({ page }) 
   // app still works perfectly from the front page.
   await page.goto("/");
   await pickAnArea(page);
-  await page.getByRole("button", { name: th.intake.submit }).click();
+  await page.getByRole("button", { name: th.intake.submit, exact: true }).click();
   await expect(page).toHaveURL(/\/runs\/[^/?#]+/);
 
   const resultUrl = page.url();
@@ -106,7 +106,7 @@ test("a result URL survives being typed into the address bar", async ({ page }) 
 test("going back from a result reopens the form on the same place", async ({ page }) => {
   await page.goto("/");
   await pickAnArea(page);
-  await page.getByRole("button", { name: th.intake.submit }).click();
+  await page.getByRole("button", { name: th.intake.submit, exact: true }).click();
   await expect(page).toHaveURL(/\/runs\/[^/?#]+/);
 
   await page.goBack();
@@ -132,7 +132,7 @@ test("going back from a reloaded result still reopens the form on the same place
 }) => {
   await page.goto("/");
   await pickAnArea(page);
-  await page.getByRole("button", { name: th.intake.submit }).click();
+  await page.getByRole("button", { name: th.intake.submit, exact: true }).click();
   await expect(page).toHaveURL(/\/runs\/[^/?#]+/);
 
   await page.goto(page.url());

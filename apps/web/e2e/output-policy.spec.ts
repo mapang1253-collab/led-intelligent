@@ -67,7 +67,7 @@ const TOPICS = [
 async function startRun(page: Page) {
   await page.goto("/");
   await pickAnArea(page);
-  await page.getByRole("button", { name: th.intake.submit }).click();
+  await page.getByRole("button", { name: th.intake.submit, exact: true }).click();
   await expect(page).toHaveURL(/\/runs\/[^/?#]+/);
   await expect(page.getByRole("heading", { level: 1, name: RESULT_HEADING })).toBeVisible({
     timeout: RESULT_TIMEOUT,
