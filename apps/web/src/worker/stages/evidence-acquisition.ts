@@ -14,8 +14,10 @@ import {
   type EvidenceRequirement,
   HOUSEHOLD_INCOME_REQUIREMENT,
   LAND_PRICE_REQUIREMENT,
+  type LinkTarget,
   POPULATION_REQUIREMENT,
   buildEvidenceLinks,
+  disclosureParts,
 } from "@reis/evidence-engine";
 
 /**
@@ -139,6 +141,11 @@ export interface EvidenceGroup {
     readonly source_note_th: string | null;
     readonly temporal_match: string;
     readonly disclosure_th: string;
+    /**
+     * The same disclosure as its clauses, so the screen can print what this figure shares with the
+     * rest of its group once instead of once per figure. `disclosure_th` stays the whole statement.
+     */
+    readonly disclosure_parts_th: readonly string[];
   }[];
 }
 
@@ -171,8 +178,15 @@ function geographyNote(match: string, levelNoun: string, areaName: string): stri
 
 export function groupEvidenceForDisplay(
   links: readonly StoredEvidenceLink[],
-  provinceNameTh: string,
+  /**
+   * The run's own target. Needed because a figure's clauses name the place the reader asked about,
+   * and they are recomputed here from the stored observation rather than carried in the row: the
+   * joined `disclosure_th` cannot be split back apart safely, since its separator also appears
+   * inside the cohort names the source publishes.
+   */
+  target: LinkTarget,
 ): EvidenceGroup[] {
+  const provinceNameTh = target.province_name_th;
   const byGroup = new Map<string, StoredEvidenceLink[]>();
   for (const link of links) {
     const key = `${link.requirement_id}|${link.observation.geography_level}|${link.observation.area_name_th}`;
@@ -215,6 +229,12 @@ export function groupEvidenceForDisplay(
           source_note_th: link.observation.source_note_th,
           temporal_match: link.temporal_match,
           disclosure_th: link.disclosure_th,
+          disclosure_parts_th: disclosureParts(
+            link.observation,
+            target,
+            link.geography_match,
+            link.temporal_match,
+          ),
         })),
         level_rank: LEVEL_ORDER[level],
       };

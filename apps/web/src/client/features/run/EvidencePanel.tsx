@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight, Database, Info, MapPin } from "lucide-react"
 import { useState } from "react";
 import { Caveat } from "./Caveat.js";
 import { GroupHeading, PanelHeading } from "./PanelHeading.js";
+import { splitDisclosures, withoutAlreadyShown, withoutRowIdentity } from "./sharedDisclosure.js";
 import type { EvidenceGroup } from "./useAnalysisRun.js";
 
 /**
@@ -58,9 +59,17 @@ const ITEMS_BEFORE_COLLAPSE = 8;
 
 function EvidenceRow({
   item,
+  clauses,
+  limitsShownBelow,
   mapsHref,
 }: {
   item: EvidenceGroup["items"][number];
+  /**
+   * This figure's own clauses, already stripped of the ones every figure in the group repeats.
+   * Those are printed once, uncollapsed, beneath the rows.
+   */
+  clauses: readonly string[];
+  limitsShownBelow: boolean;
   mapsHref?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -73,6 +82,11 @@ function EvidenceRow({
       : isRange && item.value_low !== item.value_high
         ? `${formatValue(item.value_low as string)}–${formatValue(item.value_high as string)}`
         : formatValue((item.value_low ?? "") as string);
+  const detail = [
+    ...clauses,
+    // A spread's meaning belongs to the figure that is a spread, not to the group.
+    ...(isRange && item.value_low !== item.value_high ? [th.evidence.rangeNote] : []),
+  ];
 
   return (
     <li className="border-border border-b py-3 last:border-b-0">
@@ -106,23 +120,35 @@ function EvidenceRow({
             {th.evidence.openInMaps}
           </a>
         )}
-        <button
-          type="button"
-          onClick={() => setOpen((value) => !value)}
-          aria-expanded={open}
-          className="inline-flex items-center gap-1 text-signature-text"
-        >
-          {open ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-          {open ? th.evidence.hideDetail : th.evidence.showDetail}
-        </button>
+        {detail.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setOpen((value) => !value)}
+            aria-expanded={open}
+            className="inline-flex items-center gap-1 text-signature-text"
+          >
+            {open ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+            {open
+              ? th.evidence.hideDetail
+              : limitsShownBelow
+                ? th.evidence.showRowDetail
+                : th.evidence.showDetail}
+          </button>
+        )}
       </div>
 
-      {/* The full disclosure travels with the individual figure, never only with the group. */}
+      {/*
+        Every clause still reaches the reader of this figure: what is specific to it is here, and
+        what it shares with the rest of the group is printed once below the rows, in the same card,
+        without anything to open. One clause per line, because this used to be five clauses joined
+        by dots into a paragraph nobody finished.
+      */}
       {open && (
-        <p className="mt-2 rounded-card bg-surface-sunken p-3 text-ink-muted text-xs leading-relaxed">
-          {item.disclosure_th}
-          {isRange && item.value_low !== item.value_high && ` · ${th.evidence.rangeNote}`}
-        </p>
+        <ul className="mt-2 list-disc space-y-1 rounded-card bg-surface-sunken py-3 pr-3 pl-8 text-ink-muted text-xs leading-relaxed marker:text-ink-muted">
+          {detail.map((clause) => (
+            <li key={clause}>{clause}</li>
+          ))}
+        </ul>
       )}
     </li>
   );
@@ -135,6 +161,21 @@ function EvidenceItems({ group }: { group: EvidenceGroup }) {
   const shown = collapsible && !expanded ? items.slice(0, ITEMS_BEFORE_COLLAPSE) : items;
   const mappable = group.requirement_id === CONDOMINIUM_REQUIREMENT;
 
+  /*
+    The split is over the whole group, not over the rows currently on screen, so expanding a long
+    table never moves a clause from the shared block back into the rows.
+
+    The group heading already prints the geography note and the card's foot already prints the
+    attribution, so a shared clause repeating either of those is dropped rather than moved: putting
+    it here would be the same sentence twice in one card, which is the thing being fixed.
+  */
+  const { shared, own } = splitDisclosures(items);
+  const sharedNotes = withoutAlreadyShown(shared, [
+    group.geography_note_th,
+    group.attribution_th,
+    group.source_title_th,
+  ]);
+
   return (
     <>
       <ul className="mt-2">
@@ -142,12 +183,28 @@ function EvidenceItems({ group }: { group: EvidenceGroup }) {
           <EvidenceRow
             key={item.observation_id}
             item={item}
+            clauses={withoutRowIdentity(own.get(item.observation_id) ?? [], {
+              measureNameTh: group.measure_name_th,
+              cohortTh: item.population_th,
+            })}
+            limitsShownBelow={sharedNotes.length > 0}
             {...(mappable
               ? { mapsHref: mapsSearchUrl(item.population_th, group.area_label_th) }
               : {})}
           />
         ))}
       </ul>
+
+      {sharedNotes.length > 0 && (
+        <div className="mt-3 rounded-card border border-border border-l-2 border-l-signature bg-surface-sunken p-3">
+          <p className="font-semibold text-ink text-xs">{th.evidence.sharedNotesHeading}</p>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-ink-muted text-xs leading-relaxed marker:text-ink-muted">
+            {sharedNotes.map((note) => (
+              <li key={note}>{note}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       {collapsible && (
         <button
           type="button"

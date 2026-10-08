@@ -38,6 +38,7 @@ function group(
       source_note_th: null,
       temporal_match: "CURRENT",
       disclosure_th: "",
+      disclosure_parts_th: [],
     })),
   };
 }

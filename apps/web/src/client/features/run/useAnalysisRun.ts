@@ -53,6 +53,7 @@ export interface EvidenceGroup {
     source_note_th: string | null;
     temporal_match: string;
     disclosure_th: string;
+    disclosure_parts_th: readonly string[];
   }[];
 }
 

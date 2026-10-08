@@ -1,10 +1,12 @@
 import type { StoredObservation } from "@reis/contracts";
 import { describe, expect, it } from "vitest";
 import {
+  DISCLOSURE_SEPARATOR,
   type LinkTarget,
   POPULATION_REQUIREMENT,
   buildEvidenceLinks,
   buildHouseholdIncomeLinks,
+  disclosureParts,
   temporalMatchFor,
 } from "./link-policy.js";
 
@@ -106,6 +108,29 @@ describe("buildHouseholdIncomeLinks", () => {
     expect(disclosure).toContain("ห้ามใช้แทนรายได้ของครัวเรือนในตำบลใดโดยเฉพาะ");
     expect(disclosure).toContain("สำนักงานสถิติแห่งชาติ");
     expect(disclosure).toContain("ไม่ใช่ข้อมูลของ");
+  });
+
+  /*
+    The display recomputes a figure's clauses with `disclosureParts` rather than splitting the
+    stored sentence, because the separator also occurs inside the cohort names the source
+    publishes. That only stays honest while the two agree, so this pins them together: if someone
+    adds a clause to one path, this fails rather than letting a run record one statement and the
+    screen show another.
+  */
+  it("gives the same statement whether it is read as a sentence or as its clauses", () => {
+    const [link] = buildHouseholdIncomeLinks(
+      [observation({ epistemic_status: "DERIVED", source_note_th: "หมายเหตุของแหล่งข้อมูล" })],
+      subdistrictTarget,
+      2026,
+    );
+    const parts = disclosureParts(
+      observation({ epistemic_status: "DERIVED", source_note_th: "หมายเหตุของแหล่งข้อมูล" }),
+      subdistrictTarget,
+      link?.geography_match ?? "EXACT",
+      link?.temporal_match ?? "CURRENT",
+    );
+    expect(parts.join(DISCLOSURE_SEPARATOR)).toBe(link?.disclosure_th);
+    expect(parts.length).toBeGreaterThan(1);
   });
 
   it("carries a source footnote through instead of dropping it", () => {

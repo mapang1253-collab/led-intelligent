@@ -162,12 +162,27 @@ function targetNameFor(target: LinkTarget): string {
 /** Thai Buddhist Era is 543 years ahead of the Common Era. */
 const BE_CE_OFFSET = 543;
 
-function disclosureFor(
+/**
+ * The clauses of one figure's disclosure, in reading order.
+ *
+ * Returned as parts rather than as a sentence because the screen has to tell them apart. A group of
+ * twenty Treasury figures repeats four of these five clauses verbatim twenty times, and the reader
+ * stops reading them on the second; the display prints the repeated ones once per group and the
+ * figure's own ones with the figure. Joining them here instead would force the display to split on
+ * the separator, and the separator occurs inside the clauses themselves — the source names cohorts
+ * like "ที่ดินติด คลองชลประทาน · เทศบาลตำบลท่าเรือ".
+ *
+ * `disclosure_th` remains the joined form, stored and shown verbatim, so what is recorded for a run
+ * does not depend on how a screen chose to lay it out.
+ */
+export const DISCLOSURE_SEPARATOR = " · ";
+
+export function disclosureParts(
   observation: StoredObservation,
   target: LinkTarget,
   geography: GeographyMatch,
   temporal: TemporalMatch,
-): string {
+): readonly string[] {
   const parts: string[] = [];
   parts.push(
     `${observation.measure_name_th} ของกลุ่ม "${observation.population_th}" ` +
@@ -192,7 +207,7 @@ function disclosureFor(
   // The source's own declared limits travel with every figure it produces.
   parts.push(`ข้อจำกัด: ${observation.must_not_become_th}`);
   parts.push(observation.attribution_th);
-  return parts.join(" · ");
+  return parts;
 }
 
 /**
@@ -235,7 +250,9 @@ export function buildEvidenceLinks(
           ? `ไม่มีข้อมูล${observation.measure_name_th}ที่เผยแพร่ในระดับพื้นที่เป้าหมาย จึงใช้ข้อมูลของพื้นที่ที่ครอบคลุมแทน`
           : null,
       decision_impact: "CONTEXT",
-      disclosure_th: disclosureFor(observation, target, geography, temporal),
+      disclosure_th: disclosureParts(observation, target, geography, temporal).join(
+        DISCLOSURE_SEPARATOR,
+      ),
     };
   });
 }

@@ -400,7 +400,13 @@ analysisRuns.get("/:run_id", async (c) => {
           : stalled
             ? { state: "SKIPPED", reason: "ANALYSIS_INCOMPLETE", linkCount: 0 }
             : { state: "SKIPPED", reason: "SOURCE_NOT_ACTIVATED", linkCount: 0 };
-    const evidenceGroups = groupEvidenceForDisplay(evidenceLinks, areas.province);
+    const evidenceGroups = groupEvidenceForDisplay(evidenceLinks, {
+      province_name_th: areas.province,
+      district_name_th: areas.district,
+      subdistrict_name_th: areas.subdistrict,
+      level: "SUBDISTRICT",
+      requested_scope: run.requested_scope,
+    });
     const conceptSet = await loadConceptSet(db, run.run_id);
     const validationByConcept = new Map(
       conceptSet.validations.map((validation) => [validation.concept_id, validation]),

@@ -766,6 +766,10 @@ export const th = {
     sourceLabel: "แหล่งข้อมูล",
     limitLabel: "ข้อจำกัด",
     showDetail: "ดูรายละเอียดและข้อจำกัด",
+    // Used instead of the line above when the group's shared limits are already printed openly
+    // beneath its rows, so the toggle promises only what it actually still holds.
+    showRowDetail: "ดูที่มาของตัวเลขนี้",
+    sharedNotesHeading: "ข้อจำกัดและหมายเหตุที่ใช้กับทุกตัวเลขในกลุ่มนี้",
     rangeNote: "ช่วงราคาระหว่างชั้นต่ำสุดถึงชั้นสูงสุด ไม่ได้ระบุว่าชั้นใดมีราคาเท่าใด",
     openInMaps: "ดูตำแหน่งในแผนที่",
     showAllItems: "ดูทั้งหมด",

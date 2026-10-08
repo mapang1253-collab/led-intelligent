@@ -13,5 +13,9 @@ export {
   type LinkTarget,
   buildEvidenceLinks,
   buildHouseholdIncomeLinks,
+  // Exported so the display can recompute a figure's clauses separately rather than split the
+  // joined form, whose separator also occurs inside the clauses.
+  DISCLOSURE_SEPARATOR,
+  disclosureParts,
   temporalMatchFor,
 } from "./link-policy.js";
