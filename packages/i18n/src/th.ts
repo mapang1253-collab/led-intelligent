@@ -613,6 +613,51 @@ export const th = {
     },
   },
 
+  /**
+   * The front page below the form: what this system holds, and how it works.
+   *
+   * Every figure here is read from the system at load time rather than written into the page. A
+   * landing section that states a coverage number is a promise, and a promise that drifts from the
+   * database is the kind of thing a committee is right to catch.
+   */
+  landing: {
+    howHeading: "ระบบทำงานอย่างไร",
+    howIntro: "สี่ขั้น ไม่มีการสมัครสมาชิก ไม่เก็บประวัติ ผลแต่ละครั้งหมดอายุใน 24 ชั่วโมง",
+    step1: "บอกว่าที่ดินอยู่ที่ไหน",
+    step1Body: "เลือกจังหวัด–อำเภอ–ตำบล หรือกรอกระวางและเลขที่ดินจากโฉนด ระบบจะเติมเนื้อที่และหมุดให้",
+    step2: "ระบบรวบรวมหลักฐานที่หน่วยงานรัฐเผยแพร่",
+    step2Body:
+      "ราคาประเมินของกรมธนารักษ์ ประชากรของกรมการปกครอง รายได้ครัวเรือนของ สสช. และผังเมืองของกรมโยธาธิการและผังเมือง",
+    step3: "ตรวจข้อกำหนดและเสนอแนวคิด",
+    step3Body: "เทียบกับชุดกฎควบคุมอาคารที่ผ่านการตรวจทานแล้ว แล้วเสนอแนวคิดการใช้ประโยชน์ที่หลักฐานรองรับ",
+    step4: "อ่านผล พร้อมรายการที่ต้องตรวจเอง",
+    step4Body: "ทุกตัวเลขบอกที่มาและวิธีคิดทุกบรรทัด สิ่งที่ระบบยังสรุปไม่ได้จะบอกว่ายังสรุปไม่ได้",
+
+    dataHeading: "ข้อมูลที่ระบบมีอยู่ตอนนี้",
+    dataIntro: "ตัวเลขทั้งหมดอ่านจากระบบจริงขณะที่เปิดหน้านี้ ไม่ใช่ตัวเลขที่เขียนค้างไว้ ตรวจสอบทั้งหมดได้ที่หน้าสถานะระบบ",
+    dataColumnCoverage: "ครอบคลุมพื้นที่",
+    dataColumnSources: "แหล่งข้อมูลที่เปิดใช้แล้ว",
+    dataColumnMethods: "ชุดกฎและวิธีคำนวณ",
+    coverageProvinces: "{n} จังหวัดทั่วประเทศ",
+    coverageProvincesNote: "เลือกวิเคราะห์ได้ทุกตำบล",
+    coverageParcels: "ค้นแปลงที่ดินได้ {n} จังหวัด",
+    coverageParcelsNote: "ด้วยระวางและเลขที่ดินจากหน้าโฉนด",
+    coverageObservations: "{n} รายการข้อมูล",
+    coverageObservationsNote: "ทุกรายการอ้างอิงหน่วยงานและปีที่เผยแพร่ได้",
+    methodRules: "{n} ข้อ",
+    methodReviewed: "ตรวจทานโดย {reviewers} · {date}",
+    dataLoading: "กำลังอ่านข้อมูลจากระบบ",
+    dataFailed: "อ่านข้อมูลจากระบบไม่สำเร็จ ดูสถานะระบบได้ที่หน้า“สถานะระบบ”",
+    dataStatusLink: "ดูรายละเอียดทั้งหมดที่หน้าสถานะระบบ",
+
+    areasHeading: "พื้นที่ที่ระบบมีข้อมูลมากที่สุด",
+    areasIntro:
+      "นับจากจำนวนรายการราคาประเมินที่หน่วยงานเผยแพร่ในแต่ละตำบล มากกว่าไม่ได้แปลว่าน่าลงทุนกว่า แต่แปลว่าระบบมีหลักฐานให้ดูมากกว่า",
+    areasCondo: "ห้องชุด {n} รายการ",
+    areasLand: "ที่ดิน {n} รายการ",
+    areasPickNote: "เลือกพื้นที่เหล่านี้ได้ที่ข้อ 1 ด้านบน กด “ยังไม่รู้จะเริ่มจากที่ไหน”",
+  },
+
   nav: {
     label: "เมนูหลัก",
     appName: "วิเคราะห์ศักยภาพที่ดิน",

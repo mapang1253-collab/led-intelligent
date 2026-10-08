@@ -332,10 +332,60 @@ export async function areaComparison(db: Db, ids: readonly string[]): Promise<Ar
 }
 
 export async function wellDocumentedAreas(db: Db, limit = 6): Promise<AreaChoice[]> {
+  /**
+   * One grouped pass over the observations, not three counts per subdistrict.
+   *
+   * `AREA_CHOICE_SQL` counts with LATERAL subqueries beside each row, which is right where a name
+   * filter has already cut the rows to a handful. Here there is no filter: ranking every
+   * subdistrict meant 7,436 rows × three correlated counts over 74,000 observations, and it took
+   * **sixty seconds** — on a query the front page runs for every visitor. `sourceStatuses` carries
+   * a comment warning about exactly this shape; this is the same mistake, found the same way.
+   */
   const { rows } = await db.executeQuery<AreaChoice>({
-    sql: `${AREA_CHOICE_SQL}
-     ORDER BY condominium_figures DESC, land_figures DESC, sd.code
-     LIMIT $1`,
+    sql: `WITH counts AS (
+            SELECT o.admin_area_id, o.measure_id, count(*)::int AS n
+              FROM evidence.observation o
+             WHERE o.is_current
+               AND o.measure_id IN (
+                 'assessed_condominium_value_per_sqm',
+                 'assessed_land_value_per_sqwa',
+                 'registered_population'
+               )
+             GROUP BY o.admin_area_id, o.measure_id
+          )
+          SELECT sd.id      AS subdistrict_id,
+                 sd.name_th AS subdistrict_name_th,
+                 d.id       AS district_id,
+                 d.name_th  AS district_name_th,
+                 p.id       AS province_id,
+                 p.name_th  AS province_name_th,
+                 -- A figure published against the district counts for its subdistricts: an
+                 -- observation carries one area, so adding the two cannot double-count.
+                 (COALESCE(cs.n, 0) + COALESCE(cd.n, 0))::int AS condominium_figures,
+                 (COALESCE(ls.n, 0) + COALESCE(ld.n, 0))::int AS land_figures,
+                 COALESCE(pop.n, 0) > 0 AS has_own_population,
+                 NULL::text AS matched_building_th
+            FROM reference.administrative_area sd
+            JOIN reference.administrative_area d ON d.id = sd.parent_id
+            JOIN reference.administrative_area p ON p.id = d.parent_id
+            LEFT JOIN counts cs
+                   ON cs.admin_area_id = sd.id
+                  AND cs.measure_id = 'assessed_condominium_value_per_sqm'
+            LEFT JOIN counts cd
+                   ON cd.admin_area_id = d.id
+                  AND cd.measure_id = 'assessed_condominium_value_per_sqm'
+            LEFT JOIN counts ls
+                   ON ls.admin_area_id = sd.id
+                  AND ls.measure_id = 'assessed_land_value_per_sqwa'
+            LEFT JOIN counts ld
+                   ON ld.admin_area_id = d.id
+                  AND ld.measure_id = 'assessed_land_value_per_sqwa'
+            LEFT JOIN counts pop
+                   ON pop.admin_area_id = sd.id
+                  AND pop.measure_id = 'registered_population'
+           WHERE sd.level = 'SUBDISTRICT' AND sd.valid_to IS NULL
+           ORDER BY condominium_figures DESC, land_figures DESC, sd.code
+           LIMIT $1`,
     parameters: [limit],
     query: { kind: "SelectQueryNode" } as never,
   });

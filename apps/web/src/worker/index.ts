@@ -514,6 +514,15 @@ app.get("/api/v1/place-search", async (c) => {
  * this data, which docs/data-sources/dol-parcel.md records along with what it would take.
  */
 app.get("/api/v1/parcels/coverage", async (c) => {
+  // Cached for the same reason, and for a day: which provinces can be searched changes when
+  // parcels are ingested or the adapter's list changes, both of which ship in a deployment.
+  const cache = caches.default;
+  const cacheKey = new Request("https://parcel-coverage.invalid/v2");
+  const cached = await cache.match(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const db = createDb(c.env.HYPERDRIVE.connectionString);
   try {
     const [stored, provinces] = await Promise.all([parcelCoverage(db), listProvinces(db)]);
@@ -532,13 +541,16 @@ app.get("/api/v1/parcels/coverage", async (c) => {
         : null;
     }).filter((row): row is NonNullable<typeof row> => row !== null);
 
-    return c.json({
+    const response = c.json({
       schema_version: SCHEMA_VERSION,
       // `data` keeps its meaning: the provinces held in the database, with their row counts.
       data: stored,
       live,
       live_publisher: DPT_PARCEL_ATTRIBUTION_TH,
     });
+    response.headers.set("Cache-Control", "public, max-age=86400");
+    c.executionCtx.waitUntil(cache.put(cacheKey, response.clone()));
+    return response;
   } finally {
     await db.destroy();
   }
@@ -755,11 +767,30 @@ async function parcelLayerProfile(
   return result;
 }
 
+/**
+ * The best-documented areas, cached for a day.
+ *
+ * The front page shows these to every visitor, and they change only when a source is ingested —
+ * which is a deliberate act, not something that happens while someone is reading. Caching is the
+ * second half of a fix: the query behind this ranked every subdistrict with three correlated
+ * counts and took sixty seconds, and is now one grouped pass, but a landing page should not reach
+ * the database at all for a figure that was true this morning.
+ */
 app.get("/api/v1/administrative-areas/well-documented", async (c) => {
+  const cache = caches.default;
+  const cacheKey = new Request("https://well-documented.invalid/v1");
+  const cached = await cache.match(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const db = createDb(c.env.HYPERDRIVE.connectionString);
   try {
     const data = await wellDocumentedAreas(db, 6);
-    return c.json({ schema_version: SCHEMA_VERSION, data });
+    const response = c.json({ schema_version: SCHEMA_VERSION, data });
+    response.headers.set("Cache-Control", "public, max-age=86400");
+    c.executionCtx.waitUntil(cache.put(cacheKey, response.clone()));
+    return response;
   } finally {
     await db.destroy();
   }
