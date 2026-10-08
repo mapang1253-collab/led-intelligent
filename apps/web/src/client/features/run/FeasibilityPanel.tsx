@@ -12,6 +12,7 @@ import methodFile from "../../../../../../database/reviewed-packs/th-feasibility
 import { Caveat } from "./Caveat.js";
 import { FilterableSelect } from "./FilterableSelect.js";
 import { Notice } from "./Notice.js";
+import { PanelHeading } from "./PanelHeading.js";
 import type { EvidenceGroup } from "./useAnalysisRun.js";
 
 /**
@@ -158,10 +159,7 @@ export function FeasibilityPanel({
 
   return (
     <section className="glass mt-5 rounded-card p-6">
-      <h2 className="flex items-center gap-2 font-bold text-lg">
-        <Calculator size={19} aria-hidden="true" />
-        {th.feasibility.heading}
-      </h2>
+      <PanelHeading icon={Calculator}>{th.feasibility.heading}</PanelHeading>
       <p className="mt-1 text-ink-muted text-sm leading-relaxed">{th.feasibility.intro}</p>
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">

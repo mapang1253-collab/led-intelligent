@@ -10,6 +10,7 @@ import methodFile from "../../../../../../database/reviewed-packs/th-feasibility
   type: "json",
 };
 import { Notice } from "./Notice.js";
+import { PanelHeading } from "./PanelHeading.js";
 import type { ConceptCard } from "./useAnalysisRun.js";
 
 /**
@@ -134,10 +135,7 @@ export function ConceptComparison({
   if (list.length === 0) {
     return (
       <section className="glass mt-5 rounded-card p-6">
-        <h2 className="flex items-center gap-2 font-bold text-lg">
-          <Scale size={19} aria-hidden="true" />
-          {th.compare.heading}
-        </h2>
+        <PanelHeading icon={Scale}>{th.compare.heading}</PanelHeading>
         <p className="mt-2 text-ink-muted text-sm">{th.compare.noConcepts}</p>
       </section>
     );
@@ -180,10 +178,7 @@ export function ConceptComparison({
 
   return (
     <section className="glass mt-5 rounded-card p-6">
-      <h2 className="flex items-center gap-2 font-bold text-lg">
-        <Scale size={19} aria-hidden="true" />
-        {th.compare.heading}
-      </h2>
+      <PanelHeading icon={Scale}>{th.compare.heading}</PanelHeading>
       <p className="mt-1 text-ink-muted text-sm leading-relaxed">{th.compare.intro}</p>
 
       <h3 className="mt-5 font-semibold text-sm">{th.compare.sharedHeading}</h3>

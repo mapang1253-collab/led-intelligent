@@ -14,6 +14,7 @@ import methodFile from "../../../../../../database/reviewed-packs/th-valuation-a
 import { Caveat } from "./Caveat.js";
 import { FilterableSelect } from "./FilterableSelect.js";
 import { Notice } from "./Notice.js";
+import { PanelHeading } from "./PanelHeading.js";
 import type { EvidenceGroup } from "./useAnalysisRun.js";
 
 /**
@@ -287,10 +288,7 @@ export function ValuationPanel({
 
   return (
     <section className="glass mt-5 rounded-card p-6">
-      <h2 className="flex items-center gap-2 font-bold text-lg">
-        <Calculator size={19} aria-hidden="true" />
-        {th.valuation.heading}
-      </h2>
+      <PanelHeading icon={Calculator}>{th.valuation.heading}</PanelHeading>
       <p className="mt-1 text-ink-muted text-sm leading-relaxed">{th.valuation.intro}</p>
 
       {methodOk?.ok === false && (

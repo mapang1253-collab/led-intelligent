@@ -3,6 +3,7 @@ import { Check, ChevronDown, CircleHelp, Info, Lightbulb, X } from "lucide-react
 import { useState } from "react";
 import { Caveat } from "./Caveat.js";
 import { Notice } from "./Notice.js";
+import { PanelHeading } from "./PanelHeading.js";
 import type { ConceptCard, RuleOutcomeView } from "./useAnalysisRun.js";
 
 /**
@@ -201,10 +202,7 @@ export function ConceptPanel({
     const message = stageReason ? FAILURE_LABELS[stageReason] : undefined;
     return (
       <section className="glass mt-5 rounded-card p-6">
-        <h2 className="flex items-center gap-2 font-bold text-lg">
-          <Lightbulb size={19} aria-hidden="true" />
-          {th.concepts.heading}
-        </h2>
+        <PanelHeading icon={Lightbulb}>{th.concepts.heading}</PanelHeading>
         <p className="mt-3 font-semibold">
           {stageReason === "AI_NO_DEFENSIBLE_CONCEPTS"
             ? th.concepts.noneHeading
@@ -222,10 +220,7 @@ export function ConceptPanel({
 
   return (
     <section className="glass mt-5 rounded-card p-6">
-      <h2 className="flex items-center gap-2 font-bold text-lg">
-        <Lightbulb size={19} aria-hidden="true" />
-        {th.concepts.heading}
-      </h2>
+      <PanelHeading icon={Lightbulb}>{th.concepts.heading}</PanelHeading>
       <p className="mt-1 text-ink-muted text-sm leading-relaxed">{th.concepts.intro}</p>
 
       {/* Where these came from. A recorded fixture must never be mistaken for a model's output. */}

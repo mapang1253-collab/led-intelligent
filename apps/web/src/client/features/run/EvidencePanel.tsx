@@ -2,6 +2,7 @@ import { th } from "@reis/i18n";
 import { ChevronDown, ChevronRight, Database, Info, MapPin } from "lucide-react";
 import { useState } from "react";
 import { Caveat } from "./Caveat.js";
+import { GroupHeading, PanelHeading } from "./PanelHeading.js";
 import type { EvidenceGroup } from "./useAnalysisRun.js";
 
 /**
@@ -173,11 +174,8 @@ export function EvidencePanel({
   if (groups && groups.length > 0) {
     return (
       <section className="glass mt-5 rounded-card p-6">
-        <h2 className="flex items-center gap-2 font-bold text-xl tracking-tight">
-          <Database size={20} aria-hidden="true" />
-          {th.evidence.heading}
-        </h2>
-        <p className="mt-1.5 text-ink-muted text-sm leading-relaxed">{th.evidence.intro}</p>
+        <PanelHeading icon={Database}>{th.evidence.heading}</PanelHeading>
+        <p className="mt-3 text-ink-muted text-sm leading-relaxed">{th.evidence.intro}</p>
 
         {/*
           One card per group.
@@ -193,14 +191,9 @@ export function EvidencePanel({
             key={group.group_id}
             className="mt-5 rounded-card bg-surface-sunken p-5 first:mt-4"
           >
-            <h3 className="font-bold text-base leading-snug">{group.measure_name_th}</h3>
-            {/* The area on its own line, not after a dot. Two groups can share a measure and
-                describe different places, so it has to be read — and a title that runs measure,
-                dot, area, in two weights, is read as neither. */}
-            <p className="mt-1 flex items-center gap-1.5 font-medium text-ink-muted text-xs">
-              <MapPin size={13} className="shrink-0" aria-hidden="true" />
-              {group.area_label_th}
-            </p>
+            <GroupHeading icon={MapPin} subtitle={group.area_label_th}>
+              {group.measure_name_th}
+            </GroupHeading>
 
             {/* Scope first: what this evidence is about, before any number is read. Quiet, because
                 there is one of these under every group and a screen of amber panels is a screen
@@ -226,10 +219,7 @@ export function EvidencePanel({
   const degraded = stageState === "DEGRADED";
   return (
     <section className="glass mt-5 rounded-card p-6">
-      <h2 className="flex items-center gap-2 font-bold text-lg">
-        <Database size={19} aria-hidden="true" />
-        {th.evidence.heading}
-      </h2>
+      <PanelHeading icon={Database}>{th.evidence.heading}</PanelHeading>
       <p className="mt-3 font-semibold">
         {degraded ? th.evidence.noneHeading : th.evidence.notActivatedHeading}
       </p>
