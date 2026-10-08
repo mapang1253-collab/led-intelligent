@@ -316,6 +316,17 @@ export const th = {
     modeArea: "เลือกจากรายการพื้นที่",
     modeParcel: "มีระวางและเลขที่ดิน",
     stepTwo: "2. รายละเอียดเพิ่มเติม",
+    /**
+     * One line under each of the three optional cards.
+     *
+     * They used to be three toggles stacked down the page with nothing but their own names, so a
+     * reader had to open each to learn whether it was worth opening.
+     */
+    siteCardHint: "กว้างถนนและระยะจากแหล่งน้ำ — สองช่องที่เปลี่ยนผลตรวจกฎหมายได้มากที่สุด",
+    areaCardHint: "เนื้อที่เป็นไร่ งาน ตารางวา — ใช้คิดมูลค่าที่ดินและความเป็นไปได้ทางการเงิน",
+    mapCardHint: "ตำแหน่งที่ดิน — เปิดผังเมืองพร้อมสี และระยะห่างจากสถานที่สำคัญ",
+    /** Shown on a card whose panel already holds something. */
+    cardFilled: "กรอกแล้ว",
     stepTwoNote: "ทั้งหมดนี้ไม่บังคับ ไม่รู้ก็ข้ามได้ กดเริ่มวิเคราะห์ได้เลย แต่ถ้ากรอก ระบบจะตรวจข้อกำหนดให้ได้มากขึ้น",
     areaToggle: "รู้เนื้อที่ดินไหม (ไม่บังคับ)",
     areaHelp: "กรอกตามที่ระบุไว้ในโฉนด ระบบจะเติมให้อัตโนมัติในเครื่องคำนวณมูลค่าที่ดินในหน้าผลลัพธ์ จะได้ไม่ต้องกรอกซ้ำ",
@@ -606,6 +617,25 @@ export const th = {
     closeMenu: "ปิดเมนู",
     collapse: "ซ่อนเมนู",
     expand: "แสดงเมนู",
+
+    /**
+     * One line under each link in the dropped panel.
+     *
+     * The panel has room the rail never had, and a name alone does not say what a topic holds —
+     * "ข้อมูลพื้นที่" and "ราคาอสังหาในพื้นที่" are not obviously different until you have opened both.
+     */
+    chooseAreaHint: "เลือกจังหวัด อำเภอ ตำบล หรือค้นจากระวางและเลขที่ดิน",
+    savedAreasHint: "พื้นที่ที่กดดาวไว้ กลับมาวิเคราะห์ซ้ำได้เร็ว",
+    systemStatusHint: "แหล่งข้อมูลที่เปิดใช้งาน ชุดกฎหมาย และผู้ตรวจทาน",
+    /** Column headings inside the ผลการวิเคราะห์ panel: five topics are three questions. */
+    resultGroupPlace: "พื้นที่นี้เป็นอย่างไร",
+    resultGroupMoney: "ตัวเลขและมูลค่า",
+    resultGroupIdeas: "ควรใช้ทำอะไร",
+    overviewHint: "สรุปตัวเลขสำคัญ ขั้นตอนการทำงาน และขอบเขตของผล",
+    areaHint: "ประชากร รายได้ครัวเรือน และหลักฐานที่ใช้อ้างทั้งหมด",
+    pricesHint: "ราคาประเมินห้องชุดและที่ดินที่กรมธนารักษ์ประกาศ",
+    valuationHint: "คิดมูลค่าที่ดินและอาคาร และลองคิดความเป็นไปได้ทางการเงิน",
+    conceptsHint: "แนวคิดการใช้ประโยชน์ ผังเมืองรอบที่ดิน และข้อกฎหมายที่ติดอยู่",
   },
 
   status: {

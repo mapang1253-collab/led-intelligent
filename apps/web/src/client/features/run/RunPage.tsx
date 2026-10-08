@@ -255,6 +255,7 @@ export function RunPage() {
       id: "overview",
       label: th.resultTabs.overview,
       icon: LayoutList,
+      group: th.nav.resultGroupPlace,
       render: () => (
         <>
           {/* What was found, before how it was found. A reader opening the overview wants the
@@ -305,9 +306,18 @@ export function RunPage() {
       ),
     },
     {
+      id: "area",
+      label: th.resultTabs.area,
+      icon: Users,
+      group: th.nav.resultGroupPlace,
+      count: areaGroups?.length ?? 0,
+      render: () => <EvidencePanel groups={areaGroups} stageState={evidenceStage?.state} />,
+    },
+    {
       id: "prices",
       label: th.resultTabs.prices,
       icon: Coins,
+      group: th.nav.resultGroupMoney,
       count: priceGroups?.length ?? 0,
       render: () =>
         priceGroups && priceGroups.length > 0 ? (
@@ -320,16 +330,10 @@ export function RunPage() {
         ),
     },
     {
-      id: "area",
-      label: th.resultTabs.area,
-      icon: Users,
-      count: areaGroups?.length ?? 0,
-      render: () => <EvidencePanel groups={areaGroups} stageState={evidenceStage?.state} />,
-    },
-    {
       id: "valuation",
       label: th.resultTabs.valuation,
       icon: Calculator,
+      group: th.nav.resultGroupMoney,
       render: () => (
         <>
           <ValuationPanel
@@ -358,6 +362,7 @@ export function RunPage() {
       id: "concepts",
       label: th.resultTabs.concepts,
       icon: Lightbulb,
+      group: th.nav.resultGroupIdeas,
       count: envelope?.partial_artifacts?.concepts?.length ?? 0,
       render: () => (
         <>

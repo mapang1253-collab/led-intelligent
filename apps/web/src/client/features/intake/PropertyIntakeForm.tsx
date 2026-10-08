@@ -1,5 +1,5 @@
 import { th } from "@reis/i18n";
-import { ArrowRight, ChevronDown, Info, Plus } from "lucide-react";
+import { ArrowRight, ChevronDown, Info, MapPin, Maximize2, Plus, Ruler } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useCreateRun } from "../run/useAnalysisRun.js";
@@ -367,17 +367,64 @@ export function PropertyIntakeForm() {
         <h3 className="font-semibold text-sm">{th.intake.stepTwo}</h3>
         <p className="mt-1 text-ink-muted text-xs leading-relaxed">{th.intake.stepTwoNote}</p>
 
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={() => setShowSite((open) => !open)}
-            aria-expanded={showSite}
-            className="flex items-center gap-2 font-medium text-signature-text text-sm"
-          >
-            {showSite ? <ChevronDown size={16} /> : <Plus size={16} />}
-            {th.intake.siteToggle}
-          </button>
+        {/* The three optional subjects as one row, each saying what it is for.
+            They were three toggles stacked down the page with nothing but their own names, so a
+            reader had to open each one to find out whether it was worth opening. The panels still
+            open full width underneath, because a map squeezed into a third of the page is not a
+            map. */}
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          {(
+            [
+              [
+                showSite,
+                setShowSite,
+                th.intake.siteToggle,
+                th.intake.siteCardHint,
+                Ruler,
+                site.road_width !== "" || site.water_body_width !== "" || nearLargeWater,
+              ],
+              [
+                showArea,
+                setShowArea,
+                th.intake.areaToggle,
+                th.intake.areaCardHint,
+                Maximize2,
+                Object.values(optional).some((value) => value !== ""),
+              ],
+              [showMap, setShowMap, th.map.heading, th.intake.mapCardHint, MapPin, pin !== null],
+            ] as const
+          ).map(([open, setOpen, label, hint, Icon, filled]) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => setOpen((current) => !current)}
+              aria-expanded={open}
+              className="rounded-card border p-4 text-left transition-colors"
+              style={{
+                borderColor: open ? "var(--color-signature)" : "var(--color-border-strong)",
+                backgroundColor: open ? "var(--color-signature-wash)" : "transparent",
+              }}
+            >
+              <span className="flex items-center gap-2 font-semibold text-sm">
+                <Icon size={15} className="shrink-0" aria-hidden="true" />
+                {label}
+                {open ? (
+                  <ChevronDown size={15} className="ml-auto shrink-0" aria-hidden="true" />
+                ) : (
+                  <Plus size={15} className="ml-auto shrink-0" aria-hidden="true" />
+                )}
+              </span>
+              <span className="mt-1 block text-ink-muted text-xs leading-relaxed">{hint}</span>
+              {filled && (
+                <span className="mt-1.5 block font-medium text-signature-text text-xs">
+                  {th.intake.cardFilled}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
 
+        <div className="mt-4">
           {showSite && (
             <div className="mt-4 rounded-card bg-surface-sunken p-5">
               <p className="mb-4 flex items-start gap-2 text-ink-muted text-sm">
@@ -428,17 +475,7 @@ export function PropertyIntakeForm() {
           )}
         </div>
 
-        <div className="mt-5">
-          <button
-            type="button"
-            onClick={() => setShowArea((open) => !open)}
-            aria-expanded={showArea}
-            className="flex items-center gap-2 font-medium text-signature-text text-sm"
-          >
-            {showArea ? <ChevronDown size={16} /> : <Plus size={16} />}
-            {th.intake.areaToggle}
-          </button>
-
+        <div className="mt-4">
           {showArea && (
             <div className="mt-4 rounded-card bg-surface-sunken p-5">
               <p className="mb-4 flex items-start gap-2 text-ink-muted text-sm">
@@ -478,17 +515,7 @@ export function PropertyIntakeForm() {
 
         {/* The map folds away too. It is the heaviest thing on the page and most readers never
             need it: a parcel lookup places the pin for them, and an area-level run needs none. */}
-        <div className="mt-5">
-          <button
-            type="button"
-            onClick={() => setShowMap((open) => !open)}
-            aria-expanded={showMap}
-            className="flex items-center gap-2 font-medium text-signature-text text-sm"
-          >
-            {showMap ? <ChevronDown size={16} /> : <Plus size={16} />}
-            {th.map.heading}
-          </button>
-
+        <div className="mt-4">
           {showMap && (
             <div className="mt-4 rounded-card bg-surface-sunken p-5">
               <p className="mb-3 text-ink-muted text-xs leading-relaxed">{th.map.intro}</p>
