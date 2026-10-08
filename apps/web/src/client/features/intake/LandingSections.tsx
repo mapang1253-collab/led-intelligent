@@ -1,14 +1,6 @@
 import { th } from "@reis/i18n";
 import { useQuery } from "@tanstack/react-query";
-import {
-  BookCheck,
-  Database,
-  FileSearch,
-  type LucideIcon,
-  MapPinned,
-  Scale,
-  Search,
-} from "lucide-react";
+import { BookCheck, MapPinned } from "lucide-react";
 import { Link } from "react-router";
 
 /**
@@ -60,13 +52,6 @@ interface Coverage {
 }
 
 const num = (value: number) => value.toLocaleString("th-TH");
-
-const STEPS: readonly { icon: LucideIcon; title: string; body: string }[] = [
-  { icon: Search, title: th.landing.step1, body: th.landing.step1Body },
-  { icon: Database, title: th.landing.step2, body: th.landing.step2Body },
-  { icon: Scale, title: th.landing.step3, body: th.landing.step3Body },
-  { icon: FileSearch, title: th.landing.step4, body: th.landing.step4Body },
-];
 
 function Figure({ value, note }: { value: string; note: string }) {
   return (
@@ -135,39 +120,8 @@ export function LandingSections() {
 
   return (
     <>
-      {/* How it works, as four numbered steps. The last one exists because a reader who is told
-          only what a tool produces will assume it produces everything. */}
-      <section className="mt-14">
-        <h2 className="font-bold text-2xl tracking-tight">{th.landing.howHeading}</h2>
-        <p className="mt-2 text-ink-muted text-sm leading-relaxed">{th.landing.howIntro}</p>
-
-        <ol className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {STEPS.map((step, index) => {
-            const Icon = step.icon;
-            return (
-              <li key={step.title} className="glass rounded-card p-5">
-                <span
-                  className="flex size-9 items-center justify-center rounded-pill font-bold text-sm"
-                  style={{
-                    backgroundColor: "var(--color-signature-wash)",
-                    color: "var(--color-signature-text)",
-                  }}
-                >
-                  {index + 1}
-                </span>
-                <h3 className="mt-3 flex items-start gap-2 font-semibold text-sm leading-snug">
-                  <Icon size={15} className="mt-0.5 shrink-0 text-ink-muted" aria-hidden="true" />
-                  {step.title}
-                </h3>
-                <p className="mt-1.5 text-ink-muted text-xs leading-relaxed">{step.body}</p>
-              </li>
-            );
-          })}
-        </ol>
-      </section>
-
       {/* What it holds, in three columns, from the system rather than from this file. */}
-      <section className="mt-14">
+      <section className="mt-12">
         <h2 className="font-bold text-2xl tracking-tight">{th.landing.dataHeading}</h2>
         <p className="mt-2 text-ink-muted text-sm leading-relaxed">{th.landing.dataIntro}</p>
 
@@ -176,12 +130,14 @@ export function LandingSections() {
         ) : status.isLoading ? (
           <p className="mt-4 text-ink-muted text-sm">{th.landing.dataLoading}</p>
         ) : (
-          <div className="mt-5 grid gap-6 md:grid-cols-3">
-            <div>
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            {/* Boxed, not three bare columns. The step cards above carried the shape and the
+                owners kept them for it; the steps themselves said what the form already shows. */}
+            <div className="glass rounded-card p-5">
               <h3 className="font-semibold text-ink-muted text-xs">
                 {th.landing.dataColumnCoverage}
               </h3>
-              <ul className="mt-1.5">
+              <ul className="mt-2">
                 <Figure
                   value={th.landing.coverageProvinces.replace(
                     "{n}",
@@ -200,11 +156,11 @@ export function LandingSections() {
               </ul>
             </div>
 
-            <div>
+            <div className="glass rounded-card p-5">
               <h3 className="font-semibold text-ink-muted text-xs">
                 {th.landing.dataColumnSources}
               </h3>
-              <ul className="mt-1.5">
+              <ul className="mt-2">
                 {active.map((source) => (
                   <Figure
                     key={source.product_id}
@@ -215,11 +171,11 @@ export function LandingSections() {
               </ul>
             </div>
 
-            <div>
+            <div className="glass rounded-card p-5">
               <h3 className="font-semibold text-ink-muted text-xs">
                 {th.landing.dataColumnMethods}
               </h3>
-              <ul className="mt-1.5">
+              <ul className="mt-2">
                 {[status.data?.legal_pack, status.data?.valuation_method]
                   .filter((pack): pack is Pack => Boolean(pack))
                   .map((pack) => (
