@@ -24,7 +24,6 @@ import {
   DPT_PARCEL_ATTRIBUTION_TH,
   DPT_PARCEL_PROVINCE_CODES,
   DPT_PARCEL_PUBLISHER_URL,
-  type DptParcelLayer,
   type DptParcelLayerResult,
   ZONING_ATTRIBUTION_TH,
   ZONING_PUBLISHER_URL,
@@ -36,7 +35,7 @@ import {
   searchPlaces,
   zoningTileTemplate,
 } from "@reis/source-adapters";
-import { type Context, Hono } from "hono";
+import { Hono } from "hono";
 import mr55Pack from "../../../../database/reviewed-packs/th-cba-mr55-v1.json" with {
   type: "json",
 };
@@ -596,7 +595,7 @@ app.get("/api/v1/parcels/search", async (c) => {
       });
     }
 
-    const profile = await parcelLayerProfile(c, db, provinceCode);
+    const profile = await parcelLayerProfile(db, provinceCode);
     if (profile.outcome === "FAILED") {
       /**
        * Not "your province is not published".
@@ -631,9 +630,6 @@ app.get("/api/v1/parcels/search", async (c) => {
      */
     if (found.outcome === "FAILED" && !found.retryable && profile.remembered) {
       await forgetParcelLayer(db, provinceCode);
-      c.executionCtx.waitUntil(
-        caches.default.delete(new Request(`https://dpt-parcel-layer.invalid/v1/${provinceCode}`)),
-      );
       const fresh = await describeParcelLayer(provinceCode, { timeoutMs: DPT_REQUEST_TIMEOUT_MS });
       if (fresh.outcome === "SEARCHABLE") {
         await saveParcelLayer(db, provinceCode, fresh.layer);
@@ -709,55 +705,36 @@ app.get("/api/v1/parcels/search", async (c) => {
  *
  * Discovered rather than listed, because the 57 services do not agree: the layer is numbered 0 in
  * ภูเก็ต and 26 in พิษณุโลก, นครนายก spells the column `land_no`, and ปัตตานี stores เลขที่ดิน as an
- * integer. Reading it costs two of the three requests a cold lookup makes, which is why the answer
- * is kept twice over — at the edge, and in the database (migration 0014).
+ * integer. Reading it costs two of the three requests a cold lookup makes, so the answer is kept
+ * in `reference.dpt_parcel_layer` (migration 0014).
  *
- * The database copy is the one that matters. `caches.default` is per colo, so every colo starts
- * cold and pays all three requests, and on 2026-10-08 that was the difference between a lookup
- * that answered in a second and one that failed: the owners' browser was routed through Singapore,
- * where each DPT request takes over seven seconds. Three of those cannot finish inside a budget a
- * reader will wait out. One can.
+ * Kept in the database and nowhere else, deliberately. It sat in `caches.default` first, and that
+ * is per colo: the colo near Bangkok, where the department answers in half a second, held the
+ * answer and never wrote it down, while the colo in Singapore — where each request takes over
+ * seven seconds and three of them cannot finish — started cold every time and failed. The cache
+ * helped exactly the readers who did not need help. One indexed read from a connection this route
+ * has already opened costs milliseconds and helps everyone.
  *
- * Neither copy holds anything of a reader's. This is published metadata about a province's own
- * service; the ระวาง and the เลขที่ดิน they typed are never written anywhere, and the parcel query
- * itself still goes out live on every lookup.
+ * Nothing here is a reader's. This is published metadata about a province's own service; the
+ * ระวาง and the เลขที่ดิน they typed are never written anywhere, and the parcel query itself still
+ * goes out live on every lookup.
  */
 type ParcelLayerProfile = DptParcelLayerResult & { readonly remembered?: boolean };
 
 async function parcelLayerProfile(
-  c: Context<{ Bindings: Env }>,
   db: ReturnType<typeof createDb>,
   provinceCode: string,
 ): Promise<ParcelLayerProfile> {
-  const cache = caches.default;
-  const cacheKey = new Request(`https://dpt-parcel-layer.invalid/v1/${provinceCode}`);
-  const cached = await cache.match(cacheKey);
-  if (cached) {
-    return {
-      outcome: "SEARCHABLE",
-      layer: (await cached.json()) as DptParcelLayer,
-      remembered: true,
-    };
-  }
-
-  const remember = (layer: DptParcelLayer) => {
-    const stored = new Response(JSON.stringify(layer), {
-      headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=2592000" },
-    });
-    c.executionCtx.waitUntil(cache.put(cacheKey, stored));
-  };
-
   const held = await loadParcelLayer(db, provinceCode);
   if (held) {
-    remember(held);
     return { outcome: "SEARCHABLE", layer: held, remembered: true };
   }
 
   /**
    * Two tries within a budget, as the zoning lookup does for the same service.
    *
-   * This is the first reader of a province, and only them: everyone after reads the row above.
-   * So the budget is generous — it buys a province that nobody has looked up yet, from a colo the
+   * This is the first reader of a province anywhere, and only them: everyone after reads the row.
+   * So the budget is generous — it buys a province nobody has looked up yet, from a colo the
    * department answers slowly.
    */
   const startedAt = Date.now();
@@ -767,12 +744,11 @@ async function parcelLayerProfile(
     result = await describeParcelLayer(provinceCode, { timeoutMs: DPT_REQUEST_TIMEOUT_MS });
   }
   if (result.outcome !== "SEARCHABLE") {
-    // Neither outcome is kept. "Unsearchable" is cheap to re-derive and a month of remembering it
-    // would outlast a department that started publishing; a failure must never be remembered.
+    // Neither outcome is kept. "Unsearchable" is cheap to re-derive and remembering it would
+    // outlast a department that started publishing; a failure must never be remembered.
     return result;
   }
 
-  remember(result.layer);
   // Awaited, not deferred: the route closes its pool in a `finally`, and a write still in flight
   // when that happens is a write that may not land.
   await saveParcelLayer(db, provinceCode, result.layer);
