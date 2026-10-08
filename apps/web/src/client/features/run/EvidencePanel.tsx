@@ -99,9 +99,16 @@ function EvidenceRow({
         and left-aligned it, so a column of numbers became numbers scattered down the page. Two
         columns keep the label free to wrap and the figure where the eye is already looking.
       */}
-      <div className="grid grid-cols-[1fr_auto] items-baseline gap-x-4">
+      <div className="sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline sm:gap-x-4">
         <span className="text-sm leading-snug">{item.population_th}</span>
-        <span className="whitespace-nowrap text-right font-bold tabular-nums">
+        {/*
+          Side by side where both fit, stacked where they do not.
+
+          The figure will not wrap, so on a phone the two columns left the label about a hundred
+          pixels and "ปลาทอง 1 · พักอาศัย/พื้นที่ระเบียง (4 ชั้น)" came down the screen a word at a
+          time. Below 640px the label takes the line and the figure takes the next one.
+        */}
+        <span className="mt-0.5 block whitespace-nowrap font-bold tabular-nums sm:mt-0 sm:text-right">
           {shown} <span className="font-medium text-ink-muted text-sm">{item.unit_name_th}</span>
         </span>
       </div>
@@ -178,7 +185,16 @@ function EvidenceItems({ group }: { group: EvidenceGroup }) {
 
   return (
     <>
-      <ul className="mt-2">
+      {/*
+        Two columns where there is room for two.
+
+        A figure and its label belong within one glance of each other. Given a 950px card and one
+        column, "101 บ้านพักอาศัยไม้ชั้นเดียว" sat at one end of the row and "8,400" at the other,
+        with half a screen of nothing between them — the width this page gained would have been
+        spent making its tables harder to read. Split in two, each pair stays about as close as it
+        was at 768px, and a sixty-nine-row table is half as tall.
+      */}
+      <ul className="mt-2 lg:grid lg:grid-cols-2 lg:gap-x-8">
         {shown.map((item) => (
           <EvidenceRow
             key={item.observation_id}
@@ -232,7 +248,9 @@ export function EvidencePanel({
     return (
       <section className="glass mt-5 rounded-card p-6">
         <PanelHeading icon={Database}>{th.evidence.heading}</PanelHeading>
-        <p className="mt-3 text-ink-muted text-sm leading-relaxed">{th.evidence.intro}</p>
+        <p className="mt-3 max-w-prose text-ink-muted text-sm leading-relaxed">
+          {th.evidence.intro}
+        </p>
 
         {/*
           One card per group.
@@ -280,7 +298,7 @@ export function EvidencePanel({
       <p className="mt-3 font-semibold">
         {degraded ? th.evidence.noneHeading : th.evidence.notActivatedHeading}
       </p>
-      <p className="mt-1 flex items-start gap-2 text-ink-muted text-sm leading-relaxed">
+      <p className="mt-1 flex items-start gap-2 max-w-prose text-ink-muted text-sm leading-relaxed">
         <Info size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
         {degraded ? th.evidence.noneBody : th.evidence.notActivatedBody}
       </p>

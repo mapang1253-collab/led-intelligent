@@ -171,7 +171,9 @@ function LandValuation({
   return (
     <>
       <h3 className="mt-8 font-semibold">{th.valuation.landHeading}</h3>
-      <p className="mt-1 text-ink-muted text-sm leading-relaxed">{th.valuation.landIntro}</p>
+      <p className="mt-1 max-w-prose text-ink-muted text-sm leading-relaxed">
+        {th.valuation.landIntro}
+      </p>
 
       {/* Scope before numbers: most urban land is titled and therefore absent from this schedule.
           The amber on this screen is spent on "assessed is not market", which is the one that
@@ -222,7 +224,9 @@ function LandValuation({
       </div>
 
       {selected && !selected.value && (
-        <p className="mt-4 text-ink-muted text-sm leading-relaxed">{th.valuation.landRangeNote}</p>
+        <p className="mt-4 max-w-prose text-ink-muted text-sm leading-relaxed">
+          {th.valuation.landRangeNote}
+        </p>
       )}
 
       {result?.outcome === "COMPUTED" && (
@@ -289,7 +293,9 @@ export function ValuationPanel({
   return (
     <section className="glass mt-5 rounded-card p-6">
       <PanelHeading icon={Calculator}>{th.valuation.heading}</PanelHeading>
-      <p className="mt-1 text-ink-muted text-sm leading-relaxed">{th.valuation.intro}</p>
+      <p className="mt-1 max-w-prose text-ink-muted text-sm leading-relaxed">
+        {th.valuation.intro}
+      </p>
 
       {methodOk?.ok === false && (
         <p

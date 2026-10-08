@@ -168,7 +168,10 @@ export function ZoningPanel({
               </header>
 
               <h4 className="mt-3 font-semibold text-xs">{th.zoning.permittedHeading}</h4>
-              <p className="mt-1 text-sm leading-relaxed">
+              {/* Quoted law, and long: the จ.ปทุมธานี residential zone runs to several hundred
+                  words. Capped to a reading measure so the wider page does not turn it into
+                  lines the eye cannot find its way back along. */}
+              <p className="mt-1 max-w-prose text-sm leading-relaxed">
                 {plan.permitted_th ?? (
                   <span className="text-ink-muted text-xs">{th.zoning.noPermitted}</span>
                 )}
@@ -184,7 +187,7 @@ export function ZoningPanel({
                   {plan.prohibited_th.map((clause) => (
                     <li
                       key={clause}
-                      className="border-border border-b py-1.5 text-sm leading-relaxed last:border-b-0"
+                      className="max-w-prose border-border border-b py-1.5 text-sm leading-relaxed last:border-b-0"
                     >
                       {clause}
                     </li>

@@ -227,7 +227,7 @@ export function FinalResultPanel({
             .replace("{rules}", work.rulesChecked.toLocaleString("th-TH"))}
         </p>
       )}
-      <p className="mt-1 text-ink-muted text-sm leading-relaxed">
+      <p className="mt-1 max-w-prose text-ink-muted text-sm leading-relaxed">
         {th.finalResult.leadStatus.replace("{status}", STATUS_LABELS[final.status] ?? final.status)}
       </p>
 

@@ -210,7 +210,7 @@ export function ConceptPanel({
               ? th.concepts.disabledHeading
               : th.concepts.failedHeading}
         </p>
-        <p className="mt-1 flex items-start gap-2 text-ink-muted text-sm leading-relaxed">
+        <p className="mt-1 flex items-start gap-2 max-w-prose text-ink-muted text-sm leading-relaxed">
           <Info size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
           {message ?? th.concepts.disabledBody}
         </p>
@@ -221,7 +221,7 @@ export function ConceptPanel({
   return (
     <section className="glass mt-5 rounded-card p-6">
       <PanelHeading icon={Lightbulb}>{th.concepts.heading}</PanelHeading>
-      <p className="mt-1 text-ink-muted text-sm leading-relaxed">{th.concepts.intro}</p>
+      <p className="mt-1 max-w-prose text-ink-muted text-sm leading-relaxed">{th.concepts.intro}</p>
 
       {/* Where these came from. A recorded fixture must never be mistaken for a model's output. */}
       <p className="mt-2 flex items-start gap-2 text-ink-muted text-xs leading-relaxed">

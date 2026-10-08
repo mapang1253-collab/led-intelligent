@@ -292,7 +292,7 @@ export function RunPage() {
               </h2>
               {/* What this list is for. Without it, six rows of states read as six things that
                   broke rather than as the shape of the work. */}
-              <p className="mt-1 text-ink-muted text-sm leading-relaxed">
+              <p className="mt-1 max-w-prose text-ink-muted text-sm leading-relaxed">
                 {th.progress.stageIntro}
               </p>
               <ul className="mt-3">
@@ -325,7 +325,9 @@ export function RunPage() {
         ) : (
           // Said plainly: no figures here is a fact about this system's coverage, not about the place.
           <section className="glass mt-5 rounded-card p-6">
-            <p className="text-ink-muted text-sm leading-relaxed">{th.resultTabs.noPrices}</p>
+            <p className="max-w-prose text-ink-muted text-sm leading-relaxed">
+              {th.resultTabs.noPrices}
+            </p>
           </section>
         ),
     },
@@ -384,7 +386,17 @@ export function RunPage() {
 
   return (
     <div className="text-ink">
-      <main className="mx-auto max-w-3xl px-6 py-10 lg:py-12">
+      {/*
+        Wider than the form that precedes it, and on purpose.
+
+        768px was a column sized for prose, and this page stopped being prose: it carries tables of
+        figures whose cohort names the source writes in full, a city-plan map, and cards of
+        concepts. On a 1440px screen those tables wrapped every second label onto a second line
+        while half the window stood empty. The reading measure is kept where reading happens —
+        each explanatory paragraph caps itself — so the extra width goes to the things that needed
+        it rather than to the sentences, which are worse for it.
+      */}
+      <main className="mx-auto max-w-5xl px-6 py-10 lg:py-12">
         {/* Carries this run's own intake, so going back reopens the form on the same place with
             the same answers — and therefore the same map, city-plan colours and key the reader was
             looking at before they pressed start. Without it this link led to an empty first

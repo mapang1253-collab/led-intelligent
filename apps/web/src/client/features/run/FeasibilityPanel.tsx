@@ -160,7 +160,9 @@ export function FeasibilityPanel({
   return (
     <section className="glass mt-5 rounded-card p-6">
       <PanelHeading icon={Calculator}>{th.feasibility.heading}</PanelHeading>
-      <p className="mt-1 text-ink-muted text-sm leading-relaxed">{th.feasibility.intro}</p>
+      <p className="mt-1 max-w-prose text-ink-muted text-sm leading-relaxed">
+        {th.feasibility.intro}
+      </p>
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <Field

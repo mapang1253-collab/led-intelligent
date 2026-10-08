@@ -179,7 +179,7 @@ export function ConceptComparison({
   return (
     <section className="glass mt-5 rounded-card p-6">
       <PanelHeading icon={Scale}>{th.compare.heading}</PanelHeading>
-      <p className="mt-1 text-ink-muted text-sm leading-relaxed">{th.compare.intro}</p>
+      <p className="mt-1 max-w-prose text-ink-muted text-sm leading-relaxed">{th.compare.intro}</p>
 
       <h3 className="mt-5 font-semibold text-sm">{th.compare.sharedHeading}</h3>
       <div className="mt-2 grid gap-3 sm:grid-cols-3">
