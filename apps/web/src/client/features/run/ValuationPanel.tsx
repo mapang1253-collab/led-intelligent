@@ -12,6 +12,7 @@ import methodFile from "../../../../../../database/reviewed-packs/th-valuation-a
   type: "json",
 };
 import { Caveat } from "./Caveat.js";
+import { FilterableSelect } from "./FilterableSelect.js";
 import { Notice } from "./Notice.js";
 import type { EvidenceGroup } from "./useAnalysisRun.js";
 
@@ -177,22 +178,19 @@ function LandValuation({
       <Caveat>{th.valuation.landNotTitleDeed}</Caveat>
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <label className="block">
-          <span className="font-medium text-sm">{th.valuation.landUnitLabel}</span>
-          <select
-            value={unitId}
-            disabled={!enabled}
-            onChange={(event) => setUnitId(event.target.value)}
-            className="mt-1.5 w-full rounded-card border border-border-strong bg-surface-sunken px-3 py-2.5 text-sm"
-          >
-            <option value="">{th.valuation.landUnitPlaceholder}</option>
-            {rates.map((item) => (
-              <option key={item.observation_id} value={item.observation_id}>
-                {item.population_th}
-              </option>
-            ))}
-          </select>
-        </label>
+        {/* 56 locations in เมืองปทุมธานี alone, one line each. Filterable for the same reason the
+            building list is: the schedule is as long as the schedule is. */}
+        <FilterableSelect
+          label={th.valuation.landUnitLabel}
+          value={unitId}
+          onChange={setUnitId}
+          disabled={!enabled}
+          placeholder={th.valuation.landUnitPlaceholder}
+          options={rates.map((item) => ({
+            value: item.observation_id,
+            label: item.population_th,
+          }))}
+        />
 
         <div>
           <span className="font-medium text-sm">{th.valuation.landAreaLabel}</span>
@@ -310,22 +308,17 @@ export function ValuationPanel({
       ) : (
         <>
           <div className="mt-5 grid gap-4 md:grid-cols-[2fr_1fr]">
-            <label className="block">
-              <span className="font-medium text-sm">{th.valuation.buildingTypeLabel}</span>
-              <select
-                value={typeId}
-                disabled={!methodOk?.ok}
-                onChange={(event) => setTypeId(event.target.value)}
-                className="mt-1.5 w-full rounded-card border border-border-strong bg-surface-sunken px-3 py-2.5 text-sm"
-              >
-                <option value="">{th.valuation.buildingTypePlaceholder}</option>
-                {rates.map((item) => (
-                  <option key={item.observation_id} value={item.observation_id}>
-                    {item.population_th}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <FilterableSelect
+              label={th.valuation.buildingTypeLabel}
+              value={typeId}
+              onChange={setTypeId}
+              disabled={!methodOk?.ok}
+              placeholder={th.valuation.buildingTypePlaceholder}
+              options={rates.map((item) => ({
+                value: item.observation_id,
+                label: item.population_th,
+              }))}
+            />
 
             <label className="block">
               <span className="font-medium text-sm">{th.valuation.floorAreaLabel}</span>

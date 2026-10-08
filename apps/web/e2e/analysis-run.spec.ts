@@ -34,9 +34,17 @@ const RESULT_TIMEOUT = 35_000;
  * come from the reference table rather than from a search ranking that can reorder.
  */
 async function pickAnArea(page: Page) {
-  await page.getByLabel(th.intake.provinceLabel).selectOption({ label: "ชลบุรี" });
-  await page.getByLabel(th.intake.districtLabel).selectOption({ label: "เมืองชลบุรี" });
-  await page.getByLabel(th.intake.subdistrictLabel).selectOption({ label: "แสนสุข" });
+  // By role, not by label: each level now carries a box that narrows its options, and that box's
+  // accessible name names the level too — so a label match would find two controls, not one.
+  await page
+    .getByRole("combobox", { name: th.intake.provinceLabel })
+    .selectOption({ label: "ชลบุรี" });
+  await page
+    .getByRole("combobox", { name: th.intake.districtLabel })
+    .selectOption({ label: "เมืองชลบุรี" });
+  await page
+    .getByRole("combobox", { name: th.intake.subdistrictLabel })
+    .selectOption({ label: "แสนสุข" });
 }
 
 test("choosing a suggested area and starting a run reaches a result", async ({ page }) => {

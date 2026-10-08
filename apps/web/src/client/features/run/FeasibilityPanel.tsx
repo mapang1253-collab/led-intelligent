@@ -10,6 +10,7 @@ import methodFile from "../../../../../../database/reviewed-packs/th-feasibility
   type: "json",
 };
 import { Caveat } from "./Caveat.js";
+import { FilterableSelect } from "./FilterableSelect.js";
 import { Notice } from "./Notice.js";
 import type { EvidenceGroup } from "./useAnalysisRun.js";
 
@@ -200,24 +201,20 @@ export function FeasibilityPanel({
             {th.feasibility.constructionSuggestNote}
           </p>
           <div className="mt-3 flex flex-wrap items-end gap-3">
-            <label className="block flex-1" style={{ minWidth: "16rem" }}>
-              <span className="block text-ink-muted text-xs">
-                {th.feasibility.constructionSuggestPick}
-              </span>
-              <select
+            <div className="flex-1" style={{ minWidth: "16rem" }}>
+              <FilterableSelect
+                label={th.feasibility.constructionSuggestPick}
                 value={suggestionId}
-                onChange={(event) => setSuggestionId(event.target.value)}
-                className="mt-1 w-full rounded-card border border-border-strong bg-surface px-3 py-2 text-sm"
-              >
-                <option value="">{th.feasibility.constructionSuggestPick}</option>
-                {suggestions.map((item) => (
-                  <option key={item.observation_id} value={item.observation_id}>
-                    {item.population_th} · {Number(item.value).toLocaleString("th-TH")}{" "}
-                    {item.unit_name_th}
-                  </option>
-                ))}
-              </select>
-            </label>
+                onChange={setSuggestionId}
+                placeholder={th.feasibility.constructionSuggestPick}
+                labelClassName="block text-ink-muted text-xs"
+                selectClassName="mt-1 w-full rounded-card border border-border-strong bg-surface px-3 py-2 text-sm"
+                options={suggestions.map((item) => ({
+                  value: item.observation_id,
+                  label: `${item.population_th} · ${Number(item.value).toLocaleString("th-TH")} ${item.unit_name_th}`,
+                }))}
+              />
+            </div>
             <button
               type="button"
               disabled={!suggestion?.value}

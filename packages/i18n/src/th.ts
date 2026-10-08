@@ -211,6 +211,20 @@ export const th = {
       "หมุดนี้มาจากที่ท่านระบุเอง ระบบไม่ได้รังวัดหรือยืนยันขอบเขตแปลง และแก้หมุดที่นี่ไม่ได้ เพราะผลวิเคราะห์ด้านล่างคำนวณจากจุดนี้ไปแล้ว หากต้องแก้ ให้เริ่มวิเคราะห์ใหม่",
   },
 
+  /**
+   * The box that narrows a long dropdown.
+   *
+   * The lists it serves are the Treasury's own schedules — 69 building types, 56 land locations —
+   * and the owners had to scroll all of them to reach one row.
+   */
+  optionSearch: {
+    placeholder: "พิมพ์เพื่อค้นในรายการ",
+    aria: "ค้นในรายการ",
+    clear: "ล้างคำค้น",
+    count: "พบ {n} จาก {total} รายการ",
+    none: "ไม่พบรายการที่ตรงกับคำค้น ลองพิมพ์สั้นลง",
+  },
+
   parcel: {
     heading: "รู้ระวางและเลขที่ดินไหม ค้นหาแปลงได้เลย (ไม่บังคับ)",
     coverage:

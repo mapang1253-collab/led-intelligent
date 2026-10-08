@@ -1,16 +1,22 @@
 import type { AdministrativeAreaOption } from "@reis/contracts";
 import { th } from "@reis/i18n";
-import { ChevronDown, LoaderCircle, TriangleAlert } from "lucide-react";
-import { useId } from "react";
+import { ChevronDown, LoaderCircle, Search, TriangleAlert, X } from "lucide-react";
+import { useId, useMemo, useState } from "react";
 
 /**
  * One level of the dependent administrative hierarchy. A native select is deliberate: it is
  * keyboard-operable and screen-reader-correct without custom ARIA, and it gets the platform picker
- * on mobile — which matters more here than styling, since option counts stay small (77 provinces,
- * then tens of districts and subdistricts).
+ * on mobile — which matters more here than styling.
+ *
+ * "Option counts stay small" is what this comment used to say, and 77 provinces is not small when
+ * you are hunting for one on a laptop. A box above the list narrows it; the list itself is
+ * untouched, so scrolling and type-ahead still work for anyone who prefers them.
  *
  * Free text is never accepted; docs/project-overview.md §7 requires normalized administrative IDs.
  */
+/** Below this, scrolling is not a problem and a search box is just another thing on screen. */
+const SEARCH_FROM = 12;
+
 export interface AreaSelectProps {
   label: string;
   placeholder: string;
@@ -43,6 +49,28 @@ export function AreaSelect({
   const errorId = `${selectId}-error`;
   const hasFieldError = Boolean(errorMessage);
 
+  const [query, setQuery] = useState("");
+  const searching = query.trim() !== "";
+  /**
+   * The chosen option is kept even when it does not match, as elsewhere: a `<select>` whose value
+   * is absent from its options renders blank, and the reader would watch their own answer vanish
+   * as they typed a search for the next level.
+   */
+  const visible = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (needle === "") {
+      return options ?? [];
+    }
+    return (options ?? []).filter(
+      (option) => option.id === value || option.name_th.toLowerCase().includes(needle),
+    );
+  }, [options, query, value]);
+  const matches = searching
+    ? visible.filter((option) => option.name_th.toLowerCase().includes(query.trim().toLowerCase()))
+        .length
+    : (options?.length ?? 0);
+  const canSearch = !disabled && !isLoading && !isError && (options?.length ?? 0) >= SEARCH_FROM;
+
   return (
     <div className="flex flex-col gap-1.5">
       <label className="font-medium text-sm" htmlFor={selectId}>
@@ -52,6 +80,35 @@ export function AreaSelect({
         </span>
         <span className="sr-only">({th.common.required})</span>
       </label>
+
+      {canSearch && (
+        <span className="relative block">
+          <Search
+            size={14}
+            aria-hidden="true"
+            className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 text-ink-muted"
+          />
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={th.optionSearch.placeholder}
+            aria-label={`${th.optionSearch.aria} — ${label}`}
+            autoComplete="off"
+            className="w-full rounded-card border border-border bg-surface py-1.5 pr-8 pl-8 text-sm"
+          />
+          {searching && (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              aria-label={th.optionSearch.clear}
+              className="-translate-y-1/2 absolute top-1/2 right-2 text-ink-muted"
+            >
+              <X size={14} aria-hidden="true" />
+            </button>
+          )}
+        </span>
+      )}
 
       <div className="relative">
         <select
@@ -69,7 +126,7 @@ export function AreaSelect({
           <option value="">
             {disabled ? (disabledHint ?? placeholder) : isLoading ? th.common.loading : placeholder}
           </option>
-          {options?.map((option) => (
+          {visible.map((option) => (
             <option key={option.id} value={option.id}>
               {option.name_th}
             </option>
@@ -84,6 +141,16 @@ export function AreaSelect({
           )}
         </span>
       </div>
+
+      {searching && (
+        <p className="text-ink-muted text-xs" aria-live="polite">
+          {matches === 0
+            ? th.optionSearch.none
+            : th.optionSearch.count
+                .replace("{n}", matches.toLocaleString("th-TH"))
+                .replace("{total}", (options?.length ?? 0).toLocaleString("th-TH"))}
+        </p>
+      )}
 
       {isError && (
         <p className="flex flex-wrap items-center gap-2 text-fail text-sm">

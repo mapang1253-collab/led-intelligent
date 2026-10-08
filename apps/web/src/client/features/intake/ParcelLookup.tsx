@@ -2,6 +2,7 @@ import { th } from "@reis/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, Info, LoaderCircle, Search, TriangleAlert } from "lucide-react";
 import { useState } from "react";
+import { FilterableSelect } from "../run/FilterableSelect.js";
 import type { PinnedPoint } from "./LandPinMap.js";
 
 /**
@@ -155,41 +156,35 @@ export function ParcelLookup({
       </p>
 
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
-        <label className="block">
-          <span className="font-medium text-sm">{th.parcel.provinceLabel}</span>
-          <select
+        <div>
+          {/* Grouped by publisher, because which one answers changes what the answer is worth: a
+              stored parcel is the Land Department's own row, a live one is a copy of it. And
+              filterable, because 58 provinces is a long way to scroll to reach one. */}
+          <FilterableSelect
+            label={th.parcel.provinceLabel}
             value={provinceCode}
-            onChange={(event) => setProvinceCode(event.target.value)}
-            className="mt-1 w-full rounded-card border border-border-strong bg-surface px-3 py-2.5 text-base"
-          >
-            <option value="">{th.parcel.provincePlaceholder}</option>
-            {/* Grouped by publisher, because which one answers changes what the answer is worth:
-                a stored parcel is the Land Department's own row, a live one is a copy of it. */}
-            {stored.length > 0 && (
-              <optgroup label={th.parcel.provinceGroupStored}>
-                {stored.map((province) => (
-                  <option key={province.province_code} value={province.province_code}>
-                    {province.province_name_th}
-                  </option>
-                ))}
-              </optgroup>
-            )}
-            {live.length > 0 && (
-              <optgroup label={th.parcel.provinceGroupLive}>
-                {[...live]
-                  .sort((a, b) => a.province_name_th.localeCompare(b.province_name_th, "th-TH"))
-                  .map((province) => (
-                    <option key={province.province_code} value={province.province_code}>
-                      {province.province_name_th}
-                    </option>
-                  ))}
-              </optgroup>
-            )}
-          </select>
+            onChange={setProvinceCode}
+            placeholder={th.parcel.provincePlaceholder}
+            selectClassName="mt-1.5 w-full rounded-card border border-border-strong bg-surface px-3 py-2.5 text-base"
+            options={[
+              ...stored.map((province) => ({
+                value: province.province_code,
+                label: province.province_name_th,
+                group: th.parcel.provinceGroupStored,
+              })),
+              ...[...live]
+                .sort((a, b) => a.province_name_th.localeCompare(b.province_name_th, "th-TH"))
+                .map((province) => ({
+                  value: province.province_code,
+                  label: province.province_name_th,
+                  group: th.parcel.provinceGroupLive,
+                })),
+            ]}
+          />
           <span className="mt-1 block text-ink-muted text-xs leading-relaxed">
             {th.parcel.provinceHelp}
           </span>
-        </label>
+        </div>
         <label className="block">
           <span className="font-medium text-sm">{th.parcel.mapSheetLabel}</span>
           <input
