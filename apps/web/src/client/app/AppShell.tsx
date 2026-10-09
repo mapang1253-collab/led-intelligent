@@ -4,6 +4,7 @@ import {
   Building2,
   Calculator,
   Coins,
+  Home,
   LayoutList,
   Lightbulb,
   type LucideIcon,
@@ -90,7 +91,8 @@ function NavRail({ onNavigate, onCollapse }: { onNavigate?: () => void; onCollap
   const location = useLocation();
   const runId = runIdFromPath(location.pathname);
   const view = useResultView();
-  const onIntake = location.pathname === "/";
+  const onHome = location.pathname === "/";
+  const onIntake = location.pathname === "/analyze";
   const onStatus = location.pathname === "/status";
   const onSaved = location.pathname === "/saved";
   const savedCount = useFavourites().list.length;
@@ -126,8 +128,19 @@ function NavRail({ onNavigate, onCollapse }: { onNavigate?: () => void; onCollap
 
       <div>
         <p className="px-3 pb-1.5 font-medium text-ink-muted text-xs">{th.nav.startHeading}</p>
+        {/* Two doors now: the front page that explains the product, and the form that uses it. */}
         <Link
           to="/"
+          onClick={onNavigate}
+          aria-current={onHome ? "page" : undefined}
+          className={itemClass(onHome)}
+          style={itemStyle(onHome)}
+        >
+          <Home size={16} aria-hidden="true" />
+          {th.nav.home}
+        </Link>
+        <Link
+          to="/analyze"
           onClick={onNavigate}
           aria-current={onIntake ? "page" : undefined}
           className={itemClass(onIntake)}

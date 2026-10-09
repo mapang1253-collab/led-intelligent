@@ -47,8 +47,25 @@ async function pickAnArea(page: Page) {
     .selectOption({ label: "แสนสุข" });
 }
 
-test("choosing a suggested area and starting a run reaches a result", async ({ page }) => {
+/**
+ * The front page is a page now, not the form with a headline on top of it, so the path from "what
+ * is this" to "analyse my land" is its own thing to keep working.
+ */
+test("the front page introduces the product and its button reaches the form", async ({ page }) => {
   await page.goto("/");
+
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(th.app.headlineLead);
+  // The counts are read from the running system; a landing page printing 0 provinces would be
+  // announcing an outage it had not noticed.
+  await expect(page.getByText(/[1-9][0-9]* จังหวัดทั่วประเทศ/)).toBeVisible();
+
+  await page.getByRole("link", { name: th.home.heroPrimary }).first().click();
+  await expect(page).toHaveURL(/\/analyze$/);
+  await expect(page.getByRole("heading", { name: th.intake.heading })).toBeVisible();
+});
+
+test("choosing a suggested area and starting a run reaches a result", async ({ page }) => {
+  await page.goto("/analyze");
 
   await expect(page.getByRole("heading", { name: th.intake.heading })).toBeVisible();
 
@@ -77,7 +94,7 @@ test("a result URL survives being typed into the address bar", async ({ page }) 
   // Reload rather than client-side navigation: this is served by the Worker's SPA fallback, and a
   // misconfigured `not_found_handling` turns every shared or reloaded result into a 404 while the
   // app still works perfectly from the front page.
-  await page.goto("/");
+  await page.goto("/analyze");
   await pickAnArea(page);
   await page.getByRole("button", { name: th.intake.submit, exact: true }).click();
   await expect(page).toHaveURL(/\/runs\/[^/?#]+/);
@@ -104,20 +121,20 @@ test("a result URL survives being typed into the address bar", async ({ page }) 
  * different places.
  */
 test("going back from a result reopens the form on the same place", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/analyze");
   await pickAnArea(page);
   await page.getByRole("button", { name: th.intake.submit, exact: true }).click();
   await expect(page).toHaveURL(/\/runs\/[^/?#]+/);
 
   await page.goBack();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/analyze$/);
   // The area, as the form's own confirmation prints it once a place is held.
   await expect(page.getByText("แสนสุข", { exact: false }).first()).toBeVisible();
 
   await page.goForward();
   await expect(page).toHaveURL(/\/runs\/[^/?#]+/);
   await page.getByRole("link", { name: th.progress.backToIntake }).click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/analyze$/);
   await expect(page.getByText("แสนสุข", { exact: false }).first()).toBeVisible();
 });
 
@@ -130,7 +147,7 @@ test("going back from a result reopens the form on the same place", async ({ pag
 test("going back from a reloaded result still reopens the form on the same place", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/analyze");
   await pickAnArea(page);
   await page.getByRole("button", { name: th.intake.submit, exact: true }).click();
   await expect(page).toHaveURL(/\/runs\/[^/?#]+/);
@@ -141,6 +158,6 @@ test("going back from a reloaded result still reopens the form on the same place
   });
 
   await page.getByRole("link", { name: th.progress.backToIntake }).click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/analyze$/);
   await expect(page.getByText("แสนสุข", { exact: false }).first()).toBeVisible();
 });

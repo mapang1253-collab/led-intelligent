@@ -65,7 +65,7 @@ const TOPICS = [
 ];
 
 async function startRun(page: Page) {
-  await page.goto("/");
+  await page.goto("/analyze");
   await pickAnArea(page);
   await page.getByRole("button", { name: th.intake.submit, exact: true }).click();
   await expect(page).toHaveURL(/\/runs\/[^/?#]+/);

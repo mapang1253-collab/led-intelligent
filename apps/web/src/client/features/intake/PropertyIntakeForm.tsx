@@ -308,7 +308,8 @@ export function PropertyIntakeForm() {
 
   return (
     <form onSubmit={handleSubmit} className="glass rounded-card p-6 md:p-8" noValidate>
-      <h2 className="font-bold text-xl tracking-tight">{th.intake.heading}</h2>
+      {/* The page's own title: this card is what /analyze is for. */}
+      <h1 className="font-bold text-2xl tracking-tight md:text-3xl">{th.intake.heading}</h1>
       <p className="mt-2 text-ink-muted text-sm">{th.intake.description}</p>
 
       {/* Offered before the form rather than after it: someone who does not yet know what this

@@ -1,8 +1,8 @@
 import { th } from "@reis/i18n";
-import { useQuery } from "@tanstack/react-query";
 import type { LucideIcon } from "lucide-react";
 import { BookCheck, Database, MapPinned, Ruler, Scale } from "lucide-react";
 import { Link } from "react-router";
+import { type Pack, useSystemFigures } from "./useSystemFigures.js";
 
 /**
  * What this system holds, below the form that uses it.
@@ -16,41 +16,6 @@ import { Link } from "react-router";
  * actually published, the rule pack names its reviewers, and the step list says plainly that a run
  * expires and that the analysis reports what it could not settle.
  */
-
-interface SourceStatus {
-  product_id: string;
-  title_th: string;
-  activation_state: string;
-  observations: number;
-}
-
-interface Pack {
-  title_th: string;
-  version: string;
-  rule_count?: number;
-  reviewers: string[];
-  reviewed_on: string;
-}
-
-interface SystemStatus {
-  sources: SourceStatus[];
-  legal_pack: Pack | null;
-  valuation_method: Pack | null;
-}
-
-interface WellDocumented {
-  subdistrict_id: string;
-  subdistrict_name_th: string;
-  district_name_th: string;
-  province_name_th: string;
-  condominium_figures: number;
-  land_figures: number;
-}
-
-interface Coverage {
-  data: { province_code: string; parcels: number }[];
-  live?: { province_code: string }[];
-}
 
 const num = (value: number) => value.toLocaleString("th-TH");
 
@@ -81,65 +46,30 @@ function Figure({ value, note }: { value: string; note: string }) {
 }
 
 export function LandingSections() {
-  const status = useQuery({
-    queryKey: ["system-status", "landing"],
-    staleTime: 5 * 60_000,
-    queryFn: async (): Promise<SystemStatus> => {
-      const response = await fetch("/api/v1/system-status", {
-        headers: { Accept: "application/json" },
-      });
-      if (!response.ok) {
-        throw new Error(`status failed: ${response.status}`);
-      }
-      return (await response.json()) as SystemStatus;
-    },
-  });
+  /*
+    One source for the counts.
 
-  const provinces = useQuery({
-    queryKey: ["provinces", "landing"],
-    staleTime: Number.POSITIVE_INFINITY,
-    queryFn: async (): Promise<unknown[]> => {
-      const response = await fetch("/api/v1/administrative-areas/provinces", {
-        headers: { Accept: "application/json" },
-      });
-      return response.ok ? ((await response.json()) as { data: unknown[] }).data : [];
-    },
-  });
+    These panels and the hero above them print the same figures, and they used to read them
+    through queries of their own that shared the hero's cache keys while returning a different
+    shape — so whichever mounted first decided what the other saw, and the front page announced
+    "0 จังหวัดทั่วประเทศ". One hook, one shape.
+  */
+  const {
+    status,
+    isLoading,
+    isError,
+    activeSources: active,
+    observations,
+    provinces,
+    searchableProvinces,
+    areas,
+  } = useSystemFigures();
 
-  const coverage = useQuery({
-    queryKey: ["parcel-coverage", "landing"],
-    staleTime: Number.POSITIVE_INFINITY,
-    queryFn: async (): Promise<Coverage> => {
-      const response = await fetch("/api/v1/parcels/coverage", {
-        headers: { Accept: "application/json" },
-      });
-      return response.ok ? ((await response.json()) as Coverage) : { data: [] };
-    },
-  });
-
-  const areas = useQuery({
-    queryKey: ["well-documented", "landing"],
-    staleTime: 5 * 60_000,
-    queryFn: async (): Promise<WellDocumented[]> => {
-      const response = await fetch("/api/v1/administrative-areas/well-documented", {
-        headers: { Accept: "application/json" },
-      });
-      return response.ok ? ((await response.json()) as { data: WellDocumented[] }).data : [];
-    },
-  });
-
-  const active = (status.data?.sources ?? []).filter(
-    (source) => source.activation_state === "ACTIVE",
-  );
-  const observations = active.reduce((total, source) => total + (source.observations ?? 0), 0);
   /** The busiest area sets the scale, so every bar is read against the same thing. */
   const topTotal = Math.max(
     1,
-    ...(areas.data ?? []).map((area) => area.condominium_figures + area.land_figures),
+    ...areas.map((area) => area.condominium_figures + area.land_figures),
   );
-  const searchableProvinces =
-    (coverage.data?.data ?? []).filter((province) => province.parcels > 0).length +
-    (coverage.data?.live ?? []).length;
 
   return (
     <>
@@ -148,9 +78,9 @@ export function LandingSections() {
         <h2 className="font-bold text-2xl tracking-tight">{th.landing.dataHeading}</h2>
         <p className="mt-2 text-ink-muted text-sm leading-relaxed">{th.landing.dataIntro}</p>
 
-        {status.isError ? (
+        {isError ? (
           <p className="mt-4 text-ink-muted text-sm">{th.landing.dataFailed}</p>
-        ) : status.isLoading ? (
+        ) : isLoading ? (
           <p className="mt-4 text-ink-muted text-sm">{th.landing.dataLoading}</p>
         ) : (
           <div className="mt-5 grid gap-4 md:grid-cols-3">
@@ -160,10 +90,7 @@ export function LandingSections() {
               <ColumnHeading icon={MapPinned}>{th.landing.dataColumnCoverage}</ColumnHeading>
               <ul className="mt-2">
                 <Figure
-                  value={th.landing.coverageProvinces.replace(
-                    "{n}",
-                    num(provinces.data?.length ?? 0),
-                  )}
+                  value={th.landing.coverageProvinces.replace("{n}", num(provinces))}
                   note={th.landing.coverageProvincesNote}
                 />
                 <Figure
@@ -193,7 +120,7 @@ export function LandingSections() {
             <div className="glass rounded-card p-5">
               <ColumnHeading icon={Scale}>{th.landing.dataColumnMethods}</ColumnHeading>
               <ul className="mt-2">
-                {[status.data?.legal_pack, status.data?.valuation_method]
+                {[status?.legal_pack, status?.valuation_method]
                   .filter((pack): pack is Pack => Boolean(pack))
                   .map((pack) => (
                     <Figure
@@ -219,7 +146,7 @@ export function LandingSections() {
 
       {/* Where to start, ranked by how much the sources published there. The caveat is the point:
           a well-documented place is not a good place to invest, and the two are easy to confuse. */}
-      {(areas.data?.length ?? 0) > 0 && (
+      {areas.length > 0 && (
         <section className="mt-14">
           <h2 className="font-bold text-2xl tracking-tight">{th.landing.areasHeading}</h2>
           <p className="mt-2 text-ink-muted text-sm leading-relaxed">{th.landing.areasIntro}</p>
@@ -229,7 +156,7 @@ export function LandingSections() {
                 these, and a second control that does the same thing from further down the page
                 would be two ways to answer one question — the thing step one was reorganised to
                 stop. */}
-            {(areas.data ?? []).map((area, index) => {
+            {areas.map((area, index) => {
               const total = area.condominium_figures + area.land_figures;
               return (
                 <li

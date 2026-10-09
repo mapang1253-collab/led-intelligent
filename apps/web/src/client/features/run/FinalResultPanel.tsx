@@ -341,7 +341,7 @@ export function FinalResultPanel({
             {/* Carries the run's own intake so the form reopens on this place with what was
                 already given, rather than sending the reader back to an empty first screen. */}
             <Link
-              to="/"
+              to="/analyze"
               state={intake ? { intake } : undefined}
               className="mt-3 inline-flex items-center gap-1.5 rounded-pill px-4 py-2 font-semibold text-sm"
               style={{

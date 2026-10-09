@@ -408,7 +408,7 @@ export function RunPage() {
             looking at before they pressed start. Without it this link led to an empty first
             screen, and everything they had filled in was gone. */}
         <Link
-          to="/"
+          to="/analyze"
           state={intake ? { intake } : undefined}
           className="inline-flex items-center gap-2 text-ink-muted text-sm hover:text-ink"
         >
