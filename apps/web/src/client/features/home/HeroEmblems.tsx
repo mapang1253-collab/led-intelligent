@@ -95,9 +95,9 @@ function PlotEmblem() {
  */
 const EMBLEMS = [
   { key: "map", Emblem: ThailandEmblem, className: "left-[3%] bottom-2 h-[15rem] w-[10rem]" },
-  { key: "globe", Emblem: GlobeEmblem, className: "left-[28%] bottom-16 size-32" },
-  { key: "pin", Emblem: PinEmblem, className: "left-[53%] bottom-10 size-28" },
+  { key: "globe", Emblem: GlobeEmblem, className: "left-[24%] bottom-20 size-28" },
   { key: "plot", Emblem: PlotEmblem, className: "right-[7%] bottom-20 size-36" },
+  { key: "pin", Emblem: PinEmblem, className: "right-[30%] bottom-4 size-24" },
 ] as const;
 
 export function HeroEmblems({ className }: { className?: string }) {

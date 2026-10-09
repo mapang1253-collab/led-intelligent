@@ -4,6 +4,7 @@ import {
   Building2,
   Coins,
   Database,
+  Globe,
   type LucideIcon,
   Map as MapIcon,
   MapPinned,
@@ -31,6 +32,16 @@ import { useSystemFigures } from "./useSystemFigures.js";
 const num = (value: number) => value.toLocaleString("th-TH");
 
 /**
+ * Champagne, for the line work on the front page only.
+ *
+ * The product's signature stays blue — it marks the selected thing in the rail, the active tab,
+ * the link you can follow. Gold here is scenery: the emblems, the hairline on a card, the ring
+ * round a data node. Keeping them apart is what stops the decoration from looking clickable.
+ */
+const GOLD = "#e8c89a";
+const GOLD_LINE = "rgba(232, 200, 154, 0.38)";
+
+/**
  * A figure pinned to the scene, the way this product pins evidence to a place.
  *
  * `ready` is not decoration. These counts come from the database, and the slowest of them took
@@ -43,15 +54,24 @@ function Callout({
   value,
   label,
   className,
+  icon: Icon,
 }: {
   ready: boolean;
   value: string;
   label: string;
   className: string;
+  /** Rides in the node at the foot of the leader line, naming what the figure counts. */
+  icon: LucideIcon;
 }) {
   return (
     <div className={`pointer-events-none absolute hidden lg:block ${className}`}>
-      <div className="glass rounded-card px-3.5 py-2.5 shadow-[0_18px_40px_-24px_rgba(0,0,0,0.8)]">
+      <div
+        className="rounded-card px-4 py-3 shadow-[0_18px_40px_-24px_rgba(0,0,0,0.85)] backdrop-blur-md"
+        style={{
+          backgroundColor: "rgba(7, 13, 28, 0.55)",
+          border: `1px solid ${GOLD_LINE}`,
+        }}
+      >
         {ready ? (
           <p className="font-bold text-base tabular-nums leading-none tracking-tight">{value}</p>
         ) : (
@@ -62,23 +82,28 @@ function Callout({
         )}
         <p className="mt-1 text-ink-muted text-xs">{label}</p>
       </div>
-      {/* The leader line and its point, as a survey drawing marks the thing it is describing. */}
+      {/* The leader line, as a survey drawing marks the thing it is describing, and at its foot a
+          node rather than a dot: a gold ring with the icon of whatever the figure counts. */}
       <div
-        className="mx-auto h-10 w-px"
-        style={{ background: "color-mix(in srgb, var(--color-signature) 60%, transparent)" }}
+        className="mx-auto h-9 w-px"
+        style={{ background: `linear-gradient(to bottom, transparent, ${GOLD_LINE})` }}
       />
-      <div className="relative mx-auto size-2.5">
+      <div className="relative mx-auto size-11">
         <span
-          className="absolute inset-0 animate-ping rounded-full opacity-60"
-          style={{ backgroundColor: "var(--color-signature)" }}
+          className="absolute inset-0 animate-ping rounded-full"
+          style={{ border: `1px solid ${GOLD_LINE}`, animationDuration: "3.5s" }}
         />
         <span
-          className="absolute inset-0 rounded-full"
+          className="absolute inset-0 flex items-center justify-center rounded-full backdrop-blur-sm"
           style={{
-            backgroundColor: "var(--color-signature)",
-            boxShadow: "0 0 0 3px color-mix(in srgb, var(--color-signature) 25%, transparent)",
+            backgroundColor: "rgba(7, 13, 28, 0.6)",
+            border: `1px solid ${GOLD}`,
+            color: GOLD,
+            boxShadow: "0 0 18px -4px rgba(232, 200, 154, 0.5)",
           }}
-        />
+        >
+          <Icon size={18} aria-hidden="true" />
+        </span>
       </div>
     </div>
   );
@@ -206,10 +231,14 @@ export function HomePage() {
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link
                 to="/analyze"
-                className="inline-flex items-center gap-2 rounded-pill px-7 py-3.5 font-bold text-base text-white shadow-[0_14px_38px_-14px_rgba(0,0,0,0.8)]"
+                className="inline-flex items-center gap-2 rounded-pill px-7 py-3.5 font-bold text-base text-white"
                 style={{
                   background:
                     "linear-gradient(120deg, var(--grad-deep-from), var(--grad-deep-via), var(--grad-deep-to))",
+                  // A lit edge rather than a drop shadow: the button sits on a night scene, and a
+                  // shadow under it has nothing to fall on.
+                  boxShadow:
+                    "0 0 0 1px rgba(255,255,255,0.18), 0 0 28px -6px var(--color-signature), 0 16px 40px -18px rgba(0,0,0,0.9)",
                 }}
               >
                 {th.home.heroPrimary}
@@ -217,7 +246,11 @@ export function HomePage() {
               </Link>
               <a
                 href="#what"
-                className="glass inline-flex items-center gap-2 rounded-pill px-6 py-3.5 font-semibold text-sm"
+                className="inline-flex items-center gap-2 rounded-pill px-6 py-3.5 font-semibold text-sm backdrop-blur-md"
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.22)",
+                }}
               >
                 {th.home.heroSecondary}
               </a>
@@ -259,12 +292,14 @@ export function HomePage() {
           <div className="relative mt-16 hidden h-44 lg:block">
             <Callout
               className="top-0 left-[4%]"
+              icon={MapIcon}
               ready={figures.provinces > 0}
               value={th.landing.coverageProvinces.replace("{n}", num(figures.provinces))}
               label={th.landing.coverageProvincesNote}
             />
             <Callout
               className="top-16 left-[37%]"
+              icon={Globe}
               ready={figures.observations > 0}
               value={th.landing.coverageObservations.replace("{n}", num(figures.observations))}
               label={
@@ -275,6 +310,7 @@ export function HomePage() {
             />
             <Callout
               className="top-2 right-[5%]"
+              icon={MapPinned}
               ready={figures.searchableProvinces > 0}
               value={th.landing.coverageParcels.replace("{n}", num(figures.searchableProvinces))}
               label={th.landing.coverageParcelsNote}

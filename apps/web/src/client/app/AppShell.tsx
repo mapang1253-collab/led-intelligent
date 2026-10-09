@@ -101,9 +101,17 @@ function NavRail({ onNavigate, onCollapse }: { onNavigate?: () => void; onCollap
     `flex items-center gap-2.5 rounded-card px-3 py-2.5 text-sm transition-colors ${
       active ? "font-semibold" : "font-medium"
     }`;
+  /*
+    The selected item is marked in champagne rather than in the signature blue.
+
+    Blue is what the product uses to say "this is a control you can act on", and the rail is full
+    of them; spending it again on "this is the one you are looking at" made the two readings
+    compete. Gold says where you are and nothing else, which is the job.
+  */
   const itemStyle = (active: boolean) => ({
-    backgroundColor: active ? "var(--color-signature-wash)" : "transparent",
-    color: active ? "var(--color-signature-text)" : "var(--color-ink-muted)",
+    backgroundColor: active ? "rgba(232, 200, 154, 0.12)" : "transparent",
+    color: active ? "#e8c89a" : "var(--color-ink-muted)",
+    boxShadow: active ? "inset 0 0 0 1px rgba(232, 200, 154, 0.32)" : "none",
   });
 
   return (
