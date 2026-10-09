@@ -161,15 +161,6 @@ export function HomePage() {
               "radial-gradient(56% 42% at 50% 30%, color-mix(in srgb, var(--terrain-base) 72%, transparent) 0%, color-mix(in srgb, var(--terrain-base) 38%, transparent) 52%, transparent 82%)",
           }}
         />
-        {/* A touch of the page's own colour at the very foot, to settle what the mask leaves. */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-28"
-          style={{
-            background:
-              "linear-gradient(to bottom, transparent, color-mix(in srgb, var(--terrain-base) 55%, transparent))",
-          }}
-        />
 
         <div className="relative mx-auto max-w-5xl">
           <div className="mx-auto max-w-2xl text-center">
@@ -236,7 +227,20 @@ export function HomePage() {
         </div>
       </section>
 
-      <main className="px-6 pb-20">
+      {/*
+        `isolate` is load-bearing. A positioned element paints above its in-flow siblings whatever
+        the source order, so without a stacking context of its own this veil covered the first
+        heading under it instead of sitting behind it — `-z-10` only means "behind" relative to
+        something, and this is the something.
+      */}
+      <main className="relative isolate px-6 pb-20">
+        {/* The other half of the handoff: the hero ends in the page's own colour, and the backdrop
+            behind this section comes up out of it rather than starting at an edge. */}
+        <div
+          aria-hidden="true"
+          className="-z-10 pointer-events-none absolute inset-x-0 top-0 h-44"
+          style={{ background: "linear-gradient(to bottom, var(--terrain-base), transparent)" }}
+        />
         <section id="what" className="mx-auto max-w-5xl scroll-mt-20">
           <h2 className="font-bold text-3xl tracking-tight">{th.home.whatHeading}</h2>
           <p className="mt-2 max-w-prose text-ink-muted leading-relaxed">{th.home.whatIntro}</p>
