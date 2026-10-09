@@ -7,7 +7,6 @@
  */
 export const th = {
   app: {
-    title: "ระบบวิเคราะห์ศักยภาพการลงทุนอสังหาริมทรัพย์",
     /* The two halves of the front-page headline. It is the question this field actually asks —
        "highest and best use" is that sentence in English — and it belongs here rather than in a
        component, like every other Thai string in the product. */
@@ -717,7 +716,12 @@ export const th = {
 
   nav: {
     label: "เมนูหลัก",
-    appName: "วิเคราะห์ศักยภาพที่ดิน",
+    /*
+       The product's name, chosen by the owners. A proper noun, so it stays in Latin script while
+       everything else on screen is Thai; the Thai descriptor rides with it in the document title
+       (apps/web/index.html), where a first-time visitor meets it without the page to explain it.
+    */
+    appName: "Finca Check",
     startHeading: "เริ่มต้น",
     home: "หน้าแรก",
     chooseArea: "เลือกพื้นที่",
