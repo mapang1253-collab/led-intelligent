@@ -83,16 +83,14 @@ test("the academic disclaimer is on screen without opening anything", async ({ p
   await expect(disclaimerOn(page)).toBeVisible();
 });
 
-test("the disclaimer survives every topic, switched from the top menu", async ({ page }) => {
+test("the disclaimer survives every topic, switched from the rail", async ({ page }) => {
   await startRun(page);
 
-  // The rail this used to drive is now a bar with a panel under it, so each topic costs an open.
-  // Still worth driving: it is the path a reader takes when they are on another screen and want
-  // one topic of a result, and it reaches the same five views the strip does.
-  const bar = page.getByRole("navigation", { name: th.nav.label });
+  // Above `lg` the rail owns the switching and the tab strip is hidden, so this is the path a
+  // reader on a laptop actually takes.
+  const rail = page.getByRole("navigation", { name: th.nav.label });
   for (const topic of TOPICS) {
-    await bar.getByRole("button", { name: th.nav.resultHeading }).click();
-    await page.getByRole("link", { name: topic }).click();
+    await rail.getByRole("link", { name: topic }).click();
     await expect(disclaimerOn(page)).toBeVisible();
   }
 });

@@ -676,18 +676,7 @@ export const th = {
      * The panel has room the rail never had, and a name alone does not say what a topic holds —
      * "ข้อมูลพื้นที่" and "ราคาอสังหาในพื้นที่" are not obviously different until you have opened both.
      */
-    chooseAreaHint: "เลือกจังหวัด อำเภอ ตำบล หรือค้นจากระวางและเลขที่ดิน",
-    savedAreasHint: "พื้นที่ที่กดดาวไว้ กลับมาวิเคราะห์ซ้ำได้เร็ว",
-    systemStatusHint: "แหล่งข้อมูลที่เปิดใช้งาน ชุดกฎหมาย และผู้ตรวจทาน",
     /** Column headings inside the ผลการวิเคราะห์ panel: five topics are three questions. */
-    resultGroupPlace: "พื้นที่นี้เป็นอย่างไร",
-    resultGroupMoney: "ตัวเลขและมูลค่า",
-    resultGroupIdeas: "ควรใช้ทำอะไร",
-    overviewHint: "สรุปตัวเลขสำคัญ ขั้นตอนการทำงาน และขอบเขตของผล",
-    areaHint: "ประชากร รายได้ครัวเรือน และหลักฐานที่ใช้อ้างทั้งหมด",
-    pricesHint: "ราคาประเมินห้องชุดและที่ดินที่กรมธนารักษ์ประกาศ",
-    valuationHint: "คิดมูลค่าที่ดินและอาคาร และลองคิดความเป็นไปได้ทางการเงิน",
-    conceptsHint: "แนวคิดการใช้ประโยชน์ ผังเมืองรอบที่ดิน และข้อกฎหมายที่ติดอยู่",
   },
 
   status: {

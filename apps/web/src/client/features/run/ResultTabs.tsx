@@ -3,13 +3,12 @@ import { useId, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 
 /**
- * Topic switcher for the result screen.
+ * Topic switcher for the result screen, for widths where the navigation rail is not on screen.
  *
- * It used to appear only below `lg`, because a navigation rail carried the same five links wherever
- * there was room for it, and two controls for one choice is one too many. The rail is gone — the
- * top bar it became is for moving between screens, and switching topic inside a result is not
- * that — so this strip is the only control now, at every width. It reads and writes `view` in the
- * URL, so a link pointing straight at a topic and this strip cannot disagree.
+ * The rail owns this job wherever there is room for it; duplicating it beside itself would be two
+ * controls for one choice. Below that width the rail is a drawer, and switching topic should not
+ * cost a drawer open each time, so the strip appears there instead. Both read and write the same
+ * `view` in the URL, so they can never disagree about which topic is open.
  *
  * What must NOT move into a tab is the academic disclaimer. docs/output-policy.md §3 forbids it
  * being reachable only through a collapsed area, and an unselected tab panel is exactly that, so it
@@ -21,14 +20,6 @@ export interface ResultTab {
   readonly id: string;
   readonly label: string;
   readonly icon: LucideIcon;
-  /**
-   * The question this topic answers, printed above its cluster in the strip.
-   *
-   * The same three the top menu groups them under. Five buttons in a row is readable; five buttons
-   * in a row that say which of three questions each one is about is readable and tells the reader
-   * what the screen is made of before they click anything.
-   */
-  readonly group?: string;
   /** Shown beside the label when there is something countable behind it. */
   readonly count?: number;
   readonly render: () => React.ReactNode;
@@ -78,23 +69,18 @@ export function ResultTabs({
 
   return (
     <div className="mt-5">
-      {/* Shown at every width now. It used to hide above `lg`, where the navigation rail carried
-          the same five links; the rail is gone, and switching topic inside a result was never
-          navigation anyway. Horizontal and scrollable rather than stacked: a phone keeps one row
-          and swipes it. */}
+      {/* Hidden where the rail is visible: one choice, one control. */}
+      {/* Horizontal and scrollable rather than stacked: a phone keeps one row and swipes it. */}
       <div
         ref={strip}
         role="tablist"
         aria-label="หัวข้อผลการวิเคราะห์"
         onKeyDown={onKeyDown}
-        className="-mx-1 flex items-end gap-1 overflow-x-auto px-1 pb-1"
+        className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 lg:hidden"
       >
-        {tabs.map((tab, index) => {
+        {tabs.map((tab) => {
           const selected = tab.id === active.id;
           const Icon = tab.icon;
-          // Printed once per group, on its first tab. A `role="tablist"` may only hold tabs, so
-          // the heading rides inside the button rather than in a wrapper that would break that.
-          const opensGroup = tab.group !== undefined && tab.group !== tabs[index - 1]?.group;
           return (
             <button
               key={tab.id}
@@ -105,25 +91,18 @@ export function ResultTabs({
               aria-controls={`${baseId}-${tab.id}-panel`}
               tabIndex={selected ? 0 : -1}
               onClick={() => setActiveId(tab.id)}
-              className={`shrink-0 whitespace-nowrap rounded-card border px-4 py-2.5 font-medium text-sm transition-colors ${
-                opensGroup ? "ml-3 first:ml-0" : ""
-              }`}
+              className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-card border px-4 py-2.5 font-medium text-sm transition-colors"
               style={{
                 borderColor: selected ? "var(--color-signature)" : "var(--color-border)",
                 backgroundColor: selected ? "var(--color-signature-wash)" : "transparent",
                 color: selected ? "var(--color-signature-text)" : "var(--color-ink-muted)",
               }}
             >
-              {opensGroup && (
-                <span className="mb-1 block text-ink-muted text-xs leading-none">{tab.group}</span>
+              <Icon size={15} aria-hidden="true" />
+              {tab.label}
+              {tab.count !== undefined && (
+                <span className="tabular-nums opacity-70">{tab.count}</span>
               )}
-              <span className="flex items-center gap-2">
-                <Icon size={15} aria-hidden="true" />
-                {tab.label}
-                {tab.count !== undefined && (
-                  <span className="tabular-nums opacity-70">{tab.count}</span>
-                )}
-              </span>
             </button>
           );
         })}
