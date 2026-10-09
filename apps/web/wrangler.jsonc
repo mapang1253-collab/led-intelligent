@@ -1,6 +1,9 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "reis-web",
+  // The Worker's name is the first label of its workers.dev URL, so this is the product's name
+  // in the address bar: finca-check.<account subdomain>.workers.dev. The account subdomain is not
+  // set from here — it belongs to the Cloudflare account and is changed in its dashboard.
+  "name": "finca-check",
   "main": "./src/worker/index.ts",
   // Pinned, never "latest": the runtime's behaviour must not change under the app without a
   // deliberate bump. nodejs_compat requires 2024-09-23 or later.

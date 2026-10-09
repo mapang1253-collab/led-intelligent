@@ -4,7 +4,7 @@
 
 จัดทำโดย อรณภา และ สุรัตนาพร · โครงการระดับมหาวิทยาลัย · ปรับปรุงล่าสุด 18 กันยายน 2569 (รอบที่ 3)
 
-**เปิดใช้งานจริงแล้วที่ https://reis-web.knsurattanaporn.workers.dev**
+**เปิดใช้งานจริงแล้วที่ https://finca-check.knsurattanaporn.workers.dev**
 
 ---
 
@@ -289,7 +289,7 @@ pnpm ingest:treasury-condo
 pnpm dev
 ```
 
-หรือเปิดระบบที่ให้บริการจริงได้เลยโดยไม่ต้องติดตั้งอะไร: **https://reis-web.knsurattanaporn.workers.dev**
+หรือเปิดระบบที่ให้บริการจริงได้เลยโดยไม่ต้องติดตั้งอะไร: **https://finca-check.knsurattanaporn.workers.dev**
 
 คำสั่งตรวจสอบเพิ่มเติม — `pnpm test` (ทดสอบหน่วย) · `pnpm test:e2e` (ทดสอบผ่านเบราว์เซอร์จริง 8 ข้อ
 ครอบคลุมเส้นทางหลักและกฎการวางคำปฏิเสธความรับผิดชอบตาม `docs/output-policy.md` §3) ·

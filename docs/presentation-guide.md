@@ -3,7 +3,7 @@
 ตัวเลขทุกตัวในเอกสารนี้อ่านจากระบบจริงเมื่อ **9 ตุลาคม 2569** ผ่าน `GET /api/v1/system-status`
 และหน้าเว็บจริง ไม่ใช่ตัวเลขที่ประมาณเอา — ถ้าจะใช้ในสไลด์ ให้เปิดหน้า "สถานะระบบ" ทวนอีกครั้งในวันนำเสนอ
 
-เว็บ: https://reis-web.knsurattanaporn.workers.dev
+เว็บ: https://finca-check.knsurattanaporn.workers.dev
 
 ---
 
@@ -161,7 +161,7 @@
 
 ## 8 · เช็กลิสต์ก่อนนำเสนอ
 
-- [ ] เปิด https://reis-web.knsurattanaporn.workers.dev ทดสอบรัน 1 ครั้งให้จบ **ในวันนำเสนอ**
+- [ ] เปิด https://finca-check.knsurattanaporn.workers.dev ทดสอบรัน 1 ครั้งให้จบ **ในวันนำเสนอ**
 - [ ] เปิดหน้า "สถานะระบบ" ทวนตัวเลขในหัวข้อ 1 ว่ายังตรงอยู่
 - [ ] เตรียมภาพหน้าจอสำรองไว้ทุกแท็บ เผื่อเน็ตล่ม
 - [ ] เปิด [`docs/demo-valuation-bangphun.md`](demo-valuation-bangphun.md) ไว้ในเครื่อง สำหรับกรอกแท็บประเมินมูลค่า
