@@ -1,6 +1,7 @@
 import { th } from "@reis/i18n";
 import { useQuery } from "@tanstack/react-query";
-import { BookCheck, MapPinned } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { BookCheck, Database, MapPinned, Ruler, Scale } from "lucide-react";
 import { Link } from "react-router";
 
 /**
@@ -52,6 +53,23 @@ interface Coverage {
 }
 
 const num = (value: number) => value.toLocaleString("th-TH");
+
+function ColumnHeading({ icon: Icon, children }: { icon: LucideIcon; children: string }) {
+  return (
+    <h3 className="flex items-center gap-2 font-semibold text-ink-muted text-xs">
+      <span
+        className="flex size-6 shrink-0 items-center justify-center rounded-card"
+        style={{
+          backgroundColor: "var(--color-signature-wash)",
+          color: "var(--color-signature-text)",
+        }}
+      >
+        <Icon size={13} aria-hidden="true" />
+      </span>
+      {children}
+    </h3>
+  );
+}
 
 function Figure({ value, note }: { value: string; note: string }) {
   return (
@@ -114,6 +132,11 @@ export function LandingSections() {
     (source) => source.activation_state === "ACTIVE",
   );
   const observations = active.reduce((total, source) => total + (source.observations ?? 0), 0);
+  /** The busiest area sets the scale, so every bar is read against the same thing. */
+  const topTotal = Math.max(
+    1,
+    ...(areas.data ?? []).map((area) => area.condominium_figures + area.land_figures),
+  );
   const searchableProvinces =
     (coverage.data?.data ?? []).filter((province) => province.parcels > 0).length +
     (coverage.data?.live ?? []).length;
@@ -134,9 +157,7 @@ export function LandingSections() {
             {/* Boxed, not three bare columns. The step cards above carried the shape and the
                 owners kept them for it; the steps themselves said what the form already shows. */}
             <div className="glass rounded-card p-5">
-              <h3 className="font-semibold text-ink-muted text-xs">
-                {th.landing.dataColumnCoverage}
-              </h3>
+              <ColumnHeading icon={MapPinned}>{th.landing.dataColumnCoverage}</ColumnHeading>
               <ul className="mt-2">
                 <Figure
                   value={th.landing.coverageProvinces.replace(
@@ -157,9 +178,7 @@ export function LandingSections() {
             </div>
 
             <div className="glass rounded-card p-5">
-              <h3 className="font-semibold text-ink-muted text-xs">
-                {th.landing.dataColumnSources}
-              </h3>
+              <ColumnHeading icon={Database}>{th.landing.dataColumnSources}</ColumnHeading>
               <ul className="mt-2">
                 {active.map((source) => (
                   <Figure
@@ -172,9 +191,7 @@ export function LandingSections() {
             </div>
 
             <div className="glass rounded-card p-5">
-              <h3 className="font-semibold text-ink-muted text-xs">
-                {th.landing.dataColumnMethods}
-              </h3>
+              <ColumnHeading icon={Scale}>{th.landing.dataColumnMethods}</ColumnHeading>
               <ul className="mt-2">
                 {[status.data?.legal_pack, status.data?.valuation_method]
                   .filter((pack): pack is Pack => Boolean(pack))
@@ -212,27 +229,68 @@ export function LandingSections() {
                 these, and a second control that does the same thing from further down the page
                 would be two ways to answer one question — the thing step one was reorganised to
                 stop. */}
-            {(areas.data ?? []).map((area, index) => (
-              <li
-                key={area.subdistrict_id}
-                className="glass flex items-start gap-3 rounded-card p-4"
-              >
-                <span className="font-bold text-ink-muted text-sm tabular-nums">{index + 1}</span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-1.5 font-semibold text-sm">
-                    <MapPinned size={14} className="shrink-0" aria-hidden="true" />
-                    ต.{area.subdistrict_name_th}
+            {(areas.data ?? []).map((area, index) => {
+              const total = area.condominium_figures + area.land_figures;
+              return (
+                <li
+                  key={area.subdistrict_id}
+                  className="glass flex items-start gap-3 rounded-card p-4"
+                >
+                  <span
+                    className="flex size-7 shrink-0 items-center justify-center rounded-card font-bold text-xs tabular-nums"
+                    style={{
+                      backgroundColor: "var(--color-signature-wash)",
+                      color: "var(--color-signature-text)",
+                    }}
+                  >
+                    {index + 1}
                   </span>
-                  <span className="mt-0.5 block text-ink-muted text-xs">
-                    อ.{area.district_name_th} จ.{area.province_name_th}
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1.5 font-semibold text-sm">
+                      <MapPinned size={14} className="shrink-0" aria-hidden="true" />
+                      ต.{area.subdistrict_name_th}
+                    </span>
+                    <span className="mt-0.5 block text-ink-muted text-xs">
+                      อ.{area.district_name_th} จ.{area.province_name_th}
+                    </span>
+
+                    {/* The two counts as figures rather than a sentence, and a bar showing how
+                        this place compares with the best-documented one. The bar measures
+                        published figures and nothing else — which is why the caption under the
+                        list says in as many words that more of them is not a better place to
+                        invest. */}
+                    <span className="mt-2 flex gap-4">
+                      {(
+                        [
+                          [Database, area.condominium_figures, th.landing.areasCondoLabel],
+                          [Ruler, area.land_figures, th.landing.areasLandLabel],
+                        ] as const
+                      ).map(([Icon, value, label]) => (
+                        <span key={label} className="flex items-center gap-1.5">
+                          <Icon size={13} className="text-ink-muted" aria-hidden="true" />
+                          <span className="font-bold text-sm tabular-nums">{num(value)}</span>
+                          <span className="text-ink-muted text-xs">{label}</span>
+                        </span>
+                      ))}
+                    </span>
+
+                    <span
+                      className="mt-2 block h-1 overflow-hidden rounded-pill"
+                      style={{ backgroundColor: "var(--color-border)" }}
+                    >
+                      <span
+                        className="block h-full rounded-pill"
+                        style={{
+                          width: `${topTotal > 0 ? Math.max(6, (total / topTotal) * 100) : 0}%`,
+                          background:
+                            "linear-gradient(90deg, var(--grad-vivid-from), var(--grad-vivid-via))",
+                        }}
+                      />
+                    </span>
                   </span>
-                  <span className="mt-1 block text-ink-muted text-xs">
-                    {th.landing.areasCondo.replace("{n}", num(area.condominium_figures))} ·{" "}
-                    {th.landing.areasLand.replace("{n}", num(area.land_figures))}
-                  </span>
-                </span>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ol>
 
           <p className="mt-3 text-ink-muted text-xs leading-relaxed">{th.landing.areasPickNote}</p>

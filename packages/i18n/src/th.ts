@@ -19,6 +19,16 @@ export const th = {
     tagline:
       "Highest and Best Use — หาคำตอบจากหลักฐานที่หน่วยงานรัฐเผยแพร่จริง ครบทุกจังหวัดทั่วประเทศ พร้อมสรุปข้อจำกัดทางกฎหมายและรายการที่ต้องตรวจสอบเพิ่มเติม",
     academicBadge: "ต้นแบบเชิงวิชาการ",
+    /* Three lines under the headline saying what a reader actually gets, each naming the
+       department the figures come from. They are claims the product can support today; nothing
+       here promises a stage that is not activated. */
+    offerPricesTitle: "ราคาประเมินของทางราชการ",
+    offerPricesBody: "ราคาประเมินที่ดิน สิ่งปลูกสร้าง และห้องชุด จากกรมธนารักษ์ พร้อมปีข้อมูลและข้อจำกัดของแต่ละชุด",
+    offerZoningTitle: "ผังเมืองรวมพร้อมสี",
+    offerZoningBody: "สีผังเมืองรอบที่ดิน พร้อมข้อกำหนดและข้อห้ามที่กรมโยธาธิการและผังเมืองประกาศไว้",
+    offerConceptsTitle: "แนวคิดและข้อกฎหมาย",
+    offerConceptsBody: "แนวคิดการใช้ประโยชน์ที่ดิน ตรวจกับกฎกระทรวงควบคุมอาคาร พร้อมบอกว่ายังต้องใช้ข้อมูลอะไรเพิ่ม",
+    heroScrollHint: "เลื่อนลงเพื่อเริ่มวิเคราะห์",
   },
 
   picker: {
@@ -650,6 +660,9 @@ export const th = {
     areasIntro:
       "นับจากจำนวนรายการราคาประเมินที่หน่วยงานเผยแพร่ในแต่ละตำบล มากกว่าไม่ได้แปลว่าน่าลงทุนกว่า แต่แปลว่าระบบมีหลักฐานให้ดูมากกว่า",
     areasCondo: "ห้องชุด {n} รายการ",
+    // Used where the figure is printed on its own, so the label does not repeat the number.
+    areasCondoLabel: "ห้องชุด",
+    areasLandLabel: "ที่ดิน",
     areasLand: "ที่ดิน {n} รายการ",
     areasPickNote: "เลือกพื้นที่เหล่านี้ได้ที่ข้อ 1 ด้านบน กด “ยังไม่รู้จะเริ่มจากที่ไหน”",
   },
