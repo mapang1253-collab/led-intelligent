@@ -15,6 +15,19 @@
  * Every colour is a design token, so the scene follows the theme and the chosen palette.
  */
 
+/**
+ * The light, as three colours of its own.
+ *
+ * These are literals rather than tokens on purpose, and they are the only ones in the file. A
+ * landscape with one hue has no light in it — what reads as sunlight is the meeting of a warm
+ * source and cool shade, and the palette tokens are all one side of that. They are the colour of
+ * the sun in this picture, nothing else: in particular they are not `--color-partial`, which is
+ * amber because PARTIAL means something in this product and must not be spent on scenery.
+ */
+const SUN_CORE = "#fff4de";
+const SUN_WARM = "#ffcf96";
+const SHADE_COOL = "#1b2a52";
+
 const WIDTH = 1440;
 const HEIGHT = 900;
 
@@ -179,19 +192,38 @@ export function AerialScene({ className }: { className?: string }) {
       preserveAspectRatio="xMidYMid slice"
     >
       <defs>
+        {/* Cool overhead, warming as it falls toward the light behind the hills. */}
         <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--grad-deep-to)" stopOpacity="0.95" />
-          <stop offset="48%" stopColor="var(--grad-deep-via)" stopOpacity="0.55" />
-          <stop offset="78%" stopColor="var(--grad-vivid-from)" stopOpacity="0.38" />
-          <stop offset="100%" stopColor="var(--grad-vivid-from)" stopOpacity="0.2" />
+          <stop offset="0%" stopColor="var(--grad-deep-to)" stopOpacity="0.97" />
+          <stop offset="42%" stopColor="var(--grad-deep-via)" stopOpacity="0.6" />
+          <stop offset="72%" stopColor="var(--grad-vivid-from)" stopOpacity="0.42" />
+          <stop offset="90%" stopColor={SUN_WARM} stopOpacity="0.3" />
+          <stop offset="100%" stopColor={SUN_WARM} stopOpacity="0.14" />
         </linearGradient>
 
         {/* The sun sits just above the furthest ridge and lights everything in front of it. */}
         <radialGradient id="sun" cx="0.58" cy="0.58" r="0.5">
-          <stop offset="0%" stopColor="var(--color-surface)" stopOpacity="0.9" />
-          <stop offset="26%" stopColor="var(--grad-vivid-from)" stopOpacity="0.5" />
+          <stop offset="0%" stopColor={SUN_CORE} stopOpacity="0.95" />
+          <stop offset="14%" stopColor={SUN_WARM} stopOpacity="0.72" />
+          <stop offset="38%" stopColor="var(--grad-vivid-from)" stopOpacity="0.4" />
           <stop offset="100%" stopColor="var(--grad-vivid-from)" stopOpacity="0" />
         </radialGradient>
+
+        {/* The rim each ridge takes along its crest, strongest on the ones nearest the light. */}
+        {[0, 1, 2, 3].map((index) => (
+          <linearGradient
+            key={`rim-${index}`}
+            id={`rim-${index}`}
+            gradientUnits="userSpaceOnUse"
+            x1="0"
+            y1={[404, 426, 446, 468][index]}
+            x2="0"
+            y2={[470, 500, 530, 566][index]}
+          >
+            <stop offset="0%" stopColor={SUN_WARM} stopOpacity={0.5 - index * 0.1} />
+            <stop offset="45%" stopColor={SUN_WARM} stopOpacity="0" />
+          </linearGradient>
+        ))}
 
         {/* Four ridges, each darker and more saturated than the one behind it. */}
         {[0.3, 0.46, 0.64, 0.84].map((depth, index) => (
@@ -206,15 +238,17 @@ export function AerialScene({ className }: { className?: string }) {
         ))}
 
         <linearGradient id="valley" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--grad-deep-via)" stopOpacity="0.5" />
-          <stop offset="55%" stopColor="var(--grad-deep-to)" stopOpacity="0.8" />
-          <stop offset="100%" stopColor="var(--terrain-base)" stopOpacity="0.96" />
+          <stop offset="0%" stopColor={SUN_WARM} stopOpacity="0.22" />
+          <stop offset="16%" stopColor="var(--grad-deep-via)" stopOpacity="0.5" />
+          <stop offset="58%" stopColor="var(--grad-deep-to)" stopOpacity="0.78" />
+          <stop offset="100%" stopColor={SHADE_COOL} stopOpacity="0.9" />
         </linearGradient>
 
         <linearGradient id="river" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--color-surface)" stopOpacity="0.72" />
-          <stop offset="38%" stopColor="var(--grad-vivid-from)" stopOpacity="0.78" />
-          <stop offset="100%" stopColor="var(--grad-vivid-via)" stopOpacity="0.55" />
+          <stop offset="0%" stopColor={SUN_CORE} stopOpacity="0.5" />
+          <stop offset="22%" stopColor={SUN_WARM} stopOpacity="0.44" />
+          <stop offset="52%" stopColor="var(--grad-vivid-from)" stopOpacity="0.72" />
+          <stop offset="100%" stopColor="var(--grad-vivid-via)" stopOpacity="0.5" />
         </linearGradient>
 
         <filter id="haze" x="-20%" y="-60%" width="140%" height="260%">
@@ -239,13 +273,15 @@ export function AerialScene({ className }: { className?: string }) {
 
       {/* Sun, and the light it throws forward along the valley. */}
       <ellipse cx={WIDTH * 0.58} cy={430} rx={520} ry={330} fill="url(#sun)" />
+      {/* The disc, kept small and warm. White and wide, it stopped being a sun and became a
+          smudge where the river meets the horizon. */}
       <ellipse
         cx={WIDTH * 0.58}
-        cy={452}
-        rx={120}
-        ry={34}
-        fill="var(--color-surface)"
-        opacity={0.5}
+        cy={454}
+        rx={74}
+        ry={22}
+        fill={SUN_CORE}
+        opacity={0.42}
         filter="url(#glow)"
       />
 
@@ -318,8 +354,8 @@ export function AerialScene({ className }: { className?: string }) {
             S ${WIDTH * 0.39} 820, ${WIDTH * 0.31} ${HEIGHT + 30}`}
         fill="none"
         stroke="var(--color-surface)"
-        strokeWidth={26}
-        opacity={0.22}
+        strokeWidth={22}
+        opacity={0.13}
         filter="url(#soft)"
       />
 
@@ -348,26 +384,28 @@ export function AerialScene({ className }: { className?: string }) {
       ))}
 
       {/* Depth, last: haze along the horizon, a darker foreground, and a vignette at the edges. */}
+      {/* The horizon is where the light pools, so the haze there is the warmest thing in frame. */}
       <rect
         x={-40}
-        y={512}
+        y={508}
         width={WIDTH + 80}
-        height={70}
-        fill="var(--grad-vivid-from)"
-        opacity={0.26}
+        height={74}
+        fill={SUN_WARM}
+        opacity={0.2}
         filter="url(#haze)"
       />
+      {/* The near ground is out of the light, and falls into cool shade rather than into grey. */}
       <rect
         x={0}
         y={HEIGHT * 0.68}
         width={WIDTH}
         height={HEIGHT * 0.32}
-        fill="var(--terrain-base)"
-        opacity={0.26}
+        fill={SHADE_COOL}
+        opacity={0.3}
       />
       <radialGradient id="vignette" cx="0.5" cy="0.44" r="0.78">
-        <stop offset="62%" stopColor="var(--terrain-base)" stopOpacity="0" />
-        <stop offset="100%" stopColor="var(--terrain-base)" stopOpacity="0.6" />
+        <stop offset="60%" stopColor={SHADE_COOL} stopOpacity="0" />
+        <stop offset="100%" stopColor={SHADE_COOL} stopOpacity="0.72" />
       </radialGradient>
       <rect width={WIDTH} height={HEIGHT} fill="url(#vignette)" />
       <rect width={WIDTH} height={HEIGHT} filter="url(#grain)" opacity={0.045} />
