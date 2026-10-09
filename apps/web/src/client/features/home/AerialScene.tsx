@@ -18,15 +18,24 @@
 /**
  * The light, as three colours of its own.
  *
- * These are literals rather than tokens on purpose, and they are the only ones in the file. A
+ * These three are literals rather than tokens on purpose, and the only ones in the file. A
  * landscape with one hue has no light in it — what reads as sunlight is the meeting of a warm
- * source and cool shade, and the palette tokens are all one side of that. They are the colour of
+ * source and the dark it fails to reach, and the palette tokens are all one side of that. They are
+ * the colour of
  * the sun in this picture, nothing else: in particular they are not `--color-partial`, which is
  * amber because PARTIAL means something in this product and must not be spent on scenery.
  */
 const SUN_CORE = "#fff4de";
 const SUN_WARM = "#ffcf96";
-const SHADE_COOL = "#1b2a52";
+/**
+ * The sky overhead, the far side of every ridge, and the ground nearest the viewer — everything
+ * well out of the light.
+ *
+ * Darker than `--terrain-base` on purpose. The scene sits behind the page's own backdrop and its
+ * own type, and a hero bright enough to look good on its own washes both out; the owners asked for
+ * it dimmer, and this is the colour everything falls toward.
+ */
+const NIGHT = "#070d1c";
 
 const WIDTH = 1440;
 const HEIGHT = 900;
@@ -122,7 +131,7 @@ function buildFields(): Field[] {
         key: `${row}-${col}`,
         points: corners.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" "),
         // Faint near the horizon where haze eats everything, stronger as the ground comes forward.
-        opacity: 0.1 + random() * 0.2 + depthAt(row) * 0.26,
+        opacity: 0.06 + random() * 0.13 + depthAt(row) * 0.17,
         tone: random(),
       });
     }
@@ -173,6 +182,77 @@ function buildWoods(): Clump[] {
 
 const WOODS = buildWoods();
 
+/**
+ * Stars, scattered over the upper sky and kept away from the glow behind the hills.
+ *
+ * A meteor needs something to cross. Without a star field the streak reads as a scratch on the
+ * screen rather than as something happening in the sky.
+ */
+interface Star {
+  readonly key: string;
+  readonly cx: number;
+  readonly cy: number;
+  readonly r: number;
+  readonly opacity: number;
+  /** Seconds, so no two stars breathe together. */
+  readonly delay: number;
+}
+
+function buildStars(): Star[] {
+  const random = seeded(90210);
+  const stars: Star[] = [];
+  for (let i = 0; i < 90; i += 1) {
+    const cx = random() * WIDTH;
+    const cy = 20 + random() * 400;
+    // The sky washes out toward the sun, so nothing is drawn where it would not be seen.
+    const nearSun = Math.hypot(cx - WIDTH * 0.58, (cy - 430) * 1.6) < 420;
+    if (nearSun && random() > 0.18) {
+      continue;
+    }
+    stars.push({
+      key: `star-${i}`,
+      cx,
+      cy,
+      r: 0.7 + random() * 1.5,
+      // Fainter toward the horizon, as atmosphere actually does to them.
+      opacity: (0.25 + random() * 0.6) * (1 - cy / 560),
+      delay: random() * 6,
+    });
+  }
+  return stars;
+}
+
+const STARS = buildStars();
+
+/**
+ * Meteors: three, crossing rarely rather than raining.
+ *
+ * Each is drawn once at the origin pointing down-right, and the animation carries it across its
+ * own stretch of sky. The long gaps between them are the point — a shower would be weather, and
+ * this is meant to be something the eye catches now and then.
+ */
+const METEORS = [
+  { key: "m1", from: [120, 40], to: [720, 320], length: 170, duration: 2.1, delay: 1.5, every: 13 },
+  {
+    key: "m2",
+    from: [760, 20],
+    to: [1340, 290],
+    length: 130,
+    duration: 1.7,
+    delay: 7.5,
+    every: 13,
+  },
+  {
+    key: "m3",
+    from: [380, 120],
+    to: [1020, 420],
+    length: 200,
+    duration: 2.4,
+    delay: 11,
+    every: 13,
+  },
+] as const;
+
 /** A handful of settlements along the river, as masses of light rather than as drawn buildings. */
 const SETTLEMENTS = [
   { x: 548, y: 612, w: 86, h: 26 },
@@ -194,18 +274,18 @@ export function AerialScene({ className }: { className?: string }) {
       <defs>
         {/* Cool overhead, warming as it falls toward the light behind the hills. */}
         <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--grad-deep-to)" stopOpacity="0.97" />
-          <stop offset="42%" stopColor="var(--grad-deep-via)" stopOpacity="0.6" />
-          <stop offset="72%" stopColor="var(--grad-vivid-from)" stopOpacity="0.42" />
-          <stop offset="90%" stopColor={SUN_WARM} stopOpacity="0.3" />
-          <stop offset="100%" stopColor={SUN_WARM} stopOpacity="0.14" />
+          <stop offset="0%" stopColor={NIGHT} stopOpacity="0.97" />
+          <stop offset="36%" stopColor="var(--grad-deep-to)" stopOpacity="0.84" />
+          <stop offset="68%" stopColor="var(--grad-deep-via)" stopOpacity="0.42" />
+          <stop offset="90%" stopColor={SUN_WARM} stopOpacity="0.16" />
+          <stop offset="100%" stopColor={SUN_WARM} stopOpacity="0.07" />
         </linearGradient>
 
         {/* The sun sits just above the furthest ridge and lights everything in front of it. */}
         <radialGradient id="sun" cx="0.58" cy="0.58" r="0.5">
-          <stop offset="0%" stopColor={SUN_CORE} stopOpacity="0.95" />
-          <stop offset="14%" stopColor={SUN_WARM} stopOpacity="0.72" />
-          <stop offset="38%" stopColor="var(--grad-vivid-from)" stopOpacity="0.4" />
+          <stop offset="0%" stopColor={SUN_CORE} stopOpacity="0.52" />
+          <stop offset="14%" stopColor={SUN_WARM} stopOpacity="0.34" />
+          <stop offset="38%" stopColor="var(--grad-vivid-from)" stopOpacity="0.19" />
           <stop offset="100%" stopColor="var(--grad-vivid-from)" stopOpacity="0" />
         </radialGradient>
 
@@ -220,7 +300,7 @@ export function AerialScene({ className }: { className?: string }) {
             x2="0"
             y2={[470, 500, 530, 566][index]}
           >
-            <stop offset="0%" stopColor={SUN_WARM} stopOpacity={0.5 - index * 0.1} />
+            <stop offset="0%" stopColor={SUN_WARM} stopOpacity={0.34 - index * 0.07} />
             <stop offset="45%" stopColor={SUN_WARM} stopOpacity="0" />
           </linearGradient>
         ))}
@@ -231,24 +311,24 @@ export function AerialScene({ className }: { className?: string }) {
             <stop
               offset="0%"
               stopColor={index < 2 ? "var(--grad-vivid-from)" : "var(--grad-deep-via)"}
-              stopOpacity={0.4 + depth * 0.5}
+              stopOpacity={0.3 + depth * 0.45}
             />
-            <stop offset="100%" stopColor="var(--grad-deep-to)" stopOpacity={0.72 + depth * 0.26} />
+            <stop offset="100%" stopColor={NIGHT} stopOpacity={0.74 + depth * 0.24} />
           </linearGradient>
         ))}
 
         <linearGradient id="valley" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={SUN_WARM} stopOpacity="0.22" />
-          <stop offset="16%" stopColor="var(--grad-deep-via)" stopOpacity="0.5" />
-          <stop offset="58%" stopColor="var(--grad-deep-to)" stopOpacity="0.78" />
-          <stop offset="100%" stopColor={SHADE_COOL} stopOpacity="0.9" />
+          <stop offset="0%" stopColor={SUN_WARM} stopOpacity="0.12" />
+          <stop offset="16%" stopColor="var(--grad-deep-via)" stopOpacity="0.4" />
+          <stop offset="58%" stopColor="var(--grad-deep-to)" stopOpacity="0.84" />
+          <stop offset="100%" stopColor={NIGHT} stopOpacity="0.96" />
         </linearGradient>
 
         <linearGradient id="river" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={SUN_CORE} stopOpacity="0.5" />
-          <stop offset="22%" stopColor={SUN_WARM} stopOpacity="0.44" />
-          <stop offset="52%" stopColor="var(--grad-vivid-from)" stopOpacity="0.72" />
-          <stop offset="100%" stopColor="var(--grad-vivid-via)" stopOpacity="0.5" />
+          <stop offset="0%" stopColor={SUN_CORE} stopOpacity="0.38" />
+          <stop offset="22%" stopColor={SUN_WARM} stopOpacity="0.32" />
+          <stop offset="52%" stopColor="var(--grad-vivid-from)" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="var(--grad-vivid-via)" stopOpacity="0.38" />
         </linearGradient>
 
         <filter id="haze" x="-20%" y="-60%" width="140%" height="260%">
@@ -261,6 +341,44 @@ export function AerialScene({ className }: { className?: string }) {
           <feGaussianBlur stdDeviation="16" />
         </filter>
 
+        <linearGradient id="meteor-tail" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor={SUN_CORE} stopOpacity="0" />
+          <stop offset="70%" stopColor={SUN_CORE} stopOpacity="0.35" />
+          <stop offset="100%" stopColor={SUN_CORE} stopOpacity="0.95" />
+        </linearGradient>
+
+        <style>{`
+          .star { animation: star-breathe 5s ease-in-out infinite; }
+          @keyframes star-breathe {
+            0%, 100% { opacity: 0.35; }
+            50% { opacity: 1; }
+          }
+          ${METEORS.map(
+            (meteor) => `
+          .${meteor.key} {
+            offset-rotate: 0deg;
+            /* The fill mode matters: without it the 0% frame does not apply during the delay, so
+               each meteor hangs in the sky as a motionless streak until its turn comes round. */
+            animation: fly-${meteor.key} ${meteor.every}s linear ${meteor.delay}s infinite both;
+          }
+          @keyframes fly-${meteor.key} {
+            0% { transform: translate(${meteor.from[0]}px, ${meteor.from[1]}px); opacity: 0; }
+            ${((0.08 / meteor.every) * 100).toFixed(2)}% { opacity: 0; }
+            ${((0.5 / meteor.every) * 100).toFixed(2)}% { opacity: 1; }
+            ${(((meteor.duration * 0.82) / meteor.every) * 100).toFixed(2)}% { opacity: 1; }
+            ${((meteor.duration / meteor.every) * 100).toFixed(2)}% {
+              transform: translate(${meteor.to[0]}px, ${meteor.to[1]}px);
+              opacity: 0;
+            }
+            100% { transform: translate(${meteor.to[0]}px, ${meteor.to[1]}px); opacity: 0; }
+          }`,
+          ).join("")}
+          @media (prefers-reduced-motion: reduce) {
+            .star, ${METEORS.map((meteor) => `.${meteor.key}`).join(", ")} { animation: none; }
+            ${METEORS.map((meteor) => `.${meteor.key}`).join(", ")} { opacity: 0; }
+          }
+        `}</style>
+
         {/* A breath of grain over everything, so the gradients do not band on a wide screen. */}
         <filter id="grain">
           <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" seed="7" />
@@ -270,6 +388,34 @@ export function AerialScene({ className }: { className?: string }) {
 
       <rect width={WIDTH} height={HEIGHT} fill="var(--terrain-base)" />
       <rect width={WIDTH} height={HEIGHT} fill="url(#sky)" />
+
+      {STARS.map((star) => (
+        <circle
+          key={star.key}
+          className="star"
+          cx={star.cx}
+          cy={star.cy}
+          r={star.r}
+          fill={SUN_CORE}
+          opacity={star.opacity}
+          style={{ animationDelay: `${star.delay.toFixed(2)}s` }}
+        />
+      ))}
+
+      {METEORS.map((meteor) => (
+        <g key={meteor.key} className={meteor.key} style={{ transformBox: "view-box" }}>
+          <rect
+            x={-meteor.length}
+            y={-0.9}
+            width={meteor.length}
+            height={1.8}
+            rx={0.9}
+            fill="url(#meteor-tail)"
+            transform="rotate(24)"
+          />
+          <circle r={1.8} fill={SUN_CORE} />
+        </g>
+      ))}
 
       {/* Sun, and the light it throws forward along the valley. */}
       <ellipse cx={WIDTH * 0.58} cy={430} rx={520} ry={330} fill="url(#sun)" />
@@ -281,7 +427,7 @@ export function AerialScene({ className }: { className?: string }) {
         rx={74}
         ry={22}
         fill={SUN_CORE}
-        opacity={0.42}
+        opacity={0.24}
         filter="url(#glow)"
       />
 
@@ -295,13 +441,18 @@ export function AerialScene({ className }: { className?: string }) {
       ].map((layer, index) => (
         <g key={layer.seed}>
           <path d={ridge(layer.baseline, layer.amplitude, layer.seed)} fill={layer.fill} />
+          {/* The same silhouette again, carrying only the light that catches along its crest. */}
+          <path
+            d={ridge(layer.baseline, layer.amplitude, layer.seed)}
+            fill={`url(#rim-${index})`}
+          />
           <rect
             x={-40}
             y={layer.baseline - 6}
             width={WIDTH + 80}
             height={46}
-            fill="var(--grad-vivid-from)"
-            opacity={0.3 - index * 0.055}
+            fill={index < 2 ? SUN_WARM : "var(--grad-vivid-from)"}
+            opacity={0.17 - index * 0.032}
             filter="url(#haze)"
           />
         </g>
@@ -314,11 +465,13 @@ export function AerialScene({ className }: { className?: string }) {
           key={field.key}
           points={field.points}
           fill={
-            field.tone > 0.72
-              ? "var(--grad-vivid-from)"
-              : field.tone > 0.4
-                ? "var(--grad-deep-via)"
-                : "var(--color-surface)"
+            field.tone > 0.84
+              ? SUN_WARM
+              : field.tone > 0.62
+                ? "var(--grad-vivid-from)"
+                : field.tone > 0.3
+                  ? "var(--grad-deep-via)"
+                  : "var(--color-surface)"
           }
           opacity={field.opacity}
         />
@@ -391,7 +544,7 @@ export function AerialScene({ className }: { className?: string }) {
         width={WIDTH + 80}
         height={74}
         fill={SUN_WARM}
-        opacity={0.2}
+        opacity={0.12}
         filter="url(#haze)"
       />
       {/* The near ground is out of the light, and falls into cool shade rather than into grey. */}
@@ -400,12 +553,12 @@ export function AerialScene({ className }: { className?: string }) {
         y={HEIGHT * 0.68}
         width={WIDTH}
         height={HEIGHT * 0.32}
-        fill={SHADE_COOL}
-        opacity={0.3}
+        fill={NIGHT}
+        opacity={0.46}
       />
       <radialGradient id="vignette" cx="0.5" cy="0.44" r="0.78">
-        <stop offset="60%" stopColor={SHADE_COOL} stopOpacity="0" />
-        <stop offset="100%" stopColor={SHADE_COOL} stopOpacity="0.72" />
+        <stop offset="50%" stopColor={NIGHT} stopOpacity="0" />
+        <stop offset="100%" stopColor={NIGHT} stopOpacity="0.92" />
       </radialGradient>
       <rect width={WIDTH} height={HEIGHT} fill="url(#vignette)" />
       <rect width={WIDTH} height={HEIGHT} filter="url(#grain)" opacity={0.045} />
