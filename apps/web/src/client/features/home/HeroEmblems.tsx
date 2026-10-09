@@ -88,23 +88,101 @@ function PlotEmblem() {
 }
 
 /**
- * The four, spread across the band.
+ * Towers, drawn as line work rather than as the soft masses in the scene behind them.
+ *
+ * The owners asked for the buildings to read as drawn — "ทำรูปแบบตึกให้เส้นเห็นชัด" — so these
+ * carry an outline, floor lines and a window grid at full stroke, the way an elevation does. The
+ * landscape's own settlements stay soft; these are the drawing laid over it.
+ */
+function TowersEmblem() {
+  const towers = [
+    { x: 6, w: 26, h: 86, floors: 7, mast: true },
+    { x: 38, w: 34, h: 120, floors: 10, mast: false },
+    { x: 78, w: 22, h: 62, floors: 5, mast: false },
+    { x: 106, w: 30, h: 100, floors: 8, mast: true },
+  ];
+  const base = 148;
+
+  return (
+    <svg viewBox="0 0 148 160" className="size-full" aria-hidden="true" focusable="false">
+      <title>อาคารในเมือง</title>
+      <g fill="none" stroke={EMBLEM} strokeWidth={1.4} strokeLinejoin="round">
+        {towers.map((tower) => {
+          const top = base - tower.h;
+          const storey = tower.h / tower.floors;
+          return (
+            <g key={tower.x}>
+              <rect x={tower.x} y={top} width={tower.w} height={tower.h} />
+              {tower.mast && (
+                <line
+                  x1={tower.x + tower.w / 2}
+                  y1={top}
+                  x2={tower.x + tower.w / 2}
+                  y2={top - 12}
+                  strokeLinecap="round"
+                />
+              )}
+              {Array.from({ length: tower.floors - 1 }, (_, i) => (
+                <line
+                  key={`${tower.x}-f${i}`}
+                  x1={tower.x}
+                  y1={top + storey * (i + 1)}
+                  x2={tower.x + tower.w}
+                  y2={top + storey * (i + 1)}
+                  strokeWidth={0.6}
+                  opacity={0.65}
+                />
+              ))}
+              {/* One lit window per floor, which is what a drawn skyline uses to say "occupied". */}
+              {Array.from({ length: tower.floors - 1 }, (_, i) => (
+                <rect
+                  key={`${tower.x}-w${i}`}
+                  x={tower.x + (i % 2 === 0 ? 5 : tower.w - 11)}
+                  y={top + storey * (i + 1) - storey * 0.62}
+                  width={6}
+                  height={storey * 0.4}
+                  strokeWidth={0.6}
+                  opacity={0.8}
+                />
+              ))}
+            </g>
+          );
+        })}
+        <line x1={0} y1={base} x2={148} y2={base} strokeWidth={1.1} />
+      </g>
+    </svg>
+  );
+}
+
+/**
+ * The emblems, spread across the band.
  *
  * Sizes and vertical offsets differ on purpose: a row of four identical boxes reads as a toolbar,
  * and this is meant to read as things lying on the ground at different distances.
  */
 const EMBLEMS = [
-  { key: "map", Emblem: ThailandEmblem, className: "left-[3%] bottom-2 h-[15rem] w-[10rem]" },
-  { key: "globe", Emblem: GlobeEmblem, className: "left-[24%] bottom-20 size-28" },
-  { key: "plot", Emblem: PlotEmblem, className: "right-[7%] bottom-20 size-36" },
-  { key: "pin", Emblem: PinEmblem, className: "right-[30%] bottom-4 size-24" },
+  {
+    key: "map",
+    Emblem: ThailandEmblem,
+    className: "left-[2%] bottom-2 h-[15rem] w-[10rem]",
+    opacity: 0.3,
+  },
+  { key: "globe", Emblem: GlobeEmblem, className: "left-[22%] bottom-24 size-24", opacity: 0.3 },
+  {
+    key: "towers",
+    Emblem: TowersEmblem,
+    className: "left-[36%] bottom-0 h-[11rem] w-[10rem]",
+    opacity: 0.42,
+  },
+  { key: "pin", Emblem: PinEmblem, className: "right-[26%] bottom-6 size-24", opacity: 0.3 },
+  { key: "plot", Emblem: PlotEmblem, className: "right-[5%] bottom-20 size-36", opacity: 0.3 },
 ] as const;
 
 export function HeroEmblems({ className }: { className?: string }) {
   return (
     <div aria-hidden="true" className={`pointer-events-none ${className ?? ""}`}>
-      {EMBLEMS.map(({ key, Emblem, className: place }) => (
-        <div key={key} className={`absolute ${place} opacity-[0.32]`}>
+      {EMBLEMS.map(({ key, Emblem, className: place, opacity }) => (
+        <div key={key} className={`absolute ${place}`} style={{ opacity }}>
           <Emblem />
         </div>
       ))}

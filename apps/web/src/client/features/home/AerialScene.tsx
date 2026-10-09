@@ -28,11 +28,14 @@
 const SUN_CORE = "#ffeec4";
 const SUN_WARM = "#f0b45e";
 /**
- * The aurora over the hills — the one cool thing in a warm scene, and what the owners picked the
- * picture for. Teal into green, laid across the sky in soft bands well above the ridgeline.
+ * The aurora over the hills, laid across the sky in soft bands well above the ridgeline.
+ *
+ * Teal into blue, not teal into green. The first pass went green enough that the sky stopped
+ * belonging to the rest of the product, which is blue everywhere else; the owners asked for the
+ * green pulled back and the theme's own colour put in its place.
  */
-const AURORA_TEAL = "#2fd9c5";
-const AURORA_GREEN = "#43e08a";
+const AURORA_TEAL = "#1f9fb8";
+const AURORA_GREEN = "#2b6fd4";
 /**
  * The sky overhead, the far side of every ridge, and the ground nearest the viewer — everything
  * well out of the light.
@@ -280,9 +283,9 @@ export function AerialScene({ className }: { className?: string }) {
       <defs>
         {/* Cool overhead, warming as it falls toward the light behind the hills. */}
         <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={NIGHT} stopOpacity="0.97" />
-          <stop offset="36%" stopColor="var(--grad-deep-to)" stopOpacity="0.84" />
-          <stop offset="68%" stopColor="var(--grad-deep-via)" stopOpacity="0.42" />
+          <stop offset="0%" stopColor={NIGHT} stopOpacity="0.99" />
+          <stop offset="36%" stopColor={NIGHT} stopOpacity="0.9" />
+          <stop offset="68%" stopColor="var(--grad-deep-to)" stopOpacity="0.6" />
           <stop offset="90%" stopColor={SUN_WARM} stopOpacity="0.16" />
           <stop offset="100%" stopColor={SUN_WARM} stopOpacity="0.07" />
         </linearGradient>
@@ -351,12 +354,12 @@ export function AerialScene({ className }: { className?: string }) {
             light its folds. */}
         <linearGradient id="aurora-a" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={AURORA_TEAL} stopOpacity="0" />
-          <stop offset="45%" stopColor={AURORA_TEAL} stopOpacity="0.9" />
+          <stop offset="45%" stopColor={AURORA_TEAL} stopOpacity="0.55" />
           <stop offset="100%" stopColor={AURORA_GREEN} stopOpacity="0" />
         </linearGradient>
         <linearGradient id="aurora-b" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={AURORA_GREEN} stopOpacity="0" />
-          <stop offset="55%" stopColor={AURORA_GREEN} stopOpacity="0.72" />
+          <stop offset="55%" stopColor={AURORA_GREEN} stopOpacity="0.5" />
           <stop offset="100%" stopColor={AURORA_TEAL} stopOpacity="0" />
         </linearGradient>
         <filter id="aurora-blur" x="-30%" y="-80%" width="160%" height="300%">
@@ -446,7 +449,7 @@ export function AerialScene({ className }: { className?: string }) {
         places where they cross are what look like folds. Blurred hard and kept faint — it is
         weather in the sky, not a light source, and the sun below it still sets the scene's key.
       */}
-      <g filter="url(#aurora-blur)" opacity={0.95}>
+      <g filter="url(#aurora-blur)" opacity={0.7}>
         <path
           d="M -80 232 C 240 120, 520 300, 760 196 S 1240 120, 1520 250 L 1520 400 C 1240 300, 980 420, 740 352 S 220 300, -80 392 Z"
           fill="url(#aurora-a)"
@@ -589,7 +592,7 @@ export function AerialScene({ className }: { className?: string }) {
         width={WIDTH + 80}
         height={74}
         fill={SUN_WARM}
-        opacity={0.12}
+        opacity={0.09}
         filter="url(#haze)"
       />
       {/* The near ground is out of the light, and falls into cool shade rather than into grey. */}
