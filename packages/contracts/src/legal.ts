@@ -172,6 +172,17 @@ export interface ConceptUnderTest {
   readonly characteristics: Readonly<Record<string, string>>;
   /** Measured facts, as decimal strings keyed by input_id. */
   readonly inputs: Readonly<Record<string, string>>;
+  /**
+   * What the reader says they intend to build, as decimal strings keyed by input_id
+   * (docs/adr/0010).
+   *
+   * Kept apart from `inputs` because it is a plan, not a measurement. It may decide which rules
+   * reach this concept — a setback clause for buildings over two storeys does not apply to a
+   * bungalow — and it may never decide whether a rule is met. Nobody has drawn this building, so
+   * no figure about it can settle compliance, and a PASS built on an estimate is the kind of
+   * answer this product exists not to give.
+   */
+  readonly intended?: Readonly<Record<string, string>>;
 }
 
 export interface RuleOutcome {

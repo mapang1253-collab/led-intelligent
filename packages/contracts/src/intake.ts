@@ -45,6 +45,19 @@ export const propertyIntakeSchema = z.object({
   near_large_water_body: z.coerce.boolean().optional(),
 
   /**
+   * The scale of the building the reader has in mind (docs/adr/0010).
+   *
+   * Not a site fact and not a measurement — a plan, and the only thing here that describes
+   * something which does not exist. It is carried separately all the way to the validator, where
+   * it may decide which rules reach the reader and may never decide whether one is satisfied.
+   *
+   * Bounds are sanity bounds, not law: the tallest building in Thailand is about 318 m, and a
+   * figure past these is a typo rather than an intention.
+   */
+  intended_storey_count: z.coerce.number().int().positive().max(200).optional(),
+  intended_building_height: z.coerce.number().positive().max(500).optional(),
+
+  /**
    * Where the reader says the land is, placed by hand on a map (docs/adr/0006).
    *
    * USER_ASSERTED like every other optional field: the system does not verify the pin and it

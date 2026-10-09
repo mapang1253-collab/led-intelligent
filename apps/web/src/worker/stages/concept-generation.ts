@@ -82,11 +82,34 @@ export function siteInputs(intake: Record<string, unknown>): Record<string, stri
   return inputs;
 }
 
+/**
+ * What the reader says they mean to build, kept apart from what they measured (docs/adr/0010).
+ *
+ * These two settle the applicability of the setback clauses at mr55.c41.2.x, whose own notes say
+ * they cannot be ruled out while the height and the storey count are unknown. They reach the
+ * validator under `intended`, never under `inputs`, so they can scope a rule and can never answer
+ * one.
+ */
+export function intendedInputs(intake: Record<string, unknown>): Record<string, string> {
+  const intended: Record<string, string> = {};
+  for (const [key, inputId] of [
+    ["intended_storey_count", "storey_count"],
+    ["intended_building_height", "building_height"],
+  ] as const) {
+    const value = intake[key];
+    if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+      intended[inputId] = String(value);
+    }
+  }
+  return intended;
+}
+
 /** A proposed concept, reduced to what the legal screen can act on. Nothing is invented here. */
 export function conceptUnderTest(
   concept: PotentialUseConcept,
   site: Record<string, string> = {},
   characteristics: Record<string, string> = {},
+  intended: Record<string, string> = {},
 ): ConceptUnderTest {
   return {
     concept_id: concept.concept_id,
@@ -97,6 +120,8 @@ export function conceptUnderTest(
     // report UNKNOWN and name what is missing. Where a site fact makes a threshold computable, the
     // outcome still states what the rule requires of this land.
     inputs: site,
+    // A plan, not a measurement: it scopes rules and never answers them (docs/adr/0010).
+    ...(Object.keys(intended).length > 0 ? { intended } : {}),
   };
 }
 
@@ -198,10 +223,11 @@ export async function runConceptGeneration(input: ConceptStageInput): Promise<Co
   }
 
   const site = siteInputs(input.intake);
+  const intended = intendedInputs(input.intake);
   const characteristics =
     input.intake.near_large_water_body === true ? { near_large_water_body: "true" } : {};
   const validations = proposal.concepts.map((concept) =>
-    validateLegal(input.pack, conceptUnderTest(concept, site, characteristics), {
+    validateLegal(input.pack, conceptUnderTest(concept, site, characteristics, intended), {
       area_codes: input.areaCodes,
       effective_on: input.effectiveOn,
     }),

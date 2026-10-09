@@ -488,3 +488,150 @@ describe("unresolved applicability names the fact that would settle it", () => {
     expect(result.unresolved_inputs).toEqual([]);
   });
 });
+
+/**
+ * docs/adr/0010 — the reader's own account of what they mean to build decides which rules reach
+ * them, and nothing else. These tests are the fence: the first two show it doing its job, the last
+ * two show it refusing to do the job it must never do.
+ */
+describe("stated intent scopes rules without deciding them", () => {
+  /** A setback clause that bites only on buildings over two storeys, as mr55.c41.2.x do. */
+  const tallBuildingsOnly = rule({
+    rule_id: "rule.setback",
+    applicability: {
+      activity_ids: [],
+      required_characteristics: [],
+      note_th: "ใช้กับอาคารที่สูงเกินสองชั้น",
+      any_of: [
+        {
+          kind: "MEASUREMENT",
+          predicate: {
+            kind: "NUMERIC",
+            input_id: "storey_count",
+            op: "gt",
+            value: "2",
+            unit: "ชั้น",
+          },
+        },
+      ],
+    },
+    inputs: [
+      {
+        input_id: "storey_count",
+        label_th: "จำนวนชั้นของอาคาร",
+        unit: "ชั้น",
+        obtained_from_th: "แบบสถาปัตยกรรม",
+      },
+      {
+        input_id: "setback_from_road_boundary",
+        label_th: "ระยะร่นแนวอาคารจากเขตถนน",
+        unit: "เมตร",
+        obtained_from_th: "แบบผังบริเวณ",
+      },
+    ],
+    predicate: {
+      kind: "NUMERIC",
+      input_id: "setback_from_road_boundary",
+      op: "gte",
+      value: "2",
+      unit: "เมตร",
+    },
+  });
+
+  it("leaves the clause unresolved while nobody has said how big the building is", () => {
+    const [outcome] = validateLegal(
+      pack([tallBuildingsOnly]),
+      concept({ inputs: {} }),
+      TARGET,
+    ).outcomes;
+    expect(outcome?.applicability).toBe("UNRESOLVED");
+  });
+
+  it("rules the clause in when the reader says they are thinking of four storeys", () => {
+    const [outcome] = validateLegal(
+      pack([tallBuildingsOnly]),
+      concept({ inputs: {}, intended: { storey_count: "4" } }),
+      TARGET,
+    ).outcomes;
+    expect(outcome?.applicability).toBe("APPLICABLE");
+    // Applicable, and still unanswerable: the building has not been drawn, let alone measured.
+    expect(outcome?.status).toBe("UNKNOWN");
+    expect(outcome?.missing_inputs.map((input) => input.input_id)).toEqual([
+      "setback_from_road_boundary",
+    ]);
+  });
+
+  it("rules it out when the reader says two storeys, which is what the clause says to do", () => {
+    const [outcome] = validateLegal(
+      pack([tallBuildingsOnly]),
+      concept({ inputs: {}, intended: { storey_count: "2" } }),
+      TARGET,
+    ).outcomes;
+    expect(outcome?.applicability).toBe("NOT_APPLICABLE");
+  });
+
+  it("never lets a stated figure answer the rule's own test", () => {
+    // The reader states the very measurement the predicate reads. It must not count.
+    const [outcome] = validateLegal(
+      pack([tallBuildingsOnly]),
+      concept({
+        inputs: {},
+        intended: { storey_count: "4", setback_from_road_boundary: "12" },
+      }),
+      TARGET,
+    ).outcomes;
+    expect(outcome?.applicability).toBe("APPLICABLE");
+    expect(outcome?.status).toBe("UNKNOWN");
+    expect(outcome?.status).not.toBe("PASS");
+  });
+
+  it("never lets a stated figure produce a FAIL either", () => {
+    const [outcome] = validateLegal(
+      pack([tallBuildingsOnly]),
+      concept({ inputs: {}, intended: { storey_count: "4", setback_from_road_boundary: "0.1" } }),
+      TARGET,
+    ).outcomes;
+    expect(outcome?.status).toBe("UNKNOWN");
+  });
+
+  it("states the requirement from measurements only, never from the plan", () => {
+    const ratio = rule({
+      rule_id: "rule.ratio",
+      applicability: { activity_ids: [], required_characteristics: [], note_th: "" },
+      inputs: [
+        {
+          input_id: "road_width",
+          label_th: "ความกว้างถนน",
+          unit: "เมตร",
+          obtained_from_th: "วัดหน้างาน",
+        },
+        {
+          input_id: "setback_from_road_boundary",
+          label_th: "ระยะร่นแนวอาคารจากเขตถนน",
+          unit: "เมตร",
+          obtained_from_th: "แบบผังบริเวณ",
+        },
+      ],
+      predicate: {
+        kind: "RATIO",
+        numerator_input_id: "setback_from_road_boundary",
+        denominator_input_id: "road_width",
+        op: "gte",
+        value: "0.10",
+      },
+    });
+
+    // Stated as intent, the road width must not become the basis of a stated requirement.
+    const planned = validateLegal(
+      pack([ratio]),
+      concept({ inputs: {}, intended: { road_width: "20" } }),
+      TARGET,
+    ).outcomes[0];
+    expect(planned?.requirement_th).toBeNull();
+
+    // Measured, it may.
+    const measured = validateLegal(pack([ratio]), concept({ inputs: { road_width: "20" } }), TARGET)
+      .outcomes[0];
+    expect(measured?.requirement_th).toContain("2 เมตร");
+  });
+});

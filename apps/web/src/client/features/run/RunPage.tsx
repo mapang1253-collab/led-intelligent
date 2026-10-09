@@ -136,6 +136,11 @@ function StageRow({ record }: { record: StageRecord }) {
   );
 }
 
+/** An intake value as a number, or null — the field is optional and arrives as JSON. */
+function numberOrNull(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
+}
+
 export function RunPage() {
   const { runId } = useParams();
   const location = useLocation();
@@ -378,6 +383,12 @@ export function RunPage() {
             concepts={envelope?.partial_artifacts?.concepts}
             stageReason={conceptStage?.reason}
             mode={envelope?.partial_artifacts?.candidate_search?.mode}
+            // Read back from the run's own intake, so the screen can name the figures that
+            // decided which rules were listed (docs/adr/0010).
+            statedScale={{
+              storeys: numberOrNull(intake?.intended_storey_count),
+              heightMetres: numberOrNull(intake?.intended_building_height),
+            }}
           />
         </>
       ),

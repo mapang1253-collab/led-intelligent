@@ -82,6 +82,17 @@ function applicabilityFor(
 ): { applicability: Applicability; unresolvedInputIds: readonly string[] } {
   const settled = (applicability: Applicability) => ({ applicability, unresolvedInputIds: [] });
 
+  /*
+    Scope may read what the reader intends to build; the verdict may not (docs/adr/0010).
+
+    "Does a clause about buildings over two storeys reach me?" is answered by the plan — and the
+    pack says so itself, noting on each of those clauses that without a height or a storey count
+    they cannot be ruled out. "Do I keep the distance it demands?" is answered only by measuring
+    a building that does not exist yet. Merging the two maps here, and here alone, is what keeps
+    an estimate from ever becoming a PASS.
+  */
+  const scopeFacts = { ...concept.inputs, ...(concept.intended ?? {}) };
+
   if (
     rule.applicability.activity_ids.length > 0 &&
     !rule.applicability.activity_ids.some((id) => concept.activity_ids.includes(id))
@@ -114,7 +125,7 @@ function applicabilityFor(
         }
         continue;
       }
-      const evaluation = evaluatePredicate(option.predicate, concept.inputs);
+      const evaluation = evaluatePredicate(option.predicate, scopeFacts);
       if (evaluation.status === "UNKNOWN") {
         undetermined.push(...predicateInputs(option.predicate));
       } else if (evaluation.status === "PASS") {
@@ -132,7 +143,7 @@ function applicabilityFor(
   }
 
   for (const condition of rule.applicability.conditions ?? []) {
-    const evaluation = evaluatePredicate(condition, concept.inputs);
+    const evaluation = evaluatePredicate(condition, scopeFacts);
     if (evaluation.status === "UNKNOWN") {
       // The band this clause applies to cannot be determined, so the clause cannot be ruled out.
       return { applicability: "UNRESOLVED", unresolvedInputIds: predicateInputs(condition) };

@@ -97,9 +97,33 @@ function CardSection({ title, children }: { title: string; children: React.React
  * The order changed, not the content — and no order is implied between concepts, which remain
  * unranked for the reason the panel's own comment gives.
  */
-function ConceptCardView({ concept }: { concept: ConceptCard }) {
+export interface StatedScale {
+  readonly storeys: number | null;
+  readonly heightMetres: number | null;
+}
+
+/** The reader's stated scale as one short line, or null when they stated nothing. */
+function statedScaleText(scale: StatedScale | undefined): string | null {
+  if (!scale) {
+    return null;
+  }
+  const parts: string[] = [];
+  if (scale.storeys !== null) {
+    parts.push(`${scale.storeys.toLocaleString("th-TH")} ${th.concepts.statedScaleStorey}`);
+  }
+  if (scale.heightMetres !== null) {
+    parts.push(`${scale.heightMetres.toLocaleString("th-TH")} ${th.concepts.statedScaleHeight}`);
+  }
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
+function ConceptCardView({
+  concept,
+  statedScale,
+}: { concept: ConceptCard; statedScale?: StatedScale }) {
   const [open, setOpen] = useState(false);
   const missingGroups = groupMissingInputs(concept.legal?.outcomes ?? []);
+  const stated = statedScaleText(statedScale);
   return (
     <article className="mt-4 rounded-card bg-surface-sunken p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -156,6 +180,28 @@ function ConceptCardView({ concept }: { concept: ConceptCard }) {
               {concept.legal.approval_required
                 .map((item) => `${item.title_th} (${item.clause_th})`)
                 .join(", ")}
+            </p>
+          )}
+
+          {/*
+            Provenance for the scale, where the reader supplied one (docs/adr/0010).
+
+            Which rules appear below depends on it, so the figures that decided that have to be
+            on the screen beside them — and named as the reader's own intention, not as something
+            measured, or the list would read as a finding about the land.
+
+            Above the checklist, not below it, because of the question it answers. A reader who
+            has just typed "14 เมตร" and then reads "ความสูงอาคาร" in a list of things still
+            needed will ask why they are being asked twice; the answer is that a figure they
+            stated can choose which rules apply and cannot settle one, and they should have it
+            before the list rather than after.
+          */}
+          {stated !== null && (
+            <p className="mt-2 text-ink-muted text-xs leading-relaxed">
+              <span className="font-medium text-ink">
+                {th.concepts.statedScaleLabel} ({stated})
+              </span>{" "}
+              {th.concepts.statedScaleNote}
             </p>
           )}
 
@@ -226,10 +272,13 @@ export function ConceptPanel({
   concepts,
   stageReason,
   mode,
+  statedScale,
 }: {
   concepts: readonly ConceptCard[] | undefined;
   stageReason: string | undefined;
   mode: string | undefined;
+  /** What the reader said they mean to build, if anything (docs/adr/0010). */
+  statedScale?: StatedScale;
 }) {
   if (!concepts || concepts.length === 0) {
     const message = stageReason ? FAILURE_LABELS[stageReason] : undefined;
@@ -271,7 +320,11 @@ export function ConceptPanel({
       </p>
 
       {concepts.map((concept) => (
-        <ConceptCardView key={concept.concept_id} concept={concept} />
+        <ConceptCardView
+          key={concept.concept_id}
+          concept={concept}
+          {...(statedScale ? { statedScale } : {})}
+        />
       ))}
     </section>
   );

@@ -44,6 +44,15 @@ import { useAreaCentre } from "./useAreaCentre.js";
 interface SiteFields {
   road_width: string;
   water_body_width: string;
+  /**
+   * What the reader means to build (docs/adr/0010).
+   *
+   * In the same panel as the two measurements because they answer the same screen, and under
+   * their own heading because they are a different kind of thing: these describe a building that
+   * does not exist. They narrow which rules apply and never decide whether one is met.
+   */
+  intended_storey_count: string;
+  intended_building_height: string;
 }
 
 /**
@@ -122,6 +131,8 @@ export function PropertyIntakeForm() {
   const [site, setSite] = useState<SiteFields>(() => ({
     road_width: asField(prefill.road_width),
     water_body_width: asField(prefill.water_body_width),
+    intended_storey_count: asField(prefill.intended_storey_count),
+    intended_building_height: asField(prefill.intended_building_height),
   }));
   const [nearLargeWater, setNearLargeWater] = useState(
     () => prefill.near_large_water_body === true,
@@ -471,7 +482,7 @@ export function PropertyIntakeForm() {
                 th.intake.siteToggle,
                 th.intake.siteCardHint,
                 Ruler,
-                site.road_width !== "" || site.water_body_width !== "" || nearLargeWater,
+                Object.values(site).some((value) => value !== "") || nearLargeWater,
               ],
               [
                 showArea,
@@ -561,6 +572,47 @@ export function PropertyIntakeForm() {
                 />
                 {th.intake.nearLargeWaterLabel}
               </label>
+
+              {/* Separated from the measurements above by a rule and a heading, because the
+                  difference between the two is the whole of docs/adr/0010. */}
+              <div className="mt-5 border-border border-t pt-4">
+                <p className="font-semibold text-sm">{th.intake.intendedHeading}</p>
+                <p className="mt-1 max-w-prose text-ink-muted text-xs leading-relaxed">
+                  {th.intake.intendedHelp}
+                </p>
+                <div className="mt-3 grid gap-4 md:grid-cols-2">
+                  {(
+                    [
+                      [
+                        "intended_storey_count",
+                        th.intake.intendedStoreyLabel,
+                        th.intake.intendedStoreyHelp,
+                        "1",
+                      ],
+                      [
+                        "intended_building_height",
+                        th.intake.intendedHeightLabel,
+                        th.intake.intendedHeightHelp,
+                        "any",
+                      ],
+                    ] as const
+                  ).map(([key, label, help, step]) => (
+                    <label key={key} className="flex flex-col gap-1.5">
+                      <span className="font-medium text-sm">{label}</span>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        min={0}
+                        step={step}
+                        value={site[key]}
+                        onChange={(e) => setSite((s) => ({ ...s, [key]: e.target.value }))}
+                        className="rounded-card border border-border-strong bg-surface px-4 py-3 text-base text-ink"
+                      />
+                      <span className="text-ink-muted text-xs">{help}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>
