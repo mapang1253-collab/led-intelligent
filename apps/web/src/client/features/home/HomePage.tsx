@@ -38,6 +38,16 @@ const num = (value: number) => value.toLocaleString("th-TH");
  * the link you can follow. Gold here is scenery: the emblems, the hairline on a card, the ring
  * round a data node. Keeping them apart is what stops the decoration from looking clickable.
  */
+/**
+ * The scene's own fade-out at the foot of the hero.
+ *
+ * Five stops rather than three. A long ramp between two values is where a browser's eight-bit
+ * gradient steps widely enough to draw rings, and a mask bands exactly as a fill does — the
+ * owners could see it as blocky layering. Shortening each step is the whole fix.
+ */
+const MASK =
+  "linear-gradient(to bottom, #000 58%, rgba(0,0,0,0.76) 72%, rgba(0,0,0,0.45) 84%, rgba(0,0,0,0.18) 93%, transparent 100%)";
+
 const GOLD = "#e8c89a";
 const GOLD_LINE = "rgba(232, 200, 154, 0.38)";
 
@@ -169,10 +179,8 @@ export function HomePage() {
               opaque floor; the owners looked at it and asked for exactly this, so it stays, and
               the floor is not coming.
             */
-            maskImage:
-              "linear-gradient(to bottom, #000 58%, rgba(0,0,0,0.45) 84%, transparent 100%)",
-            WebkitMaskImage:
-              "linear-gradient(to bottom, #000 58%, rgba(0,0,0,0.45) 84%, transparent 100%)",
+            maskImage: MASK,
+            WebkitMaskImage: MASK,
           }}
         >
           <AerialScene className="size-full" />

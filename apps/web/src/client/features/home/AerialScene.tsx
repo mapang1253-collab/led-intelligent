@@ -285,8 +285,11 @@ export function AerialScene({ className }: { className?: string }) {
         {/* Cool overhead, warming as it falls toward the light behind the hills. */}
         <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={NIGHT} stopOpacity="0.99" />
+          <stop offset="18%" stopColor={NIGHT} stopOpacity="0.96" />
           <stop offset="36%" stopColor={NIGHT} stopOpacity="0.9" />
+          <stop offset="52%" stopColor="var(--grad-deep-to)" stopOpacity="0.78" />
           <stop offset="68%" stopColor="var(--grad-deep-to)" stopOpacity="0.6" />
+          <stop offset="80%" stopColor="var(--grad-deep-via)" stopOpacity="0.34" />
           <stop offset="90%" stopColor={SUN_WARM} stopOpacity="0.16" />
           <stop offset="100%" stopColor={SUN_WARM} stopOpacity="0.07" />
         </linearGradient>
@@ -338,8 +341,11 @@ export function AerialScene({ className }: { className?: string }) {
           */}
           <stop offset="0%" stopColor="var(--grad-deep-to)" stopOpacity="0" />
           <stop offset="9%" stopColor={SUN_WARM} stopOpacity="0.06" />
+          <stop offset="17%" stopColor="var(--grad-deep-to)" stopOpacity="0.38" />
           <stop offset="24%" stopColor="var(--grad-deep-to)" stopOpacity="0.68" />
+          <stop offset="36%" stopColor="var(--grad-deep-to)" stopOpacity="0.82" />
           <stop offset="52%" stopColor={NIGHT} stopOpacity="0.9" />
+          <stop offset="74%" stopColor={NIGHT} stopOpacity="0.95" />
           <stop offset="100%" stopColor={NIGHT} stopOpacity="0.98" />
         </linearGradient>
 
@@ -415,8 +421,17 @@ export function AerialScene({ className }: { className?: string }) {
         `}</style>
 
         {/* A breath of grain over everything, so the gradients do not band on a wide screen. */}
+        {/*
+          Dither, not texture.
+
+          Banding happens because two neighbouring shades of a gradient round to the same byte
+          until they suddenly do not. A fine monochrome noise laid over the whole frame pushes
+          pixels across that boundary at random, and the eye reads the average — the same trick a
+          printer uses. High frequency and one octave: any coarser and it stops dithering and
+          starts being visible as grain.
+        */}
         <filter id="grain">
-          <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" seed="7" />
+          <feTurbulence type="fractalNoise" baseFrequency="0.95" numOctaves="1" seed="7" />
           <feColorMatrix type="saturate" values="0" />
         </filter>
       </defs>
@@ -633,21 +648,38 @@ export function AerialScene({ className }: { className?: string }) {
         opacity={0.09}
         filter="url(#haze)"
       />
-      {/* The near ground is out of the light, and falls into cool shade rather than into grey. */}
-      <rect
-        x={0}
-        y={HEIGHT * 0.68}
-        width={WIDTH}
-        height={HEIGHT * 0.32}
-        fill={NIGHT}
-        opacity={0.46}
-      />
-      <radialGradient id="vignette" cx="0.5" cy="0.44" r="0.78">
-        <stop offset="50%" stopColor={NIGHT} stopOpacity="0" />
-        <stop offset="100%" stopColor={NIGHT} stopOpacity="0.92" />
+      {/*
+        The near ground falls out of the light — as a gradient, not as a panel.
+
+        This was a flat rect at 0.46 starting two-thirds down, which is to say a hard horizontal
+        edge with one tone under it: the blocky layering the owners could see. A gradient has no
+        edge to find.
+      */}
+      <linearGradient id="foreground" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor={NIGHT} stopOpacity="0" />
+        <stop offset="22%" stopColor={NIGHT} stopOpacity="0.09" />
+        <stop offset="48%" stopColor={NIGHT} stopOpacity="0.24" />
+        <stop offset="74%" stopColor={NIGHT} stopOpacity="0.4" />
+        <stop offset="100%" stopColor={NIGHT} stopOpacity="0.52" />
+      </linearGradient>
+      <rect x={0} y={HEIGHT * 0.5} width={WIDTH} height={HEIGHT * 0.5} fill="url(#foreground)" />
+
+      {/*
+        The vignette, eased rather than ramped.
+
+        Two stops across a huge radius is where 8-bit colour bands worst: the step between
+        adjacent shades is wider than the eye's threshold, so it draws rings. Intermediate stops
+        shorten every step, and the grain over the top dithers what is left.
+      */}
+      <radialGradient id="vignette" cx="0.5" cy="0.44" r="0.82">
+        <stop offset="42%" stopColor={NIGHT} stopOpacity="0" />
+        <stop offset="60%" stopColor={NIGHT} stopOpacity="0.14" />
+        <stop offset="74%" stopColor={NIGHT} stopOpacity="0.36" />
+        <stop offset="87%" stopColor={NIGHT} stopOpacity="0.64" />
+        <stop offset="100%" stopColor={NIGHT} stopOpacity="0.9" />
       </radialGradient>
       <rect width={WIDTH} height={HEIGHT} fill="url(#vignette)" />
-      <rect width={WIDTH} height={HEIGHT} filter="url(#grain)" opacity={0.045} />
+      <rect width={WIDTH} height={HEIGHT} filter="url(#grain)" opacity={0.075} />
     </svg>
   );
 }
