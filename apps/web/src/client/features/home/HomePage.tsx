@@ -29,12 +29,21 @@ import { useSystemFigures } from "./useSystemFigures.js";
 
 const num = (value: number) => value.toLocaleString("th-TH");
 
-/** A figure pinned to the scene, the way this product pins evidence to a place. */
+/**
+ * A figure pinned to the scene, the way this product pins evidence to a place.
+ *
+ * `ready` is not decoration. These counts come from the database, and the slowest of them took
+ * about ten seconds on the deployed site — during which the card stated "0 รายการข้อมูล", which is
+ * not a figure that is loading, it is a false statement about the system. Until the number is
+ * known the card shows a bar where it will be.
+ */
 function Callout({
+  ready,
   value,
   label,
   className,
 }: {
+  ready: boolean;
   value: string;
   label: string;
   className: string;
@@ -42,7 +51,14 @@ function Callout({
   return (
     <div className={`pointer-events-none absolute hidden lg:block ${className}`}>
       <div className="glass rounded-card px-3.5 py-2.5 shadow-[0_18px_40px_-24px_rgba(0,0,0,0.8)]">
-        <p className="font-bold text-base tabular-nums leading-none tracking-tight">{value}</p>
+        {ready ? (
+          <p className="font-bold text-base tabular-nums leading-none tracking-tight">{value}</p>
+        ) : (
+          <p
+            className="h-4 w-28 animate-pulse rounded-pill"
+            style={{ backgroundColor: "var(--color-border-strong)" }}
+          />
+        )}
         <p className="mt-1 text-ink-muted text-xs">{label}</p>
       </div>
       {/* The leader line and its point, as a survey drawing marks the thing it is describing. */}
@@ -181,16 +197,23 @@ export function HomePage() {
           <div className="relative mt-16 hidden h-44 lg:block">
             <Callout
               className="top-0 left-[4%]"
+              ready={figures.provinces > 0}
               value={th.landing.coverageProvinces.replace("{n}", num(figures.provinces))}
               label={th.landing.coverageProvincesNote}
             />
             <Callout
               className="top-16 left-[37%]"
+              ready={figures.observations > 0}
               value={th.landing.coverageObservations.replace("{n}", num(figures.observations))}
-              label={th.home.calloutSources.replace("{n}", num(figures.activeSources.length))}
+              label={
+                figures.activeSources.length > 0
+                  ? th.home.calloutSources.replace("{n}", num(figures.activeSources.length))
+                  : th.home.calloutSourcesPending
+              }
             />
             <Callout
               className="top-2 right-[5%]"
+              ready={figures.searchableProvinces > 0}
               value={th.landing.coverageParcels.replace("{n}", num(figures.searchableProvinces))}
               label={th.landing.coverageParcelsNote}
             />
