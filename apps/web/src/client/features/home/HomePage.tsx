@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router";
 import { AerialScene } from "./AerialScene.js";
+import { HeroEmblems } from "./HeroEmblems.js";
 import { LandingSections } from "./LandingSections.js";
 import { useSystemFigures } from "./useSystemFigures.js";
 
@@ -169,6 +170,11 @@ export function HomePage() {
               "radial-gradient(56% 42% at 50% 30%, color-mix(in srgb, var(--terrain-base) 72%, transparent) 0%, color-mix(in srgb, var(--terrain-base) 38%, transparent) 52%, transparent 82%)",
           }}
         />
+
+        {/* The band the owners circled: the country, a globe, a pin and a plot, lying across the
+            foot of the hero behind the figures. Hidden below `lg`, where there is no room for
+            them beside the words. */}
+        <HeroEmblems className="absolute inset-x-0 bottom-14 hidden h-72 lg:block" />
 
         <div className="relative mx-auto max-w-5xl">
           <div className="mx-auto max-w-2xl text-center">
