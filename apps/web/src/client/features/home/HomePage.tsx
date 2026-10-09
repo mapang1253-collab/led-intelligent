@@ -179,7 +179,19 @@ export function HomePage() {
             <h1 className="mt-6 font-bold text-4xl leading-[1.15] tracking-tight md:text-6xl">
               {th.app.headlineLead}
               <br />
-              <span className="headline-gradient">{th.app.headlineAnswer}</span>
+              {/* Gold here and nowhere else. The product's own signature stays blue; this line is
+                  the one the owners picked out of the reference, and it is lit by the same sun
+                  that lights the scene behind it. */}
+              <span
+                style={{
+                  background: "linear-gradient(100deg, #ffeec4, #f0b45e 48%, #e2a04a)",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  color: "transparent",
+                }}
+              >
+                {th.app.headlineAnswer}
+              </span>
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-base text-ink-muted leading-relaxed">
               {th.home.heroLead}
@@ -204,6 +216,36 @@ export function HomePage() {
                 {th.home.heroSecondary}
               </a>
             </div>
+
+            {/* Three short promises in a row beneath the buttons, each one the product can keep
+                today: where the figures come from, how far they reach, and what it asks of the
+                reader in return — which is nothing. */}
+            <ul className="mt-10 flex flex-wrap items-start justify-center gap-x-10 gap-y-5">
+              {(
+                [
+                  [Database, th.home.badge1Title, th.home.badge1Body],
+                  [MapPinned, th.home.badge2Title, th.home.badge2Body],
+                  [ShieldCheck, th.home.badge3Title, th.home.badge3Body],
+                ] as const
+              ).map(([Icon, title, body]) => (
+                <li key={title} className="flex items-center gap-2.5 text-left">
+                  <span
+                    className="flex size-9 shrink-0 items-center justify-center rounded-card"
+                    style={{
+                      backgroundColor: "rgba(255,255,255,0.08)",
+                      color: "#f0d9a8",
+                      border: "1px solid rgba(255,255,255,0.14)",
+                    }}
+                  >
+                    <Icon size={17} aria-hidden="true" />
+                  </span>
+                  <span>
+                    <span className="block font-semibold text-xs tracking-wide">{title}</span>
+                    <span className="block text-ink-muted text-xs">{body}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* The counts, pinned onto the ground they describe. Hidden below `lg`, where there is

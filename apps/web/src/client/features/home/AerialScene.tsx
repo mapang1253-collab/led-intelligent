@@ -25,8 +25,14 @@
  * the sun in this picture, nothing else: in particular they are not `--color-partial`, which is
  * amber because PARTIAL means something in this product and must not be spent on scenery.
  */
-const SUN_CORE = "#fff4de";
-const SUN_WARM = "#ffcf96";
+const SUN_CORE = "#ffeec4";
+const SUN_WARM = "#f0b45e";
+/**
+ * The aurora over the hills — the one cool thing in a warm scene, and what the owners picked the
+ * picture for. Teal into green, laid across the sky in soft bands well above the ridgeline.
+ */
+const AURORA_TEAL = "#2fd9c5";
+const AURORA_GREEN = "#43e08a";
 /**
  * The sky overhead, the far side of every ridge, and the ground nearest the viewer — everything
  * well out of the light.
@@ -341,6 +347,22 @@ export function AerialScene({ className }: { className?: string }) {
           <feGaussianBlur stdDeviation="16" />
         </filter>
 
+        {/* Each band is its own soft brush stroke; three of them overlapping is what gives the
+            light its folds. */}
+        <linearGradient id="aurora-a" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={AURORA_TEAL} stopOpacity="0" />
+          <stop offset="45%" stopColor={AURORA_TEAL} stopOpacity="0.9" />
+          <stop offset="100%" stopColor={AURORA_GREEN} stopOpacity="0" />
+        </linearGradient>
+        <linearGradient id="aurora-b" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={AURORA_GREEN} stopOpacity="0" />
+          <stop offset="55%" stopColor={AURORA_GREEN} stopOpacity="0.72" />
+          <stop offset="100%" stopColor={AURORA_TEAL} stopOpacity="0" />
+        </linearGradient>
+        <filter id="aurora-blur" x="-30%" y="-80%" width="160%" height="300%">
+          <feGaussianBlur stdDeviation="24" />
+        </filter>
+
         <linearGradient id="meteor-tail" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0%" stopColor={SUN_CORE} stopOpacity="0" />
           <stop offset="70%" stopColor={SUN_CORE} stopOpacity="0.35" />
@@ -416,6 +438,29 @@ export function AerialScene({ className }: { className?: string }) {
           <circle r={1.8} fill={SUN_CORE} />
         </g>
       ))}
+
+      {/*
+        The aurora, between the stars and the hills.
+
+        Drawn as three broad curves rather than one, because a single band reads as a smear; the
+        places where they cross are what look like folds. Blurred hard and kept faint — it is
+        weather in the sky, not a light source, and the sun below it still sets the scene's key.
+      */}
+      <g filter="url(#aurora-blur)" opacity={0.95}>
+        <path
+          d="M -80 232 C 240 120, 520 300, 760 196 S 1240 120, 1520 250 L 1520 400 C 1240 300, 980 420, 740 352 S 220 300, -80 392 Z"
+          fill="url(#aurora-a)"
+        />
+        <path
+          d="M -80 318 C 300 232, 600 372, 900 280 S 1300 232, 1520 330 L 1520 452 C 1280 372, 1000 472, 700 412 S 240 400, -80 468 Z"
+          fill="url(#aurora-b)"
+        />
+        <path
+          d="M -80 160 C 200 96, 440 216, 680 140 S 1120 72, 1520 180 L 1520 268 C 1160 196, 900 292, 640 236 S 180 212, -80 280 Z"
+          fill="url(#aurora-a)"
+          opacity={0.6}
+        />
+      </g>
 
       {/* Sun, and the light it throws forward along the valley. */}
       <ellipse cx={WIDTH * 0.58} cy={430} rx={520} ry={330} fill="url(#sun)" />

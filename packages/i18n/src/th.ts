@@ -646,6 +646,13 @@ export const th = {
     heroPrimary: "เริ่มวิเคราะห์ที่ดิน",
     heroSecondary: "ดูว่าระบบทำอะไรให้ได้บ้าง",
     calloutSources: "จากหน่วยงานรัฐ {n} แหล่ง",
+    /* The row under the buttons: three short promises, each one the product can keep today. */
+    badge1Title: "ข้อมูลจากหน่วยงานรัฐ",
+    badge1Body: "ทุกตัวเลขบอกที่มาและปีได้",
+    badge2Title: "ครบทุกจังหวัด",
+    badge2Body: "เลือกวิเคราะห์ได้ถึงระดับตำบล",
+    badge3Title: "ไม่ต้องสมัครสมาชิก",
+    badge3Body: "ผลลัพธ์หมดอายุใน 24 ชั่วโมง",
     // Said while the count is still being read, so the card never prints "0 แหล่ง" as a fact.
     calloutSourcesPending: "จากหน่วยงานรัฐที่เปิดใช้งานแล้ว",
 
