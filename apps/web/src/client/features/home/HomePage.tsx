@@ -127,7 +127,20 @@ export function HomePage() {
           this one has its own horizon, its own haze and its own light. Laying it back as well
           would be perspective applied twice.
         */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 overflow-hidden"
+          style={{
+            // Dissolved at the foot rather than cut off there. The hero used to fade to an opaque
+            // --terrain-base while the page's own backdrop — which is lighter, and carries the
+            // skyline — began immediately below it, so the two met as a horizontal seam across the
+            // window. Fading the scene itself to nothing hands the eye to that backdrop instead.
+            maskImage:
+              "linear-gradient(to bottom, #000 58%, rgba(0,0,0,0.45) 84%, transparent 100%)",
+            WebkitMaskImage:
+              "linear-gradient(to bottom, #000 58%, rgba(0,0,0,0.45) 84%, transparent 100%)",
+          }}
+        >
           <AerialScene className="size-full" />
         </div>
 
@@ -148,11 +161,13 @@ export function HomePage() {
               "radial-gradient(56% 42% at 50% 30%, color-mix(in srgb, var(--terrain-base) 72%, transparent) 0%, color-mix(in srgb, var(--terrain-base) 38%, transparent) 52%, transparent 82%)",
           }}
         />
+        {/* A touch of the page's own colour at the very foot, to settle what the mask leaves. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-40"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-28"
           style={{
-            background: "linear-gradient(to bottom, transparent, var(--terrain-base))",
+            background:
+              "linear-gradient(to bottom, transparent, color-mix(in srgb, var(--terrain-base) 55%, transparent))",
           }}
         />
 
