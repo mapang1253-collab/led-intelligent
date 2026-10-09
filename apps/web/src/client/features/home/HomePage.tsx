@@ -104,24 +104,15 @@ export function HomePage() {
         reads as ground seen from the air. The mask at its foot is what stops it ending in a line.
       */}
       <section className="relative flex min-h-[38rem] flex-col justify-center overflow-hidden px-6 pt-12 pb-16 lg:min-h-[46rem] lg:pt-16 lg:pb-24">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0"
-          style={{ perspective: "1400px", perspectiveOrigin: "50% 0%" }}
-        >
-          <div
-            className="absolute inset-x-[-22%] top-[18%] bottom-[-18%]"
-            style={{
-              transform: "rotateX(58deg) rotateZ(-13deg) scale(1.18)",
-              transformOrigin: "50% 0%",
-              maskImage:
-                "radial-gradient(130% 92% at 50% 8%, #000 36%, rgba(0,0,0,0.55) 66%, transparent 92%)",
-              WebkitMaskImage:
-                "radial-gradient(130% 92% at 50% 8%, #000 36%, rgba(0,0,0,0.55) 66%, transparent 92%)",
-            }}
-          >
-            <AerialScene className="size-full" />
-          </div>
+        {/*
+          The scene fills the hero as a backdrop.
+
+          It is not tilted: the first version was a flat plan that CSS laid back to fake depth, and
+          this one has its own horizon, its own haze and its own light. Laying it back as well
+          would be perspective applied twice.
+        */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+          <AerialScene className="size-full" />
         </div>
 
         {/*
@@ -138,7 +129,7 @@ export function HomePage() {
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(68% 52% at 50% 34%, color-mix(in srgb, var(--terrain-base) 90%, transparent) 0%, color-mix(in srgb, var(--terrain-base) 62%, transparent) 46%, transparent 76%)",
+              "radial-gradient(56% 42% at 50% 30%, color-mix(in srgb, var(--terrain-base) 72%, transparent) 0%, color-mix(in srgb, var(--terrain-base) 38%, transparent) 52%, transparent 82%)",
           }}
         />
         <div
