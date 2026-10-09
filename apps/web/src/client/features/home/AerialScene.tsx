@@ -327,9 +327,18 @@ export function AerialScene({ className }: { className?: string }) {
         ))}
 
         <linearGradient id="valley" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={SUN_WARM} stopOpacity="0.07" />
-          <stop offset="14%" stopColor="var(--grad-deep-to)" stopOpacity="0.72" />
-          <stop offset="46%" stopColor={NIGHT} stopOpacity="0.88" />
+          {/*
+            The first stop is transparent on purpose.
+
+            This fill belongs to a rectangle, and a rectangle laid across the frame has a straight
+            top edge — which is exactly the line the owners drew in red. Starting the gradient at
+            nothing means the shape arrives rather than begins, and the ridges above it hand over
+            instead of stopping.
+          */}
+          <stop offset="0%" stopColor="var(--grad-deep-to)" stopOpacity="0" />
+          <stop offset="9%" stopColor={SUN_WARM} stopOpacity="0.06" />
+          <stop offset="24%" stopColor="var(--grad-deep-to)" stopOpacity="0.68" />
+          <stop offset="52%" stopColor={NIGHT} stopOpacity="0.9" />
           <stop offset="100%" stopColor={NIGHT} stopOpacity="0.98" />
         </linearGradient>
 
@@ -449,7 +458,7 @@ export function AerialScene({ className }: { className?: string }) {
         places where they cross are what look like folds. Blurred hard and kept faint — it is
         weather in the sky, not a light source, and the sun below it still sets the scene's key.
       */}
-      <g filter="url(#aurora-blur)" opacity={0.52}>
+      <g filter="url(#aurora-blur)" opacity={0.78}>
         <path
           d="M -80 232 C 240 120, 520 300, 760 196 S 1240 120, 1520 250 L 1520 400 C 1240 300, 980 420, 740 352 S 220 300, -80 392 Z"
           fill="url(#aurora-a)"
@@ -462,6 +471,34 @@ export function AerialScene({ className }: { className?: string }) {
           d="M -80 160 C 200 96, 440 216, 680 140 S 1120 72, 1520 180 L 1520 268 C 1160 196, 900 292, 640 236 S 180 212, -80 280 Z"
           fill="url(#aurora-a)"
           opacity={0.6}
+        />
+
+        {/*
+          Two more, hung down the left and right edges.
+
+          The three bands above all sweep across the middle, so the sides of the frame had none of
+          this light at all — which is the pair of columns the owners bracketed in green. These
+          are steeper and narrower: curtains at the edges rather than another sweep.
+        */}
+        <path
+          d="M -140 20 C 30 180, -10 350, 110 540 L 330 500 C 200 330, 230 170, 100 0 Z"
+          fill="url(#aurora-b)"
+          opacity={1}
+        />
+        <path
+          d="M -40 40 C 90 200, 60 360, 180 560 L 300 540 C 190 350, 210 200, 110 20 Z"
+          fill="url(#aurora-a)"
+          opacity={0.85}
+        />
+        <path
+          d="M 1580 10 C 1410 170, 1450 340, 1330 530 L 1110 490 C 1240 320, 1210 160, 1340 -10 Z"
+          fill="url(#aurora-a)"
+          opacity={0.95}
+        />
+        <path
+          d="M 1480 40 C 1350 200, 1380 360, 1260 550 L 1140 530 C 1250 340, 1230 190, 1330 20 Z"
+          fill="url(#aurora-b)"
+          opacity={0.8}
         />
       </g>
 
@@ -507,7 +544,7 @@ export function AerialScene({ className }: { className?: string }) {
       ))}
 
       {/* The floor of the valley, and the plots on it. */}
-      <rect x={0} y={520} width={WIDTH} height={HEIGHT - 520} fill="url(#valley)" />
+      <rect x={0} y={430} width={WIDTH} height={HEIGHT - 430} fill="url(#valley)" />
       {FIELDS.map((field) => (
         <polygon
           key={field.key}
