@@ -25,8 +25,8 @@
  * the sun in this picture, nothing else: in particular they are not `--color-partial`, which is
  * amber because PARTIAL means something in this product and must not be spent on scenery.
  */
-const SUN_CORE = "#ffeec4";
-const SUN_WARM = "#f0b45e";
+const SUN_CORE = "#ffeaca";
+const SUN_WARM = "#dca96a";
 /**
  * The aurora over the hills, laid across the sky in soft bands well above the ridgeline.
  *
@@ -40,11 +40,12 @@ const AURORA_GREEN = "#2b6fd4";
  * The sky overhead, the far side of every ridge, and the ground nearest the viewer — everything
  * well out of the light.
  *
- * Darker than `--terrain-base` on purpose. The scene sits behind the page's own backdrop and its
- * own type, and a hero bright enough to look good on its own washes both out; the owners asked for
- * it dimmer, and this is the colour everything falls toward.
+ * The page's own colour, not a literal near it. This was #070d1c for a while, which is a few
+ * points bluer and lighter than `--terrain-base`, and that was enough for the hero to read as a
+ * picture pasted onto the page rather than as the top of it. Taking the token means the scene
+ * resolves to exactly what the rest of the site is made of, and follows it if it ever changes.
  */
-const NIGHT = "#070d1c";
+const NIGHT = "var(--terrain-base)";
 
 const WIDTH = 1440;
 const HEIGHT = 900;
