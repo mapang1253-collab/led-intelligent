@@ -140,7 +140,7 @@ function buildFields(): Field[] {
         key: `${row}-${col}`,
         points: corners.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" "),
         // Faint near the horizon where haze eats everything, stronger as the ground comes forward.
-        opacity: 0.06 + random() * 0.13 + depthAt(row) * 0.17,
+        opacity: 0.035 + random() * 0.075 + depthAt(row) * 0.095,
         tone: random(),
       });
     }
@@ -320,24 +320,24 @@ export function AerialScene({ className }: { className?: string }) {
             <stop
               offset="0%"
               stopColor={index < 2 ? "var(--grad-vivid-from)" : "var(--grad-deep-via)"}
-              stopOpacity={0.3 + depth * 0.45}
+              stopOpacity={0.2 + depth * 0.32}
             />
-            <stop offset="100%" stopColor={NIGHT} stopOpacity={0.74 + depth * 0.24} />
+            <stop offset="100%" stopColor={NIGHT} stopOpacity={0.88 + depth * 0.12} />
           </linearGradient>
         ))}
 
         <linearGradient id="valley" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={SUN_WARM} stopOpacity="0.12" />
-          <stop offset="16%" stopColor="var(--grad-deep-via)" stopOpacity="0.4" />
-          <stop offset="58%" stopColor="var(--grad-deep-to)" stopOpacity="0.84" />
-          <stop offset="100%" stopColor={NIGHT} stopOpacity="0.96" />
+          <stop offset="0%" stopColor={SUN_WARM} stopOpacity="0.07" />
+          <stop offset="14%" stopColor="var(--grad-deep-to)" stopOpacity="0.72" />
+          <stop offset="46%" stopColor={NIGHT} stopOpacity="0.88" />
+          <stop offset="100%" stopColor={NIGHT} stopOpacity="0.98" />
         </linearGradient>
 
         <linearGradient id="river" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={SUN_CORE} stopOpacity="0.38" />
-          <stop offset="22%" stopColor={SUN_WARM} stopOpacity="0.32" />
-          <stop offset="52%" stopColor="var(--grad-vivid-from)" stopOpacity="0.55" />
-          <stop offset="100%" stopColor="var(--grad-vivid-via)" stopOpacity="0.38" />
+          <stop offset="0%" stopColor={SUN_CORE} stopOpacity="0.28" />
+          <stop offset="22%" stopColor={SUN_WARM} stopOpacity="0.2" />
+          <stop offset="52%" stopColor="var(--grad-vivid-from)" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="var(--grad-vivid-via)" stopOpacity="0.18" />
         </linearGradient>
 
         <filter id="haze" x="-20%" y="-60%" width="140%" height="260%">
@@ -449,7 +449,7 @@ export function AerialScene({ className }: { className?: string }) {
         places where they cross are what look like folds. Blurred hard and kept faint — it is
         weather in the sky, not a light source, and the sun below it still sets the scene's key.
       */}
-      <g filter="url(#aurora-blur)" opacity={0.7}>
+      <g filter="url(#aurora-blur)" opacity={0.52}>
         <path
           d="M -80 232 C 240 120, 520 300, 760 196 S 1240 120, 1520 250 L 1520 400 C 1240 300, 980 420, 740 352 S 220 300, -80 392 Z"
           fill="url(#aurora-a)"
@@ -500,7 +500,7 @@ export function AerialScene({ className }: { className?: string }) {
             width={WIDTH + 80}
             height={46}
             fill={index < 2 ? SUN_WARM : "var(--grad-vivid-from)"}
-            opacity={0.17 - index * 0.032}
+            opacity={0.1 - index * 0.022}
             filter="url(#haze)"
           />
         </g>
@@ -568,7 +568,7 @@ export function AerialScene({ className }: { className?: string }) {
             rx={place.w}
             ry={place.h}
             fill="var(--grad-vivid-from)"
-            opacity={0.3}
+            opacity={0.15}
             filter="url(#glow)"
           />
           <rect
@@ -578,7 +578,7 @@ export function AerialScene({ className }: { className?: string }) {
             height={place.h}
             rx={6}
             fill="var(--color-surface)"
-            opacity={0.3}
+            opacity={0.16}
             filter="url(#soft)"
           />
         </g>

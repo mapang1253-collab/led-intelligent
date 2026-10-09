@@ -192,7 +192,7 @@ export function HomePage() {
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(56% 42% at 50% 30%, color-mix(in srgb, var(--terrain-base) 72%, transparent) 0%, color-mix(in srgb, var(--terrain-base) 38%, transparent) 52%, transparent 82%)",
+              "radial-gradient(62% 58% at 50% 34%, color-mix(in srgb, var(--terrain-base) 80%, transparent) 0%, color-mix(in srgb, var(--terrain-base) 52%, transparent) 55%, transparent 88%)",
           }}
         />
 
@@ -224,7 +224,10 @@ export function HomePage() {
                 {th.app.headlineAnswer}
               </span>
             </h1>
-            <p className="mx-auto mt-5 max-w-xl text-base text-ink-muted leading-relaxed">
+            <p
+              className="mx-auto mt-5 max-w-xl text-base leading-relaxed [text-shadow:0_1px_12px_rgba(0,0,0,0.8)]"
+              style={{ color: "rgba(226,234,246,0.86)" }}
+            >
               {th.home.heroLead}
             </p>
 
@@ -278,9 +281,13 @@ export function HomePage() {
                   >
                     <Icon size={17} aria-hidden="true" />
                   </span>
-                  <span>
-                    <span className="block font-semibold text-xs tracking-wide">{title}</span>
-                    <span className="block text-ink-muted text-xs">{body}</span>
+                  {/* Not ink-muted. Muted grey is a colour for a panel; over a landscape it is
+                      the first thing to disappear, and the owners could not read this row. */}
+                  <span className="[text-shadow:0_1px_10px_rgba(0,0,0,0.85)]">
+                    <span className="block font-semibold text-sm tracking-wide">{title}</span>
+                    <span className="block text-xs" style={{ color: "rgba(226,234,246,0.78)" }}>
+                      {body}
+                    </span>
                   </span>
                 </li>
               ))}
