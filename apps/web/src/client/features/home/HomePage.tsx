@@ -131,10 +131,18 @@ export function HomePage() {
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 overflow-hidden"
           style={{
-            // Dissolved at the foot rather than cut off there. The hero used to fade to an opaque
-            // --terrain-base while the page's own backdrop — which is lighter, and carries the
-            // skyline — began immediately below it, so the two met as a horizontal seam across the
-            // window. Fading the scene itself to nothing hands the eye to that backdrop instead.
+            /*
+              Dissolved at the foot rather than cut off there, and the page's own backdrop is
+              meant to come up through it.
+
+              The hero used to fade to an opaque --terrain-base while that backdrop — the map of
+              Thailand and its lit markers — began immediately below, so the two met as a seam
+              across the window. Fading the scene itself hands the eye over gradually instead, and
+              the landscape, the map and the markers read as one picture for the last third of the
+              hero. That overlap was briefly treated as a fault and was going to be covered with an
+              opaque floor; the owners looked at it and asked for exactly this, so it stays, and
+              the floor is not coming.
+            */
             maskImage:
               "linear-gradient(to bottom, #000 58%, rgba(0,0,0,0.45) 84%, transparent 100%)",
             WebkitMaskImage:
