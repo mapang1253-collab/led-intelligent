@@ -52,9 +52,11 @@ export interface ZoningResponse {
  * TanStack Query — and a URL that does not change cannot shake any of them. Adding `legend` and
  * deploying was not enough: the server returned it, and the screen kept showing a month-old copy
  * without it. Bumping this is what actually reaches a reader. Raise it whenever the response
- * grows or loses a field.
+ * grows or loses a field — or, as at v3, when the same shape starts carrying a fuller answer:
+ * the legend now covers every plan the overlay paints, and a month-old entry would still describe
+ * only the plan the pin fell in.
  */
-export const ZONING_SHAPE = 2;
+export const ZONING_SHAPE = 3;
 
 export function useZoning(point: PinnedPoint | null, provinceCode: string | null) {
   return useQuery({

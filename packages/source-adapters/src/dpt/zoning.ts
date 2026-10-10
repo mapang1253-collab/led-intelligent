@@ -186,6 +186,41 @@ function readIdentify(payload: unknown): IdentifyResult[] {
 }
 
 /**
+ * Every land-use layer the province service draws, with the plan each one belongs to.
+ *
+ * The overlay is the whole service: switching it on paints every plan the province publishes, not
+ * only the one the pin fell in. ปทุมธานี draws three — the provincial plan 1300000 and the town
+ * plans 1302101 and 1306102 — and the legend used to describe only the plan the point hit, so a
+ * reader saw the town plans' ที่อยู่อาศัยหนาแน่นน้อย in yellow on the map with nothing in the key
+ * to say what yellow meant. The owners reported exactly that.
+ *
+ * The plan id comes out of the layer name (`PLLU_1302101`), so this costs one request for the
+ * service description and nothing per plan beyond what the legend already fetches.
+ */
+async function planLayers(
+  provinceCode: string,
+  options: FetchJsonOptions,
+): Promise<readonly { layerId: number; planId: string }[]> {
+  const result = await fetchJson(`${ARCGIS_ROOT}/PLLU${provinceCode}/MapServer?f=json`, options);
+  if (result.outcome !== "SUCCESS") {
+    return [];
+  }
+  const layers = (result.payload as { layers?: unknown }).layers;
+  if (!Array.isArray(layers)) {
+    return [];
+  }
+  const found: { layerId: number; planId: string }[] = [];
+  for (const layer of layers) {
+    const record = layer as { id?: unknown; name?: unknown };
+    const planId = typeof record.name === "string" ? /^PLLU_(\d+)$/.exec(record.name)?.[1] : null;
+    if (planId && typeof record.id === "number") {
+      found.push({ layerId: record.id, planId });
+    }
+  }
+  return found;
+}
+
+/**
  * Every zone code this layer draws, with the colour it draws it in.
  *
  * The whole renderer rather than one lookup, because the same request answers two questions: what
@@ -433,10 +468,24 @@ export async function fetchZoning(
    */
   const legend: ZoningLegendEntry[] = [];
   const seen = new Set<string>();
-  for (const hit of hits) {
-    const [colours, names] = await Promise.all([coloursFor(hit.layerId), legendFor(hit.planId)]);
+  /*
+   * Every layer the overlay paints, with the layers the pin fell in first so their zones lead the
+   * key. If the service description cannot be read, this falls back to the hits alone — a shorter
+   * key is worse than none, and nothing about the pin's own answer depends on it.
+   */
+  const drawn = await planLayers(provinceCode, options);
+  const sources = [
+    ...hits.map((hit) => ({ layerId: hit.layerId, planId: hit.planId })),
+    ...drawn.filter((layer) => !hits.some((hit) => hit.layerId === layer.layerId)),
+  ];
+  for (const source of sources) {
+    const [colours, names] = await Promise.all([
+      coloursFor(source.layerId),
+      legendFor(source.planId),
+    ]);
     for (const [zoneCode, colour] of colours) {
-      const name = names.get(zoneCode) ?? (zoneCode === hit.zoneCode ? hit.descriptionTh : "");
+      const hit = hits.find((candidate) => candidate.layerId === source.layerId);
+      const name = names.get(zoneCode) ?? (zoneCode === hit?.zoneCode ? hit.descriptionTh : "");
       if (!name || seen.has(zoneCode)) {
         continue;
       }
