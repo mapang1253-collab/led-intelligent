@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
+import { useForgetCarriedIntake } from "../../app/intake-carrier.js";
 import { useCreateRun } from "../run/useAnalysisRun.js";
 import { type AreaChoice, AreaPicker } from "./AreaPicker.js";
 import { AreaSelect } from "./AreaSelect.js";
@@ -162,6 +163,7 @@ export function PropertyIntakeForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const navigate = useNavigate();
+  const forgetCarried = useForgetCarriedIntake();
   /**
    * The run to open, once this screen's own history entry has been stamped with the intake.
    *
@@ -410,6 +412,8 @@ export function PropertyIntakeForm() {
               setErrors((current) => ({ ...current, subdistrict_id: "" }));
             }}
             onClear={() => {
+              // The rail must not hand this place back after the reader has let go of it.
+              forgetCarried();
               setPicked(null);
               setAreaCleared(true);
               setProvinceId("");

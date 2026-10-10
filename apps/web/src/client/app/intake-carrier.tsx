@@ -22,13 +22,21 @@ type Intake = Readonly<Record<string, unknown>>;
 interface Carrier {
   readonly intake: Intake | null;
   readonly carry: (intake: Intake) => void;
+  readonly forget: () => void;
 }
 
-const IntakeCarrierContext = createContext<Carrier>({ intake: null, carry: () => {} });
+const IntakeCarrierContext = createContext<Carrier>({
+  intake: null,
+  carry: () => {},
+  forget: () => {},
+});
 
 export function IntakeCarrier({ children }: { children: React.ReactNode }) {
   const [intake, setIntake] = useState<Intake | null>(null);
-  const value = useMemo<Carrier>(() => ({ intake, carry: setIntake }), [intake]);
+  const value = useMemo<Carrier>(
+    () => ({ intake, carry: setIntake, forget: () => setIntake(null) }),
+    [intake],
+  );
   return <IntakeCarrierContext.Provider value={value}>{children}</IntakeCarrierContext.Provider>;
 }
 
@@ -54,4 +62,15 @@ export function useCarryIntake(intake: Intake | null | undefined): void {
     const current = latest.current;
     if (key !== "" && current) carry(current);
   }, [key, carry]);
+}
+
+/**
+ * Drop what is carried, because the reader has said they are starting somewhere else.
+ *
+ * Clearing the area is that statement. Without this, the rail would hand the abandoned place —
+ * and its road width, its intended storeys, its pin — straight back on the next visit, which
+ * reads as the form refusing to let go.
+ */
+export function useForgetCarriedIntake(): () => void {
+  return useContext(IntakeCarrierContext).forget;
 }
