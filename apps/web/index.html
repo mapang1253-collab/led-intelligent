@@ -6,9 +6,68 @@
     <!-- The product's name. Its twin is th.nav.appName, which puts the same name on screen;
          this copy is static so the tab is right before any JavaScript runs. Keep them together. -->
     <title>Finca Check — ระบบวิเคราะห์ศักยภาพที่ดิน</title>
+    <!--
+      Recover from a build that moved under an open tab.
+
+      Every deployment writes the bundle under a new hashed name and removes the old one. A tab
+      that was already open still asks for the file it was told about, and the Worker answers a
+      missing path with index.html, because that is what makes client-side routes work. The browser
+      refuses to run HTML as a module, and the reader gets a black screen with nothing on it —
+      which is what this page looked like for a minute after a deploy, and would have looked like
+      during a demonstration.
+
+      So: a failed script or stylesheet reloads the page once, which fetches the current index.html
+      and with it the current bundle. Once, guarded by a flag the app clears as soon as it has
+      booted, so a file that is genuinely missing cannot put the tab in a reload loop. Resource
+      errors do not bubble, hence the capture phase, and this runs before the module tag so it is
+      listening by the time that tag can fail.
+    -->
+    <script>
+      (function () {
+        var KEY = "reis.stale-build-reload";
+        window.addEventListener(
+          "error",
+          function (event) {
+            // Only a boot that never happened is worth a reload. Once the app is running, a
+            // failed resource is the network's problem, and reloading would take a reader who is
+            // merely offline from a working page to the browser's offline screen.
+            if (window.__reisBooted) return;
+            var el = event.target;
+            if (!el || (el.tagName !== "SCRIPT" && el.tagName !== "LINK")) return;
+            try {
+              if (sessionStorage.getItem(KEY) === "1") return;
+              sessionStorage.setItem(KEY, "1");
+            } catch (_) {
+              return;
+            }
+            location.reload();
+          },
+          true,
+        );
+      })();
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <!--
+      What stands in the page until React replaces it. A reader whose bundle will not load after
+      the reload above sees a sentence telling them what to do, rather than an empty black screen
+      they can only read as the site being gone.
+    -->
+    <div id="root">
+      <div
+        style="
+          color: #a8b0c2;
+          font-family: system-ui, sans-serif;
+          font-size: 15px;
+          line-height: 1.8;
+          padding: 3rem 1.5rem;
+          text-align: center;
+        "
+      >
+        กำลังโหลดระบบ<br />
+        หากหน้านี้ค้างอยู่นานกว่าปกติ กรุณารีเฟรชหน้าเว็บอีกครั้ง
+      </div>
+    </div>
     <script type="module" src="/src/client/app/main.tsx"></script>
   </body>
 </html>

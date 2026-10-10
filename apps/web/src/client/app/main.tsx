@@ -18,6 +18,18 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
 });
 
+/*
+ * The app booted, so the one-shot reload guard in index.html is spent and may arm again. Without
+ * clearing it, a reader who hit one stale build would get no second recovery for the life of the
+ * tab — and the next deployment is the one that would leave them staring at nothing.
+ */
+(window as unknown as { __reisBooted?: boolean }).__reisBooted = true;
+try {
+  sessionStorage.removeItem("reis.stale-build-reload");
+} catch {
+  // A tab that cannot read its own session storage simply does without the guard.
+}
+
 createRoot(container).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
