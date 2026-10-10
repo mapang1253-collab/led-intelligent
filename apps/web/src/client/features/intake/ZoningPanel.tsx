@@ -1,7 +1,7 @@
 import { th } from "@reis/i18n";
-import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, Info, LoaderCircle, Map as MapIcon, TriangleAlert } from "lucide-react";
 import type { PinnedPoint } from "./LandPinMap.js";
+import { useZoning } from "./useZoning.js";
 
 /**
  * The city plan covering the pin (docs/adr/0008).
@@ -15,47 +15,6 @@ import type { PinnedPoint } from "./LandPinMap.js";
  * Three empty answers render differently, because they mean opposite things to a reader: the
  * province publishes no plan, the pin falls outside every published plan, and the lookup failed.
  */
-
-interface ZoningPlan {
-  plan_id: string;
-  zone_code: string;
-  zone_name_th: string;
-  block_th: string | null;
-  colour: string | null;
-  permitted_th: string | null;
-  prohibited_th: string[];
-}
-
-interface ZoningLegendEntry {
-  zone_code: string;
-  zone_name_th: string;
-  colour: string | null;
-}
-
-interface ZoningResponse {
-  covered: boolean;
-  data: ZoningPlan[];
-  /**
-   * Optional on purpose. Answers are cached at the edge for a month, so a deployment that adds a
-   * field meets responses stored before it existed — and reading `.length` off one of those took
-   * the whole page down to a blank screen, not just this panel. Every field this component reads
-   * from the envelope has to survive being absent.
-   */
-  legend?: ZoningLegendEntry[];
-  attribution_th: string;
-  publisher_url: string;
-}
-
-/**
- * The response shape this component expects, carried in the URL.
- *
- * Answers are cached for a month in three places — the edge, the browser's own HTTP cache, and
- * TanStack Query — and a URL that does not change cannot shake any of them. Adding `legend` and
- * deploying was not enough: the server returned it, and the screen kept showing a month-old copy
- * without it. Bumping this is what actually reaches a reader. Raise it whenever the response
- * grows or loses a field.
- */
-const ZONING_SHAPE = 2;
 
 export function ZoningPanel({
   point,
@@ -74,23 +33,7 @@ export function ZoningPanel({
    */
   legendOpen?: boolean;
 }) {
-  const zoning = useQuery({
-    queryKey: ["zoning", ZONING_SHAPE, provinceCode, point?.latitude, point?.longitude],
-    enabled: point !== null && provinceCode !== null,
-    // A ministerial regulation does not change while a form is open.
-    staleTime: Number.POSITIVE_INFINITY,
-    retry: false,
-    queryFn: async (): Promise<ZoningResponse> => {
-      const response = await fetch(
-        `/api/v1/zoning?lat=${point?.latitude}&lon=${point?.longitude}&province_code=${provinceCode}&v=${ZONING_SHAPE}`,
-        { headers: { Accept: "application/json" } },
-      );
-      if (!response.ok) {
-        throw new Error(`zoning lookup failed: ${response.status}`);
-      }
-      return (await response.json()) as ZoningResponse;
-    },
-  });
+  const zoning = useZoning(point, provinceCode);
 
   if (!point || !provinceCode) {
     return null;

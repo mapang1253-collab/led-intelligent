@@ -4,6 +4,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Layers, LoaderCircle, MapPin, RotateCcw, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { planNotPublished, useZoning } from "./useZoning.js";
 import { zoningTileLayer } from "./zoningTiles.js";
 
 /**
@@ -91,6 +92,8 @@ export function LandPinMap({
    * and going back has no such state to carry, and the colours would be gone again.
    */
   const [showZoning, setShowZoning] = useState(() => value !== null);
+  /* Shares the lookup the panel beside this map already makes, so it costs no extra request. */
+  const noPlan = planNotPublished(useZoning(value, zoningProvinceCode));
   /**
    * Turns the colours on for the first pin, once.
    *
@@ -205,13 +208,13 @@ export function LandPinMap({
     }
     zoning.current?.remove();
     zoning.current = null;
-    if (!showZoning || !zoningProvinceCode) {
+    if (!showZoning || !zoningProvinceCode || noPlan) {
       return;
     }
     const layer = zoningTileLayer(zoningProvinceCode);
     layer.addTo(map.current);
     zoning.current = layer;
-  }, [ready, showZoning, zoningProvinceCode]);
+  }, [ready, showZoning, zoningProvinceCode, noPlan]);
 
   useEffect(() => {
     if (!ready || !map.current) {
@@ -293,7 +296,10 @@ export function LandPinMap({
         role="application"
         aria-label={th.map.ariaLabel}
       />
-      {zoningProvinceCode && (
+      {zoningProvinceCode && noPlan && (
+        <p className="mt-2 text-ink-muted text-xs leading-relaxed">{th.zoningMap.noLayer}</p>
+      )}
+      {zoningProvinceCode && !noPlan && (
         <div className="mt-2">
           <button
             type="button"

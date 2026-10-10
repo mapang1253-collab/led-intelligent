@@ -4,6 +4,7 @@ import "leaflet/dist/leaflet.css";
 import { Info, Layers } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { PinnedPoint } from "../intake/LandPinMap.js";
+import { planNotPublished, useZoning } from "../intake/useZoning.js";
 import { zoningTileLayer } from "../intake/zoningTiles.js";
 
 /**
@@ -60,6 +61,9 @@ export function ZoningMap({
   const latitude = point?.latitude ?? null;
   const longitude = point?.longitude ?? null;
 
+  /* Shares the panel's lookup below, so this costs no extra request. */
+  const noPlan = planNotPublished(useZoning(point, provinceCode));
+
   useEffect(() => {
     if (!container.current || map.current || latitude === null || longitude === null) {
       return;
@@ -96,13 +100,13 @@ export function ZoningMap({
     }
     overlay.current?.remove();
     overlay.current = null;
-    if (!showZoning || !provinceCode) {
+    if (!showZoning || !provinceCode || noPlan) {
       return;
     }
     const layer = zoningTileLayer(provinceCode);
     layer.addTo(map.current);
     overlay.current = layer;
-  }, [ready, showZoning, provinceCode]);
+  }, [ready, showZoning, provinceCode, noPlan]);
 
   if (!point || !provinceCode) {
     return null;
@@ -125,14 +129,18 @@ export function ZoningMap({
       />
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setShowZoning((on) => !on)}
-          className="inline-flex items-center gap-1.5 rounded-pill border border-border-strong px-3 py-1.5 font-medium text-xs"
-        >
-          <Layers size={13} aria-hidden="true" />
-          {showZoning ? th.zoningMap.hideOverlay : th.zoningMap.showOverlay}
-        </button>
+        {noPlan ? (
+          <p className="text-ink-muted text-xs leading-relaxed">{th.zoningMap.noLayer}</p>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowZoning((on) => !on)}
+            className="inline-flex items-center gap-1.5 rounded-pill border border-border-strong px-3 py-1.5 font-medium text-xs"
+          >
+            <Layers size={13} aria-hidden="true" />
+            {showZoning ? th.zoningMap.hideOverlay : th.zoningMap.showOverlay}
+          </button>
+        )}
       </div>
 
       {/* The pin is the reader's own assertion, here as everywhere else. A map drawn around it
