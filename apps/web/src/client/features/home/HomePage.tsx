@@ -210,12 +210,15 @@ export function HomePage() {
         <HeroEmblems className="absolute inset-x-0 bottom-14 hidden h-72 lg:block" />
 
         <div className="relative mx-auto max-w-5xl">
-          <div className="mx-auto max-w-2xl text-center">
+          {/* Wider than the paragraph below it, so the headline can be set large without the
+              question breaking across three lines. The phone keeps the smaller size for the same
+              reason: at 48px "What is this land" wraps and leaves "land" alone on its own line. */}
+          <div className="mx-auto max-w-3xl text-center">
             <span className="glass inline-flex items-center gap-1.5 rounded-pill px-3.5 py-1.5 font-semibold text-xs">
               <Building2 size={14} aria-hidden="true" />
               {th.app.academicBadge}
             </span>
-            <h1 className="mt-6 font-bold text-4xl leading-[1.15] tracking-tight md:text-6xl">
+            <h1 className="mt-6 font-bold text-4xl leading-[1.1] tracking-tight md:text-7xl">
               {th.app.headlineLead}
               <br />
               {/* Gold here and nowhere else. The product's own signature stays blue; this line is
