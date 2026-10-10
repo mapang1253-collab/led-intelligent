@@ -61,13 +61,15 @@
   --color-signature-text: #2563eb;
   --color-signature-wash: #e6ecfd;
 
-  /* The band behind a result heading. Champagne rather than the signature blue, because the
-     headings sat in the same blue as the links and the chart fills around them and stopped
-     separating anything — the owners said they blended in. It is the colour the navigation rail
-     already uses for the page you are on, so a heading and the tab that leads to it now agree.
-     Darker here than the rail's, because this one sits on white. */
-  --color-heading: #8a6118;
-  --color-heading-wash: #faf2e3;
+  /* The band behind a result heading.
+     Its own colour, not the signature: the headings used to take the same blue as the links, the
+     chart fills and the primary button on the same screen, and a heading in the page's commonest
+     colour stops being a heading — the owners said they blended in. This is the cyan end of the
+     palette's own gradient rather than a colour invented here, so it still belongs to the product
+     while reading clearly apart from the link blue beside it. Darkened for this theme, because the
+     light value is unreadable on white. */
+  --color-heading: #0b6f88;
+  --color-heading-wash: #e4f4f9;
   --grad-deep-from: #026170;
   --grad-deep-via: #2362ed;
   --grad-deep-to: #1d398b;
@@ -183,10 +185,10 @@
   --color-signature-text: #3b82f6;
   --color-signature-wash: #10203c;
 
-  /* The rail's own champagne, unchanged: on this theme the heading and the active tab are the
-     same colour exactly. */
-  --color-heading: #e8c89a;
-  --color-heading-wash: rgba(232, 200, 154, 0.1);
+  /* Light enough, and far enough toward cyan, to separate from the link blue (#3d74ed) that
+     surrounds it on the same screen. */
+  --color-heading: #62c9ea;
+  --color-heading-wash: rgba(98, 201, 234, 0.1);
 
   --terrain-base: #05080f;
   --terrain-glow-1: color-mix(in srgb, var(--grad-vivid-from) 32%, transparent);
