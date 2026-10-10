@@ -334,7 +334,7 @@ app.get("/api/v1/zoning", async (c) => {
    * whenever this response grows or loses a field.
    */
   const cacheKey = new Request(
-    `https://zoning.invalid/v3/${provinceCode}/${lat.toFixed(4)},${lon.toFixed(4)}`,
+    `https://zoning.invalid/v4/${provinceCode}/${lat.toFixed(4)},${lon.toFixed(4)}`,
   );
   const cached = await cache.match(cacheKey);
   if (cached) {

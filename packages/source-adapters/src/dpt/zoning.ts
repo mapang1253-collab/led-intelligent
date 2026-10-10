@@ -405,9 +405,33 @@ export async function fetchZoning(
     return pending;
   };
 
+  /*
+   * Every land-use layer the service draws, with the plan each belongs to. Needed before the
+   * plans below as well as for the key, because the two can disagree.
+   */
+  const drawn = await planLayers(provinceCode, options);
+
+  /**
+   * Which plan's published material describes this polygon.
+   *
+   * Normally the feature's own CB_ID, and for most provinces that is the end of it. สมุทรปราการ
+   * is not most provinces: its features carry CB_ID 1100000, the layer drawing them is named
+   * PLLU_1100003, and only 1100003 has a legend page and regulation text — 1100000 answers every
+   * question with an empty page. Taking the feature at its word there meant a pin in
+   * พาณิชยกรรม 2003 was told it lay outside every published plan, which is a worse answer than no
+   * answer. So when the feature's own plan has nothing published, the layer's does.
+   */
+  const publishedPlanFor = async (hit: { layerId: number; planId: string }) => {
+    if ((await legendFor(hit.planId)).size > 0) {
+      return hit.planId;
+    }
+    return drawn.find((layer) => layer.layerId === hit.layerId)?.planId ?? hit.planId;
+  };
+
   const plans = await Promise.all(
     hits.map(async (hit): Promise<ZoningPlan | null> => {
-      const { planId, zoneCode } = hit;
+      const planId = await publishedPlanFor(hit);
+      const { zoneCode } = hit;
       const block = hit.blockTh;
 
       // The stored answer, when there is one. This is the whole point of the store: on a hit the
@@ -473,11 +497,22 @@ export async function fetchZoning(
    * key. If the service description cannot be read, this falls back to the hits alone — a shorter
    * key is worse than none, and nothing about the pin's own answer depends on it.
    */
-  const drawn = await planLayers(provinceCode, options);
-  const sources = [
+  const sources: { layerId: number; planId: string }[] = [];
+  for (const candidate of [
     ...hits.map((hit) => ({ layerId: hit.layerId, planId: hit.planId })),
-    ...drawn.filter((layer) => !hits.some((hit) => hit.layerId === layer.layerId)),
-  ];
+    ...drawn,
+  ]) {
+    // Keyed on the pair, not the layer: where a feature's CB_ID and its layer's name disagree,
+    // both have to be asked, and only one of them has a legend page.
+    if (
+      !sources.some(
+        (seenSource) =>
+          seenSource.layerId === candidate.layerId && seenSource.planId === candidate.planId,
+      )
+    ) {
+      sources.push(candidate);
+    }
+  }
   for (const source of sources) {
     const [colours, names] = await Promise.all([
       coloursFor(source.layerId),

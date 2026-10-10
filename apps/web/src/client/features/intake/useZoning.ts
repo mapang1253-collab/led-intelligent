@@ -56,7 +56,7 @@ export interface ZoningResponse {
  * the legend now covers every plan the overlay paints, and a month-old entry would still describe
  * only the plan the pin fell in.
  */
-export const ZONING_SHAPE = 3;
+export const ZONING_SHAPE = 4;
 
 export function useZoning(point: PinnedPoint | null, provinceCode: string | null) {
   return useQuery({
