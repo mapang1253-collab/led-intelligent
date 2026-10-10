@@ -206,12 +206,29 @@ interface Star {
   readonly opacity: number;
   /** Seconds, so no two stars breathe together. */
   readonly delay: number;
+  /** Seconds. Varied as well as offset: one shared period reads as the whole sky blinking. */
+  readonly period: number;
+}
+
+/**
+ * A glint: the few stars bright enough to throw points.
+ *
+ * Drawn as a four-pointed cross rather than a disc, and lit in short winks with long gaps, which
+ * is what the eye reads as sparkle. Kept to a dozen — a sky full of them is tinsel.
+ */
+interface Glint {
+  readonly key: string;
+  readonly cx: number;
+  readonly cy: number;
+  readonly size: number;
+  readonly delay: number;
+  readonly period: number;
 }
 
 function buildStars(): Star[] {
   const random = seeded(90210);
   const stars: Star[] = [];
-  for (let i = 0; i < 90; i += 1) {
+  for (let i = 0; i < 150; i += 1) {
     const cx = random() * WIDTH;
     const cy = 20 + random() * 400;
     // The sky washes out toward the sun, so nothing is drawn where it would not be seen.
@@ -227,12 +244,44 @@ function buildStars(): Star[] {
       // Fainter toward the horizon, as atmosphere actually does to them.
       opacity: (0.25 + random() * 0.6) * (1 - cy / 560),
       delay: random() * 6,
+      period: 3.4 + random() * 3.6,
     });
   }
   return stars;
 }
 
 const STARS = buildStars();
+
+function buildGlints(): Glint[] {
+  const random = seeded(4471);
+  const glints: Glint[] = [];
+  for (let i = 0; i < 12; i += 1) {
+    const cx = random() * WIDTH;
+    const cy = 30 + random() * 300;
+    // Same rule as the stars: nothing is drawn where the sun would wash it out.
+    if (Math.hypot(cx - WIDTH * 0.58, (cy - 430) * 1.6) < 440) {
+      continue;
+    }
+    glints.push({
+      key: `glint-${i}`,
+      cx,
+      cy,
+      size: 5 + random() * 5,
+      // Long gaps, scattered: two winking together looks like a fault in the screen.
+      delay: random() * 11,
+      period: 7 + random() * 5,
+    });
+  }
+  return glints;
+}
+
+const GLINTS = buildGlints();
+
+/** One arm-pair of a four-pointed glint, drawn once at the origin and placed by transform. */
+function glintPath(size: number): string {
+  const waist = size * 0.16;
+  return `M 0 ${-size} L ${waist} ${-waist} L ${size} 0 L ${waist} ${waist} L 0 ${size} L ${-waist} ${waist} L ${-size} 0 L ${-waist} ${-waist} Z`;
+}
 
 /**
  * Meteors: three, crossing rarely rather than raining.
@@ -391,8 +440,15 @@ export function AerialScene({ className }: { className?: string }) {
         <style>{`
           .star { animation: star-breathe 5s ease-in-out infinite; }
           @keyframes star-breathe {
-            0%, 100% { opacity: 0.35; }
+            0%, 100% { opacity: 0.3; }
             50% { opacity: 1; }
+          }
+          /* A wink, not a pulse: dark for most of the cycle, bright for a moment of it. */
+          .glint { animation: glint-wink 9s ease-in-out infinite both; transform-box: fill-box; transform-origin: center; }
+          @keyframes glint-wink {
+            0%, 72%, 100% { opacity: 0; transform: scale(0.45) rotate(0deg); }
+            82% { opacity: 1; transform: scale(1) rotate(12deg); }
+            92% { opacity: 0.18; transform: scale(0.7) rotate(18deg); }
           }
           ${METEORS.map(
             (meteor) => `
@@ -415,7 +471,8 @@ export function AerialScene({ className }: { className?: string }) {
           }`,
           ).join("")}
           @media (prefers-reduced-motion: reduce) {
-            .star, ${METEORS.map((meteor) => `.${meteor.key}`).join(", ")} { animation: none; }
+            .star, .glint, ${METEORS.map((meteor) => `.${meteor.key}`).join(", ")} { animation: none; }
+            .glint { opacity: 0.5; }
             ${METEORS.map((meteor) => `.${meteor.key}`).join(", ")} { opacity: 0; }
           }
         `}</style>
@@ -448,7 +505,24 @@ export function AerialScene({ className }: { className?: string }) {
           r={star.r}
           fill={SUN_CORE}
           opacity={star.opacity}
-          style={{ animationDelay: `${star.delay.toFixed(2)}s` }}
+          style={{
+            animationDelay: `${star.delay.toFixed(2)}s`,
+            animationDuration: `${star.period.toFixed(2)}s`,
+          }}
+        />
+      ))}
+
+      {GLINTS.map((glint) => (
+        <path
+          key={glint.key}
+          className="glint"
+          d={glintPath(glint.size)}
+          transform={`translate(${glint.cx.toFixed(1)} ${glint.cy.toFixed(1)})`}
+          fill={SUN_CORE}
+          style={{
+            animationDelay: `${glint.delay.toFixed(2)}s`,
+            animationDuration: `${glint.period.toFixed(2)}s`,
+          }}
         />
       ))}
 
