@@ -81,6 +81,7 @@ function CardTitle({ children }: { children: ReactNode }) {
 
 /** Latin + looped-Thai pairings. Loopless Thai faces are deliberately not offered. */
 const FONTS = [
+  { id: "niramit", name: "Niramit" },
   { id: "plex", name: "Inter + Plex Thai" },
   { id: "sarabun", name: "Inter + Sarabun" },
   { id: "looped", name: "DM Sans + Noto Looped" },

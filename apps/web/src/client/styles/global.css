@@ -105,6 +105,11 @@
   --font-latin: "Plus Jakarta Sans";
   --font-thai: "Plus Jakarta Sans", "IBM Plex Sans Thai", system-ui, sans-serif;
 }
+/* The only option whose Latin and Thai are the same family, drawn together. */
+:root[data-font="niramit"] {
+  --font-latin: "Niramit";
+  --font-thai: "Niramit", system-ui, sans-serif;
+}
 
 :root[data-palette="aurora"] {
   --color-signature: #1469f4;
