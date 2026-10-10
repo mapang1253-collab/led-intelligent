@@ -10,9 +10,9 @@ import type { LucideIcon } from "lucide-react";
  * the work of a hierarchy.
  *
  * Colour does that work instead, which leaves size free to say which level is which. Both bands
- * use the signature wash, so they come from the palette rather than from a colour chosen here, and
- * both read on a light and a dark theme because the wash token flips with the theme while the
- * accent stays.
+ * take their own token rather than the signature, which they used to share with the links, the
+ * chart fills and the primary button around them — too much of one blue, and the headings stopped
+ * separating anything. The token flips with the theme, so both read light and dark.
  *
  * Two levels only. A third would be back to telling them apart by eye.
  */
@@ -29,9 +29,9 @@ export function PanelHeading({
     <h2
       className="flex items-center gap-2.5 rounded-card border-l-4 px-4 py-3 font-bold text-lg tracking-tight"
       style={{
-        backgroundColor: "var(--color-signature-wash)",
-        borderLeftColor: "var(--color-signature)",
-        color: "var(--color-signature-text)",
+        backgroundColor: "var(--color-heading-wash)",
+        borderLeftColor: "var(--color-heading)",
+        color: "var(--color-heading)",
       }}
     >
       <Icon size={19} className="shrink-0" aria-hidden="true" />
@@ -60,20 +60,17 @@ export function GroupHeading({
     <div
       className="rounded-card border-l-4 px-3.5 py-2.5"
       style={{
-        backgroundColor: "var(--color-signature-wash)",
-        borderLeftColor: "var(--color-signature)",
+        backgroundColor: "var(--color-heading-wash)",
+        borderLeftColor: "var(--color-heading)",
       }}
     >
-      <h3
-        className="font-bold text-base leading-snug"
-        style={{ color: "var(--color-signature-text)" }}
-      >
+      <h3 className="font-bold text-base leading-snug" style={{ color: "var(--color-heading)" }}>
         {children}
       </h3>
       {subtitle && (
         <p
           className="mt-0.5 flex items-center gap-1.5 font-medium text-xs"
-          style={{ color: "var(--color-signature-text)", opacity: 0.85 }}
+          style={{ color: "var(--color-heading)", opacity: 0.85 }}
         >
           {Icon && <Icon size={13} className="shrink-0" aria-hidden="true" />}
           {subtitle}

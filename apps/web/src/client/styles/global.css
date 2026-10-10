@@ -60,6 +60,14 @@
   --color-signature-on: #ffffff;
   --color-signature-text: #2563eb;
   --color-signature-wash: #e6ecfd;
+
+  /* The band behind a result heading. Champagne rather than the signature blue, because the
+     headings sat in the same blue as the links and the chart fills around them and stopped
+     separating anything — the owners said they blended in. It is the colour the navigation rail
+     already uses for the page you are on, so a heading and the tab that leads to it now agree.
+     Darker here than the rail's, because this one sits on white. */
+  --color-heading: #8a6118;
+  --color-heading-wash: #faf2e3;
   --grad-deep-from: #026170;
   --grad-deep-via: #2362ed;
   --grad-deep-to: #1d398b;
@@ -174,6 +182,11 @@
   --color-signature-on: #ffffff;
   --color-signature-text: #3b82f6;
   --color-signature-wash: #10203c;
+
+  /* The rail's own champagne, unchanged: on this theme the heading and the active tab are the
+     same colour exactly. */
+  --color-heading: #e8c89a;
+  --color-heading-wash: rgba(232, 200, 154, 0.1);
 
   --terrain-base: #05080f;
   --terrain-glow-1: color-mix(in srgb, var(--grad-vivid-from) 32%, transparent);
