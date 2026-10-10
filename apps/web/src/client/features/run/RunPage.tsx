@@ -20,6 +20,7 @@ import {
 import { useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { useResultView } from "../../app/AppShell.js";
+import { useCarryIntake } from "../../app/intake-carrier.js";
 import { ZoningPanel } from "../intake/ZoningPanel.js";
 import { useProvinces } from "../intake/useAdministrativeAreas.js";
 import { ConceptComparison } from "./ConceptComparison.js";
@@ -172,6 +173,8 @@ export function RunPage() {
    */
   const intake =
     (location.state as { intake?: Record<string, unknown> } | null)?.intake ?? envelope?.intake;
+  /* Hand it to the rail, whose own link to the form carries no state of its own. */
+  useCarryIntake(intake);
 
   /**
    * The city plan, beside the result rather than only on the form that produced it.

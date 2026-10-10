@@ -21,6 +21,7 @@ import { useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router";
 import { TerrainBackdrop } from "../features/design-system/TerrainBackdrop.js";
 import { useFavourites } from "../features/intake/useFavourites.js";
+import { IntakeCarrier, useCarriedIntake } from "./intake-carrier.js";
 
 /**
  * The application frame: one navigation rail that is present from the first screen.
@@ -96,6 +97,8 @@ function NavRail({ onNavigate, onCollapse }: { onNavigate?: () => void; onCollap
   const onStatus = location.pathname === "/status";
   const onSaved = location.pathname === "/saved";
   const savedCount = useFavourites().list.length;
+  /* So the rail returns the reader to the form they filled, not to an empty one. */
+  const carried = useCarriedIntake();
 
   const itemClass = (active: boolean) =>
     `flex items-center gap-2.5 rounded-card px-3 py-2.5 text-sm transition-colors ${
@@ -149,6 +152,7 @@ function NavRail({ onNavigate, onCollapse }: { onNavigate?: () => void; onCollap
         </Link>
         <Link
           to="/analyze"
+          state={carried ? { intake: carried } : undefined}
           onClick={onNavigate}
           aria-current={onIntake ? "page" : undefined}
           className={itemClass(onIntake)}
@@ -241,68 +245,70 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="relative min-h-screen text-ink">
-      <TerrainBackdrop />
+    <IntakeCarrier>
+      <div className="relative min-h-screen text-ink">
+        <TerrainBackdrop />
 
-      {/* A phone gets a top bar and a drawer; the rail only becomes a rail where there is width. */}
-      <header className="glass sticky top-0 z-30 flex items-center gap-3 px-4 py-3 lg:hidden">
-        <button
-          type="button"
-          onClick={() => setDrawerOpen(true)}
-          aria-label={th.nav.openMenu}
-          className="rounded-card border border-border-strong p-2"
-        >
-          <Menu size={18} aria-hidden="true" />
-        </button>
-        <span className="flex items-center gap-2 font-bold text-sm">
-          <Building2 size={16} aria-hidden="true" />
-          {th.nav.appName}
-        </span>
-      </header>
-
-      {drawerOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
+        {/* A phone gets a top bar and a drawer; the rail only becomes a rail where there is width. */}
+        <header className="glass sticky top-0 z-30 flex items-center gap-3 px-4 py-3 lg:hidden">
           <button
             type="button"
-            aria-label={th.nav.closeMenu}
-            onClick={() => setDrawerOpen(false)}
-            className="absolute inset-0 bg-black/60"
-          />
-          <div className="glass absolute inset-y-0 left-0 w-72 max-w-[85%] overflow-y-auto">
-            <div className="flex justify-end p-2">
-              <button
-                type="button"
-                onClick={() => setDrawerOpen(false)}
-                aria-label={th.nav.closeMenu}
-                className="rounded-card border border-border-strong p-2"
-              >
-                <X size={16} aria-hidden="true" />
-              </button>
-            </div>
-            <NavRail onNavigate={() => setDrawerOpen(false)} />
-          </div>
-        </div>
-      )}
-
-      <div className="lg:flex">
-        {collapsed ? (
-          /* Tucked away: one button, out of the way, rather than a rail standing there always. */
-          <button
-            type="button"
-            onClick={() => setRail(false)}
-            aria-label={th.nav.expand}
-            title={th.nav.expand}
-            className="glass sticky top-4 z-20 ml-4 hidden size-10 shrink-0 items-center justify-center self-start rounded-card lg:flex"
+            onClick={() => setDrawerOpen(true)}
+            aria-label={th.nav.openMenu}
+            className="rounded-card border border-border-strong p-2"
           >
-            <PanelLeftOpen size={18} aria-hidden="true" />
+            <Menu size={18} aria-hidden="true" />
           </button>
-        ) : (
-          <aside className="glass sticky top-0 hidden h-screen w-64 shrink-0 overflow-y-auto lg:block">
-            <NavRail onCollapse={() => setRail(true)} />
-          </aside>
+          <span className="flex items-center gap-2 font-bold text-sm">
+            <Building2 size={16} aria-hidden="true" />
+            {th.nav.appName}
+          </span>
+        </header>
+
+        {drawerOpen && (
+          <div className="fixed inset-0 z-40 lg:hidden">
+            <button
+              type="button"
+              aria-label={th.nav.closeMenu}
+              onClick={() => setDrawerOpen(false)}
+              className="absolute inset-0 bg-black/60"
+            />
+            <div className="glass absolute inset-y-0 left-0 w-72 max-w-[85%] overflow-y-auto">
+              <div className="flex justify-end p-2">
+                <button
+                  type="button"
+                  onClick={() => setDrawerOpen(false)}
+                  aria-label={th.nav.closeMenu}
+                  className="rounded-card border border-border-strong p-2"
+                >
+                  <X size={16} aria-hidden="true" />
+                </button>
+              </div>
+              <NavRail onNavigate={() => setDrawerOpen(false)} />
+            </div>
+          </div>
         )}
-        <div className="min-w-0 flex-1">{children}</div>
+
+        <div className="lg:flex">
+          {collapsed ? (
+            /* Tucked away: one button, out of the way, rather than a rail standing there always. */
+            <button
+              type="button"
+              onClick={() => setRail(false)}
+              aria-label={th.nav.expand}
+              title={th.nav.expand}
+              className="glass sticky top-4 z-20 ml-4 hidden size-10 shrink-0 items-center justify-center self-start rounded-card lg:flex"
+            >
+              <PanelLeftOpen size={18} aria-hidden="true" />
+            </button>
+          ) : (
+            <aside className="glass sticky top-0 hidden h-screen w-64 shrink-0 overflow-y-auto lg:block">
+              <NavRail onCollapse={() => setRail(true)} />
+            </aside>
+          )}
+          <div className="min-w-0 flex-1">{children}</div>
+        </div>
       </div>
-    </div>
+    </IntakeCarrier>
   );
 }
