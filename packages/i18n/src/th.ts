@@ -9,9 +9,15 @@ export const th = {
   app: {
     /* The two halves of the front-page headline. It is the question this field actually asks —
        "highest and best use" is that sentence in English — and it belongs here rather than in a
-       component, like every other Thai string in the product. */
-    headlineLead: "อสังหาริมทรัพย์ในพื้นที่นี้",
-    headlineAnswer: "ควรเป็นอะไร จึงจะดีที่สุด",
+       component, like every other string in the product.
+       
+       In English at the owners' request, and the only place in the product that is. Everything a
+       reader is asked to act on or decide from — the form, the result, every status, every error —
+       stays Thai, because LOCKED decision #41 is about what the reader must be able to understand,
+       and a display line above two Thai sentences of explanation is not that. Keeping it needs an
+       ADR; reverting it is two strings. */
+    headlineLead: "What is this land",
+    headlineAnswer: "best used for?",
     /* "อะไรที่ยังไม่รู้" described the system's epistemics to someone who came to look at land.
        The promise is the same and now says what the reader gets: the limits, and the list of what
        to check. */
