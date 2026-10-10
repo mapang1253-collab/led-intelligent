@@ -244,7 +244,7 @@ function buildStars(): Star[] {
       // Fainter toward the horizon, as atmosphere actually does to them.
       opacity: (0.25 + random() * 0.6) * (1 - cy / 560),
       delay: random() * 6,
-      period: 3.4 + random() * 3.6,
+      period: 1.7 + random() * 2.6,
     });
   }
   return stars;
@@ -335,24 +335,35 @@ function glintPath(size: number): string {
  * this is meant to be something the eye catches now and then.
  */
 const METEORS = [
-  { key: "m1", from: [120, 40], to: [720, 320], length: 170, duration: 2.1, delay: 1.5, every: 13 },
-  {
-    key: "m2",
-    from: [760, 20],
-    to: [1340, 290],
-    length: 130,
-    duration: 1.7,
-    delay: 7.5,
-    every: 13,
-  },
+  { key: "m1", from: [120, 40], to: [720, 320], length: 170, duration: 2.1, delay: 0.8, every: 9 },
+  { key: "m2", from: [760, 20], to: [1340, 290], length: 130, duration: 1.7, delay: 3.1, every: 9 },
   {
     key: "m3",
     from: [380, 120],
     to: [1020, 420],
     length: 200,
     duration: 2.4,
-    delay: 11,
-    every: 13,
+    delay: 5.4,
+    every: 9,
+  },
+  {
+    key: "m4",
+    from: [1180, 60],
+    to: [1620, 300],
+    length: 120,
+    duration: 1.5,
+    delay: 2.2,
+    every: 11,
+  },
+  { key: "m5", from: [40, 180], to: [520, 430], length: 150, duration: 1.9, delay: 6.9, every: 11 },
+  {
+    key: "m6",
+    from: [900, 150],
+    to: [1460, 440],
+    length: 180,
+    duration: 2.2,
+    delay: 9.3,
+    every: 11,
   },
 ] as const;
 
@@ -482,10 +493,20 @@ export function AerialScene({ className }: { className?: string }) {
         </linearGradient>
 
         <style>{`
-          .star { animation: star-breathe 5s ease-in-out infinite; }
+          /* transform-box/origin so the flare grows from the star rather than from the canvas. */
+          .star {
+            animation: star-breathe 5s ease-in-out infinite;
+            transform-box: fill-box;
+            transform-origin: center;
+          }
+          /* A flare, not a fade: dim for most of the cycle, then a quick bright moment that
+             overshoots in size. Smoothly crossing 0.3 and 1.0 reads as breathing; this reads as
+             glitter, which is what was asked for. */
           @keyframes star-breathe {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
+            0%, 100% { opacity: 0.18; transform: scale(0.72); }
+            38% { opacity: 0.35; transform: scale(0.9); }
+            50% { opacity: 1; transform: scale(1.35); }
+            62% { opacity: 0.45; transform: scale(0.95); }
           }
           /* A wink, not a pulse: dark for most of the cycle, bright for a moment of it. */
           .glint { animation: glint-wink 9s ease-in-out infinite both; transform-box: fill-box; transform-origin: center; }
