@@ -247,6 +247,29 @@ function buildStars(): Star[] {
       period: 1.7 + random() * 2.6,
     });
   }
+  /*
+   * A second pass over the right of the frame.
+   *
+   * The first pass is even across the width, but the sun sits at 0.58 and washes the middle out,
+   * and the emblems take the bottom right, so the top right read as the empty corner of the
+   * picture. These fill it rather than brightening the whole sky.
+   */
+  for (let i = 0; i < 48; i += 1) {
+    const cx = WIDTH * 0.6 + random() * WIDTH * 0.4;
+    const cy = 20 + random() * 400;
+    if (Math.hypot(cx - WIDTH * 0.58, (cy - 430) * 1.6) < 420 && random() > 0.18) {
+      continue;
+    }
+    stars.push({
+      key: `star-r-${i}`,
+      cx,
+      cy,
+      r: 0.7 + random() * 1.6,
+      opacity: (0.3 + random() * 0.62) * (1 - cy / 560),
+      delay: random() * 6,
+      period: 1.7 + random() * 2.6,
+    });
+  }
   return stars;
 }
 
@@ -268,6 +291,21 @@ function buildGlints(): Glint[] {
       cy,
       size: 5 + random() * 5,
       // Long gaps, scattered: two winking together looks like a fault in the screen.
+      delay: random() * 11,
+      period: 7 + random() * 5,
+    });
+  }
+  for (let i = 0; i < 8; i += 1) {
+    const cx = WIDTH * 0.62 + random() * WIDTH * 0.36;
+    const cy = 30 + random() * 300;
+    if (Math.hypot(cx - WIDTH * 0.58, (cy - 430) * 1.6) < 440) {
+      continue;
+    }
+    glints.push({
+      key: `glint-r-${i}`,
+      cx,
+      cy,
+      size: 5 + random() * 5,
       delay: random() * 11,
       period: 7 + random() * 5,
     });
@@ -307,6 +345,19 @@ function buildMotes(): Mote[] {
       key: `mote-${i}`,
       cx: random() * WIDTH,
       // Low in the frame, where the land is: these rise off the valley, not out of the sky.
+      cy: 330 + random() * 260,
+      r: 0.9 + random() * 1.4,
+      driftX: (random() - 0.5) * 90,
+      driftY: -(70 + random() * 90),
+      peak: 0.35 + random() * 0.45,
+      delay: random() * 20,
+      period: 16 + random() * 12,
+    });
+  }
+  for (let i = 0; i < 8; i += 1) {
+    motes.push({
+      key: `mote-r-${i}`,
+      cx: WIDTH * 0.62 + random() * WIDTH * 0.36,
       cy: 330 + random() * 260,
       r: 0.9 + random() * 1.4,
       driftX: (random() - 0.5) * 90,
@@ -590,18 +641,25 @@ export function AerialScene({ className }: { className?: string }) {
         />
       ))}
 
+      {/*
+        The group carries the position and the path carries the animation, which has to be that way
+        round: in SVG the `transform` attribute and the CSS `transform` property are one property,
+        so a keyframe that scales replaces the translate that placed the glint. Written as one
+        element, every glint piled up in the top-left corner — and did it invisibly, because they
+        spend most of their cycle at zero opacity.
+      */}
       {GLINTS.map((glint) => (
-        <path
-          key={glint.key}
-          className="glint"
-          d={glintPath(glint.size)}
-          transform={`translate(${glint.cx.toFixed(1)} ${glint.cy.toFixed(1)})`}
-          fill={SUN_CORE}
-          style={{
-            animationDelay: `${glint.delay.toFixed(2)}s`,
-            animationDuration: `${glint.period.toFixed(2)}s`,
-          }}
-        />
+        <g key={glint.key} transform={`translate(${glint.cx.toFixed(1)} ${glint.cy.toFixed(1)})`}>
+          <path
+            className="glint"
+            d={glintPath(glint.size)}
+            fill={SUN_CORE}
+            style={{
+              animationDelay: `${glint.delay.toFixed(2)}s`,
+              animationDuration: `${glint.period.toFixed(2)}s`,
+            }}
+          />
+        </g>
       ))}
 
       {MOTES.map((mote) => (
