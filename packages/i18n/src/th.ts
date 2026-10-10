@@ -16,7 +16,7 @@ export const th = {
        stays Thai, because LOCKED decision #41 is about what the reader must be able to understand,
        and a display line above two Thai sentences of explanation is not that. Keeping it needs an
        ADR; reverting it is two strings. */
-    headlineLead: "What is this land",
+    headlineLead: "What is this property",
     headlineAnswer: "best used for?",
     /* "อะไรที่ยังไม่รู้" described the system's epistemics to someone who came to look at land.
        The promise is the same and now says what the reader gets: the limits, and the list of what
