@@ -277,6 +277,50 @@ function buildGlints(): Glint[] {
 
 const GLINTS = buildGlints();
 
+/**
+ * Motes: the sparkle that moves.
+ *
+ * Specks of light that drift up and sideways across the valley and fade out, the way dust does in
+ * a low sun. The stars twinkle where they are and the glints wink where they are; this is the one
+ * layer that travels, which is what makes the scene feel alive rather than decorated.
+ *
+ * Slow on purpose — sixteen to twenty-eight seconds to cross a hundred-odd pixels. Anything
+ * quicker reads as snow, and snow over a Thai valley is a different picture entirely.
+ */
+interface Mote {
+  readonly key: string;
+  readonly cx: number;
+  readonly cy: number;
+  readonly r: number;
+  readonly driftX: number;
+  readonly driftY: number;
+  readonly peak: number;
+  readonly delay: number;
+  readonly period: number;
+}
+
+function buildMotes(): Mote[] {
+  const random = seeded(60613);
+  const motes: Mote[] = [];
+  for (let i = 0; i < 18; i += 1) {
+    motes.push({
+      key: `mote-${i}`,
+      cx: random() * WIDTH,
+      // Low in the frame, where the land is: these rise off the valley, not out of the sky.
+      cy: 330 + random() * 260,
+      r: 0.9 + random() * 1.4,
+      driftX: (random() - 0.5) * 90,
+      driftY: -(70 + random() * 90),
+      peak: 0.35 + random() * 0.45,
+      delay: random() * 20,
+      period: 16 + random() * 12,
+    });
+  }
+  return motes;
+}
+
+const MOTES = buildMotes();
+
 /** One arm-pair of a four-pointed glint, drawn once at the origin and placed by transform. */
 function glintPath(size: number): string {
   const waist = size * 0.16;
@@ -450,6 +494,18 @@ export function AerialScene({ className }: { className?: string }) {
             82% { opacity: 1; transform: scale(1) rotate(12deg); }
             92% { opacity: 0.18; transform: scale(0.7) rotate(18deg); }
           }
+          ${MOTES.map(
+            (mote) => `
+          .${mote.key} {
+            animation: drift-${mote.key} ${mote.period.toFixed(1)}s linear ${mote.delay.toFixed(1)}s infinite both;
+          }
+          @keyframes drift-${mote.key} {
+            0% { transform: translate(0px, 0px); opacity: 0; }
+            18% { opacity: ${mote.peak.toFixed(2)}; }
+            72% { opacity: ${mote.peak.toFixed(2)}; }
+            100% { transform: translate(${mote.driftX.toFixed(1)}px, ${mote.driftY.toFixed(1)}px); opacity: 0; }
+          }`,
+          ).join("")}
           ${METEORS.map(
             (meteor) => `
           .${meteor.key} {
@@ -471,8 +527,9 @@ export function AerialScene({ className }: { className?: string }) {
           }`,
           ).join("")}
           @media (prefers-reduced-motion: reduce) {
-            .star, .glint, ${METEORS.map((meteor) => `.${meteor.key}`).join(", ")} { animation: none; }
+            .star, .glint, ${MOTES.map((mote) => `.${mote.key}`).join(", ")}, ${METEORS.map((meteor) => `.${meteor.key}`).join(", ")} { animation: none; }
             .glint { opacity: 0.5; }
+            ${MOTES.map((mote) => `.${mote.key}`).join(", ")} { opacity: 0.3; }
             ${METEORS.map((meteor) => `.${meteor.key}`).join(", ")} { opacity: 0; }
           }
         `}</style>
@@ -523,6 +580,17 @@ export function AerialScene({ className }: { className?: string }) {
             animationDelay: `${glint.delay.toFixed(2)}s`,
             animationDuration: `${glint.period.toFixed(2)}s`,
           }}
+        />
+      ))}
+
+      {MOTES.map((mote) => (
+        <circle
+          key={mote.key}
+          className={mote.key}
+          cx={mote.cx.toFixed(1)}
+          cy={mote.cy.toFixed(1)}
+          r={mote.r.toFixed(2)}
+          fill={SUN_CORE}
         />
       ))}
 
