@@ -21,7 +21,6 @@ interface SourceStatus {
   activation_state: string;
   coverage_note_th: string | null;
   observations: number;
-  reviewers: string[] | null;
   reviewed_at: string | null;
 }
 
@@ -30,7 +29,6 @@ interface ReviewedArtefact {
   title_th: string;
   lifecycle_state: string;
   rule_count?: number;
-  reviewers: string[] | null;
   reviewed_on: string | null;
 }
 
@@ -100,8 +98,8 @@ function ReviewedRow({ artefact, id }: { artefact: ReviewedArtefact; id: string 
         <StateBadge state={artefact.lifecycle_state} />
       </div>
       <p className="mt-1.5 text-ink-muted text-xs leading-relaxed">
-        {artefact.reviewers && artefact.reviewers.length > 0
-          ? `${th.status.reviewedBy} ${artefact.reviewers.join(", ")}${artefact.reviewed_on ? ` · ${artefact.reviewed_on}` : ""}`
+        {artefact.reviewed_on
+          ? `${th.status.reviewedOn} ${artefact.reviewed_on}`
           : th.status.notReviewed}
       </p>
     </div>
@@ -168,10 +166,9 @@ export function SystemStatusPage() {
                       {source.coverage_note_th}
                     </p>
                   )}
-                  {source.reviewers && source.reviewers.length > 0 && (
+                  {source.reviewed_at && (
                     <p className="mt-1 text-ink-muted text-xs">
-                      {th.status.reviewedBy} {source.reviewers.join(", ")}
-                      {source.reviewed_at && ` · ${source.reviewed_at}`}
+                      {th.status.reviewedOn} {source.reviewed_at}
                     </p>
                   )}
                 </li>

@@ -808,7 +808,16 @@ app.get("/api/v1/administrative-areas/well-documented", async (c) => {
 app.get("/api/v1/system-status", async (c) => {
   const db = createDb(c.env.HYPERDRIVE.connectionString);
   try {
-    const [sources, ai] = await Promise.all([sourceStatuses(db), aiStatus(db)]);
+    const [registered, ai] = await Promise.all([sourceStatuses(db), aiStatus(db)]);
+    /*
+     * The review date is published; the reviewers' names are not.
+     *
+     * A reviewed artefact may only execute because a named review record exists, and that record
+     * stays in database/reviewed-packs and in the source registry unchanged. What the owners asked
+     * for is that their names not appear in the product, and hiding them in the page while the
+     * endpoint still served them would have been a gesture rather than a change.
+     */
+    const sources = registered.map(({ reviewers: _reviewers, ...source }) => source);
     const limits = readBudgetLimits(c.env);
     const reserve = limits ? limits.rpd * (limits.dailyReservePercent / 100) : 0;
     return c.json({
@@ -820,7 +829,6 @@ app.get("/api/v1/system-status", async (c) => {
         title_th: LEGAL_PACK.title_th,
         lifecycle_state: LEGAL_PACK.lifecycle_state,
         rule_count: LEGAL_PACK.rules.length,
-        reviewers: LEGAL_PACK.review?.reviewers ?? null,
         reviewed_on: LEGAL_PACK.review?.reviewed_on ?? null,
       },
       valuation_method: {
@@ -828,7 +836,6 @@ app.get("/api/v1/system-status", async (c) => {
         version: VALUATION_METHOD.version,
         title_th: VALUATION_METHOD.title_th,
         lifecycle_state: VALUATION_METHOD.lifecycle_state,
-        reviewers: VALUATION_METHOD.review?.reviewers ?? null,
         reviewed_on: VALUATION_METHOD.review?.reviewed_on ?? null,
       },
       ai: {

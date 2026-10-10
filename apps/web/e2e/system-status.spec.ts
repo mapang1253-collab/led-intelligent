@@ -26,9 +26,10 @@ test("the status page loads from a typed URL and lists active sources", async ({
   const active = Number(text.match(/เปิดใช้งาน (\d+) จาก/)?.[1] ?? "0");
   expect(active).toBeGreaterThan(0);
 
-  // Reviewer names are the whole basis on which a reviewed artefact is allowed to execute
-  // (docs/implementation-plan.md §4), so an unattributed one is a bug, not a blank field.
-  await expect(page.getByText(th.status.reviewedBy).first()).toBeVisible();
+  // A review date is the visible half of the record that lets a reviewed artefact execute at all
+  // (docs/implementation-plan.md §4), so an undated one is a bug, not a blank field. The
+  // reviewers' own names stay in the pack and out of the product, at the owners' request.
+  await expect(page.getByText(th.status.reviewedOn).first()).toBeVisible();
 });
 
 test("the AI section says which mode the deployment is actually in", async ({ page }) => {

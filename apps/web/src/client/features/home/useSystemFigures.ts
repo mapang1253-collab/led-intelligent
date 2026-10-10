@@ -20,7 +20,6 @@ export interface Pack {
   title_th: string;
   version: string;
   rule_count?: number;
-  reviewers: string[];
   reviewed_on: string;
 }
 

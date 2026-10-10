@@ -90,7 +90,7 @@ function ValuationResultView({
       <p className="mt-3 flex items-start gap-2 text-ink-muted text-xs">
         <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
         {th.valuation.methodLabel}: {METHOD.method_id} v{result.method_version}
-        {METHOD.review && ` · ${th.valuation.reviewedBy} ${METHOD.review.reviewers.join(", ")}`}
+        {METHOD.review && ` · ${th.valuation.reviewedOn} ${METHOD.review.reviewed_on}`}
       </p>
     </div>
   );

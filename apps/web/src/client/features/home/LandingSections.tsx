@@ -13,7 +13,7 @@ import { type Pack, useSystemFigures } from "./useSystemFigures.js";
  * status screen does, and prints what comes back.
  *
  * Nothing here is a claim the product cannot support. The counts are observations the sources
- * actually published, the rule pack names its reviewers, and the step list says plainly that a run
+ * actually published, the rule pack says when it was reviewed, and the step list says plainly that a run
  * expires and that the analysis reports what it could not settle.
  */
 
@@ -126,9 +126,7 @@ export function LandingSections() {
                     <Figure
                       key={pack.title_th}
                       value={pack.title_th}
-                      note={th.landing.methodReviewed
-                        .replace("{reviewers}", pack.reviewers.join(", "))
-                        .replace("{date}", pack.reviewed_on)}
+                      note={th.landing.methodReviewed.replace("{date}", pack.reviewed_on)}
                     />
                   ))}
               </ul>
